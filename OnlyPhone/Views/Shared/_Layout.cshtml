@@ -1,0 +1,152 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <link href="~/Content/Css/header.css" rel="stylesheet" />
+    <link href="~/Content/Css/subheader.css" rel="stylesheet" />
+    <link href="~/Content/FontAwesome/css/all.min.css" rel="stylesheet" />
+    <link href="~/Content/Bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-main">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <div class="header-logo">
+                <a href="TrangChu.html" class="logo-page">
+                    OnlyPhone <span>Store</span>
+                </a>
+            </div>
+
+            <div class="header-search">
+                <form action="/search" class="search-form">
+                    <input type="text" placeholder="Bạn cần tìm..." class="search-input">
+                    <button type="submit" class="search-button">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </form>
+            </div>
+
+            @Html.Action("HeaderParaticalView", "Home")
+        </div>
+
+        <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+        <nav class="header-nav" id="headerNav">
+            <div class="mobile-menu-close d-lg-none">
+                <button id="mobileMenuClose">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <ul class="main-menu">
+                <li class="menu-item has-submenu">
+                    <a href="#" class="submenu-toggle">
+                        <span>
+                            <i class="fa-solid fa-bars menu-icon"></i>
+                            Danh mục sản phẩm
+                        </span>
+                        <i class="fa-solid fa-chevron-down chevron-icon"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li class="menu-item has-submenu">
+                            <a href="#" class="submenu-toggle" style="text-transform: none;">iPhone</a>
+                            <ul class="submenu">
+                                <li><a href="#">17 series</a></li>
+                                <li><a href="#">16 series</a></li>
+                                <li><a href="#">15 series</a></li>
+                                <li><a href="#">14 series</a></li>
+                                <li><a href="#">13 series</a></li>
+                                <li><a href="#">SE series</a></li>
+                                <li><a href="#">iPhone Air</a></li>
+                            </ul>
+                        </li>
+                        <li class="menu-item has-submenu">
+                            <a href="#" class="submenu-toggle" style="text-transform: none;">SamSung</a>
+                            <ul class="submenu">
+                                <li><a href="#">Galaxy AI</a></li>
+                                <li><a href="#">Galaxy S25 series</a></li>
+                                <li><a href="#">Galaxy Z (Màn hình gập)</a></li>
+                                <li><a href="#">Galaxy S</a></li>
+                                <li><a href="#">Galaxy A</a></li>
+                                <li><a href="#">Galaxy M</a></li>
+                            </ul>
+                        </li>
+                        <li class="menu-item has-submenu">
+                            <a href="#" class="submenu-toggle" style="text-transform: none;">Xiaomi</a>
+                            <ul class="submenu">
+                                <li><a href="#">Xiaomi Mi</a></li>
+                                <li><a href="#">Xiaomi Redmi</a></li>
+                                <li><a href="#">Xiaomi Note 14</a></li>
+                            </ul>
+                        </li>
+                        <li class="menu-item has-submenu">
+                            <a href="#" class="submenu-toggle" style="text-transform: none;">Vivo</a>
+                            <ul class="submenu">
+                                <li><a href="#">Vivo X</a></li>
+                                <li><a href="#">Vivo V</a></li>
+                                <li><a href="#">Vivo Y</a></li>
+                            </ul>
+                        </li>
+                        <li class="menu-item"><a href="#">Realme</a></li>
+
+                        <li class="menu-item"><a href="#">HONOR</a></li>
+                        <li class="menu-item"><a href="#">TECNO</a></li>
+                        <li><a href="#">Best Seller</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item"><a href="#">Sản phẩm mới</a></li>
+                <li class="menu-item has-submenu">
+                    <a href="#" class="submenu-toggle">
+                        <span>Về chúng tôi</span>
+                        <i class="fa-solid fa-chevron-down chevron-icon"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li><a href="#">Nguồn Cảm hứng</a></li>
+                        <li><a href="#">Mục đích chính</a></li>
+                        <li><a href="#">Mẹo & Thủ thuật</a></li>
+                        <li><a href="#">Liên Hệ</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item"><a href="#">DEAL HOT Bất ngờ</a></li>
+                <li class="menu-item has-submenu">
+                    <a href="#" class="submenu-toggle">
+                        <span>Tin tức</span>
+                        <i class="fa-solid fa-chevron-down chevron-icon"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li><a href="#">Tin khuyến mãi</a></li>
+                        <li><a href="#">Sự kiện</a></li>
+                        <li><a href="#">Tuyển dụng</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item"><a href="#">Tra cứu đơn hàng</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+        </footer>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/Scripts/CustomJS/subheader.js")
+    <script src="~/Scripts/CustomJS/header.js"></script>
+    <script src="~/Scripts/Bootstrap/bootstrap.bundle.min.js"></script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

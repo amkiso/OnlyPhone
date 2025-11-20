@@ -1,0 +1,236 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="PhoneSeller" Class="SQLDataClassesDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Table Name="dbo.cart_item" Member="cart_items">
+    <Type Name="cart_item">
+      <Column Name="cart_item_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="cart_ID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Product_ID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Sale_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="quantity" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Association Name="Product_cart_item" Member="Product" ThisKey="Product_ID" OtherKey="Product_ID" Type="Product" IsForeignKey="true" />
+      <Association Name="shopping_cart_cart_item" Member="shopping_cart" ThisKey="cart_ID" OtherKey="cart_ID" Type="shopping_cart" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Voucher" Member="Vouchers">
+    <Type Name="Voucher">
+      <Column Name="VoucherID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Code" Type="System.String" DbType="NVarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="Descriptions" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
+      <Column Name="DiscountType" Type="System.String" DbType="NVarChar(20) NOT NULL" CanBeNull="false" />
+      <Column Name="DiscountValue" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
+      <Column Name="MaxDiscountAmount" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="MinOrderValue" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="StartDate" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="EndDate" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="Quantity" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="QuantityUsed" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="IsActive" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Association Name="Voucher_Order" Member="Orders" ThisKey="VoucherID" OtherKey="VoucherID" Type="Order" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Notifications" Member="Notifications">
+    <Type Name="Notification">
+      <Column Name="Notification_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="ID_user" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Title" Type="System.String" DbType="NVarChar(255) NOT NULL" CanBeNull="false" />
+      <Column Name="Message" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
+      <Column Name="Type" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Related_ID" Type="System.String" DbType="VarChar(20)" CanBeNull="true" />
+      <Column Name="IsRead" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Created_At" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Association Name="User_Notification" Member="User" ThisKey="ID_user" OtherKey="ID_user" Type="User" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Orders" Member="Orders">
+    <Type Name="Order">
+      <Column Name="Order_ID" Type="System.String" DbType="VarChar(10) NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="ID_user" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="VoucherID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="Order_Date" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="StatusID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Total_Amount" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Association Name="Order_Orders_item" Member="Orders_items" ThisKey="Order_ID" OtherKey="Order_ID" Type="Orders_item" />
+      <Association Name="Order_Payment" Member="Payments" ThisKey="Order_ID" OtherKey="Order_ID" Type="Payment" />
+      <Association Name="Voucher_Order" Member="Voucher" ThisKey="VoucherID" OtherKey="VoucherID" Type="Voucher" IsForeignKey="true" />
+      <Association Name="OrderStatus_Order" Member="OrderStatus" ThisKey="StatusID" OtherKey="StatusID" Type="OrderStatus" IsForeignKey="true" />
+      <Association Name="User_Order" Member="User" ThisKey="ID_user" OtherKey="ID_user" Type="User" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Orders_item" Member="Orders_items">
+    <Type Name="Orders_item">
+      <Column Name="Order_item_ID" Type="System.String" DbType="VarChar(10) NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Order_ID" Type="System.String" DbType="VarChar(10) NOT NULL" CanBeNull="false" />
+      <Column Name="Product_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="quantity" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="Sale_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Association Name="Order_Orders_item" Member="Order" ThisKey="Order_ID" OtherKey="Order_ID" Type="Order" IsForeignKey="true" />
+      <Association Name="Product_Orders_item" Member="Product" ThisKey="Product_ID" OtherKey="Product_ID" Type="Product" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.OrderStatus" Member="OrderStatus">
+    <Type Name="OrderStatus">
+      <Column Name="StatusID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="StatusName" Type="System.String" DbType="NVarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="Descriptions" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
+      <Association Name="OrderStatus_Order" Member="Orders" ThisKey="StatusID" OtherKey="StatusID" Type="Order" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Payment" Member="Payments">
+    <Type Name="Payment">
+      <Column Name="PaymentID" Type="System.String" DbType="VarChar(10) NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="cart_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="Order_ID" Type="System.String" DbType="VarChar(10) NOT NULL" CanBeNull="false" />
+      <Column Name="Payment_Method" Type="System.String" DbType="NVarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="Payment_Status" Type="System.String" DbType="NVarChar(30) NOT NULL" CanBeNull="false" />
+      <Column Name="Payment_Date" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="Amount" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
+      <Association Name="Order_Payment" Member="Order" ThisKey="Order_ID" OtherKey="Order_ID" Type="Order" IsForeignKey="true" />
+      <Association Name="shopping_cart_Payment" Member="shopping_cart" ThisKey="cart_ID" OtherKey="cart_ID" Type="shopping_cart" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.PhoneSeries" Member="PhoneSeries">
+    <Type Name="PhoneSery">
+      <Column Name="Series_id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="SeriesName" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
+      <Association Name="PhoneSery_Product" Member="Products" ThisKey="Series_id" OtherKey="Series_id" Type="Product" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Products" Member="Products">
+    <Type Name="Product">
+      <Column Name="Product_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Product_name" Type="System.String" DbType="NVarChar(200)" CanBeNull="true" />
+      <Column Name="Descriptions" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
+      <Column Name="Current_Quantity" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Sale_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Product_Image" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
+      <Column Name="supplier_ID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Product_Status" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="Original_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Created_Date" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="Is_Featured" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Is_New" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Series_id" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="Product_cart_item" Member="cart_items" ThisKey="Product_ID" OtherKey="Product_ID" Type="cart_item" />
+      <Association Name="Product_Orders_item" Member="Orders_items" ThisKey="Product_ID" OtherKey="Product_ID" Type="Orders_item" />
+      <Association Name="Product_slide" Member="slides" ThisKey="Product_ID" OtherKey="Product_ID" Type="slide" />
+      <Association Name="PhoneSery_Product" Member="PhoneSery" ThisKey="Series_id" OtherKey="Series_id" Type="PhoneSery" IsForeignKey="true" />
+      <Association Name="supplier_Product" Member="supplier" ThisKey="supplier_ID" OtherKey="supplier_ID" Type="supplier" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.shopping_cart" Member="shopping_carts">
+    <Type Name="shopping_cart">
+      <Column Name="cart_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="ID_user" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="day_create" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="update_at" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Association Name="shopping_cart_cart_item" Member="cart_items" ThisKey="cart_ID" OtherKey="cart_ID" Type="cart_item" />
+      <Association Name="shopping_cart_Payment" Member="Payments" ThisKey="cart_ID" OtherKey="cart_ID" Type="Payment" />
+      <Association Name="User_shopping_cart" Member="User" ThisKey="ID_user" OtherKey="ID_user" Type="User" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.slide" Member="slides">
+    <Type Name="slide">
+      <Column Name="Slide_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Product_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="img" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
+      <Column Name="status" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Association Name="Product_slide" Member="Product" ThisKey="Product_ID" OtherKey="Product_ID" Type="Product" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.supplier" Member="suppliers">
+    <Type Name="supplier">
+      <Column Name="supplier_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="supplier_name" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="email" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Phone_Number" Type="System.String" DbType="VarChar(11)" CanBeNull="true" />
+      <Column Name="supplier_address" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Association Name="supplier_Product" Member="Products" ThisKey="supplier_ID" OtherKey="supplier_ID" Type="Product" />
+    </Type>
+  </Table>
+  <Table Name="dbo.User_detail" Member="User_details">
+    <Type Name="User_detail">
+      <Column Name="ID_user" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="user_phone_number" Type="System.String" DbType="VarChar(15)" CanBeNull="true" />
+      <Column Name="full_name" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="user_address" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="user_pic" Type="System.String" DbType="VarChar(50)" CanBeNull="true" />
+      <Column Name="last_change" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="date_create" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="user_status" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Association Name="User_User_detail" Member="User" ThisKey="ID_user" OtherKey="ID_user" Type="User" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Users" Member="Users">
+    <Type Name="User">
+      <Column Name="ID_user" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="users_name" Type="System.String" DbType="VarChar(20)" CanBeNull="true" />
+      <Column Name="user_email" Type="System.String" DbType="VarChar(30) NOT NULL" CanBeNull="false" />
+      <Column Name="user_password" Type="System.String" DbType="VarChar(255) NOT NULL" CanBeNull="false" />
+      <Column Name="user_type" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Association Name="User_Notification" Member="Notifications" ThisKey="ID_user" OtherKey="ID_user" Type="Notification" />
+      <Association Name="User_Order" Member="Orders" ThisKey="ID_user" OtherKey="ID_user" Type="Order" />
+      <Association Name="User_shopping_cart" Member="shopping_carts" ThisKey="ID_user" OtherKey="ID_user" Type="shopping_cart" />
+      <Association Name="User_User_detail" Member="User_detail" ThisKey="ID_user" OtherKey="ID_user" Type="User_detail" Cardinality="One" />
+    </Type>
+  </Table>
+  <Function Name="dbo.sp_GetProductsWithFilter" Method="sp_GetProductsWithFilter">
+    <Parameter Name="SeriesID" Parameter="seriesID" Type="System.Int32" DbType="Int" />
+    <Parameter Name="SortBy" Parameter="sortBy" Type="System.String" DbType="VarChar(20)" />
+    <Parameter Name="PageNumber" Parameter="pageNumber" Type="System.Int32" DbType="Int" />
+    <Parameter Name="PageSize" Parameter="pageSize" Type="System.Int32" DbType="Int" />
+    <ElementType Name="sp_GetProductsWithFilterResult">
+      <Column Name="Product_ID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Product_name" Type="System.String" DbType="NVarChar(200)" CanBeNull="true" />
+      <Column Name="Sale_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Original_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Current_Quantity" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Product_Status" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="Product_Image" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
+      <Column Name="SeriesName" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
+      <Column Name="Descriptions" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
+      <Column Name="supplier_name" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Created_Date" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="Is_Featured" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Is_New" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Total_Sold" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Discount_Percent" Type="System.Decimal" DbType="Decimal(38,15)" CanBeNull="true" />
+      <Column Name="Series_id" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="TotalRecords" Type="System.Int32" DbType="Int" CanBeNull="true" />
+    </ElementType>
+  </Function>
+  <Function Name="dbo.sp_SearchProducts" Method="sp_SearchProducts">
+    <Parameter Name="SearchTerm" Parameter="searchTerm" Type="System.String" DbType="NVarChar(200)" />
+    <Parameter Name="MinSimilarity" Parameter="minSimilarity" Type="System.Decimal" DbType="Decimal(5,2)" />
+    <Parameter Name="PageNumber" Parameter="pageNumber" Type="System.Int32" DbType="Int" />
+    <Parameter Name="PageSize" Parameter="pageSize" Type="System.Int32" DbType="Int" />
+    <Parameter Name="SeriesID" Parameter="seriesID" Type="System.Int32" DbType="Int" />
+    <ElementType Name="sp_SearchProductsResult">
+      <Column Name="Product_ID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Product_name" Type="System.String" DbType="NVarChar(200)" CanBeNull="true" />
+      <Column Name="Sale_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Original_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Product_Image" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
+      <Column Name="Current_Quantity" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Product_Status" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="SeriesName" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
+      <Column Name="supplier_name" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Is_Featured" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Is_New" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Total_Sold" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="SimilarityScore" Type="System.Decimal" DbType="Decimal(5,2)" CanBeNull="true" />
+      <Column Name="TotalRecords" Type="System.Int32" DbType="Int" CanBeNull="true" />
+    </ElementType>
+  </Function>
+  <Function Name="dbo.sp_QuickSearchProducts" Method="sp_QuickSearchProducts">
+    <Parameter Name="SearchTerm" Parameter="searchTerm" Type="System.String" DbType="NVarChar(200)" />
+    <Parameter Name="MaxResults" Parameter="maxResults" Type="System.Int32" DbType="Int" />
+    <ElementType Name="sp_QuickSearchProductsResult">
+      <Column Name="Product_ID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Product_name" Type="System.String" DbType="NVarChar(200)" CanBeNull="true" />
+      <Column Name="Sale_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Original_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Product_Image" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
+      <Column Name="SeriesName" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
+      <Column Name="SimilarityScore" Type="System.Decimal" DbType="Decimal(5,2)" CanBeNull="true" />
+    </ElementType>
+  </Function>
+</Database>

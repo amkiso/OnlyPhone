@@ -1,0 +1,189 @@
+﻿@model OnlyPhone.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link href="~/Content/FontAwesome/css/all.min.css" rel="stylesheet" />
+    <link href="~/Content/Css/Register.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-card">
+            <div class="card-header">
+                <a href="/Home" class="logo">
+                    <span>OnlyPhone</span>
+                </a>
+                <h1>Đăng ký tài khoản</h1>
+                <p>Tạo tài khoản mới để bắt đầu mua sắm!</p>
+            </div>
+
+            <div class="card-body">
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step active" data-step="1">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Thông tin</div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Xác thực OTP</div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Hoàn tất</div>
+                    </div>
+                </div>
+
+                <!-- Alert Messages -->
+                <div id="alertContainer"></div>
+
+                <form id="registerForm" method="post" asp-action="Register" asp-controller="Account" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <!-- Step 1: Thông tin đăng ký -->
+                    <div class="form-section active" id="step1">
+                        <div class="form-group">
+                            <label for="username">
+                                Tên đăng nhập <span class="required">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text"
+                                       id="username"
+                                       name="Username"
+                                       class="with-icon"
+                                       placeholder="Nhập tên đăng nhập"
+                                       autocomplete="username" />
+                            </div>
+                            <span class="error-message" id="usernameError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">
+                                Email <span class="required">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope input-icon"></i>
+                                <input type="email"
+                                       id="email"
+                                       name="Email"
+                                       class="with-icon"
+                                       placeholder="example@email.com"
+                                       autocomplete="email" />
+                            </div>
+                            <span class="error-message" id="emailError"></span>
+                            <span class="success-message" id="emailSuccess"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">
+                                Mật khẩu <span class="required">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock input-icon"></i>
+                                <input type="password"
+                                       id="password"
+                                       name="Password"
+                                       class="with-icon"
+                                       placeholder="Nhập mật khẩu"
+                                       autocomplete="new-password" />
+                            </div>
+                            <div class="password-strength">
+                                <div class="strength-bar">
+                                    <div class="strength-fill" id="strengthFill"></div>
+                                </div>
+                                <div class="strength-text" id="strengthText"></div>
+                            </div>
+                            <span class="error-message" id="passwordError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">
+                                Xác nhận mật khẩu <span class="required">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock input-icon"></i>
+                                <input type="password"
+                                       id="confirmPassword"
+                                       name="ConfirmPassword"
+                                       class="with-icon"
+                                       placeholder="Nhập lại mật khẩu"
+                                       autocomplete="new-password" />
+                            </div>
+                            <span class="error-message" id="confirmPasswordError"></span>
+                            <span class="success-message" id="confirmPasswordSuccess"></span>
+                        </div>
+
+                        <button type="button" class="btn btn-primary" id="btnSendOTP">
+                            Tiếp tục
+                        </button>
+                    </div>
+
+                    <!-- Step 2: Xác thực OTP -->
+                    <div class="form-section" id="step2">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Mã OTP đã được gửi đến email: <strong id="emailDisplay"></strong>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nhập mã OTP (6 số)</label>
+                            <div class="otp-container">
+                                <input type="text" class="otp-input" maxlength="1" data-index="0" />
+                                <input type="text" class="otp-input" maxlength="1" data-index="1" />
+                                <input type="text" class="otp-input" maxlength="1" data-index="2" />
+                                <input type="text" class="otp-input" maxlength="1" data-index="3" />
+                                <input type="text" class="otp-input" maxlength="1" data-index="4" />
+                                <input type="text" class="otp-input" maxlength="1" data-index="5" />
+                            </div>
+                            <input type="hidden" id="otpCode" name="OtpCode" />
+                            <span class="error-message" id="otpError"></span>
+                        </div>
+
+                        <div class="otp-timer" id="otpTimer">
+                            Mã OTP sẽ hết hạn sau: <strong id="countdown">05:00</strong>
+                        </div>
+
+                        <div class="resend-otp">
+                            <span>Không nhận được mã? </span>
+                            <a href="#" class="resend-link disabled" id="resendOTP">Gửi lại</a>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-secondary" id="btnBackStep1">
+                                Quay lại
+                            </button>
+                            <button type="button" class="btn btn-primary" id="btnVerifyOTP">
+                                Xác thực
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Hoàn tất -->
+                    <div class="form-section" id="step3">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Đăng ký thành công!</strong><br>
+                            Tài khoản của bạn đã được tạo. Vui lòng đợi trong giây lát...
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-footer">
+                Đã có tài khoản? <a href="/Account/Login">Đăng nhập ngay</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/Scripts/CustomJS/Register.js"></script>
+</body>
+</html>

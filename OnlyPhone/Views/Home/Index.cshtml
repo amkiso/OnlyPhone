@@ -1,0 +1,283 @@
+﻿@model OnlyPhone.Models.IndexpageData
+
+@{
+    ViewBag.Title = "OnlyPhone Store - Điện thoại chính hãng giá tốt";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link href="~/Content/Css/Index.css" rel="stylesheet" />
+
+
+<!-- Hero Carousel -->
+<div class="container">
+    <div id="heroCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            @for (int i = 0; i < Model.SlideImages.Count(); i++)
+            {
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="@i"
+                        class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")"
+                        aria-label="Slide @(i + 1)"></button>
+            }
+        </div>
+        <div class="carousel-inner">
+            @{ var isFirst = true; }
+            @foreach (var slide in Model.SlideImages)
+            {
+                <div class="carousel-item @(isFirst ? "active" : "")">
+                    <img src="~/Content/Pic/Carousel/@slide.img" alt="Slide" />
+                </div>
+                isFirst = false;
+            }
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+</div>
+
+<!-- Brand Section -->
+<div class="container">
+    <div class="brand-section">
+        
+        <div class="brand-grid">
+            <a href="@Url.Action("Products", "Home", new { series = 1 })" class="brand-card">
+                <div class="brand-logo"></div>
+                <p class="brand-name">Apple</p>
+            </a>
+            <a href="@Url.Action("Products", "Home", new { series = 9 })" class="brand-card">
+                <div class="brand-logo"></div>
+                <p class="brand-name">Samsung</p>
+            </a>
+            <a href="@Url.Action("Products", "Home", new { series = 14 })" class="brand-card">
+                <div class="brand-logo"></div>
+                <p class="brand-name">Xiaomi</p>
+            </a>
+            <a href="@Url.Action("Products", "Home", new { series = 20 })" class="brand-card">
+                <div class="brand-logo"></div>
+                <p class="brand-name">OPPO</p>
+            </a>
+            <a href="@Url.Action("Products", "Home", new { series = 19 })" class="brand-card">
+                <div class="brand-logo"></div>
+                <p class="brand-name">Vivo</p>
+            </a>
+            <a href="@Url.Action("Products", "Home", new { series = 20 })" class="brand-card">
+                <div class="brand-logo"></div>
+                <p class="brand-name">Realme</p>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Products -->
+<div class="container">
+    <div class="section-header">
+        <h2 class="section-title"> Sản Phẩm Nổi Bật</h2>
+        <a href="@Url.Action("Products", "Home", new { sort = "featured" })" class="view-all-btn">
+            Xem tất cả <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+    <div class="product-grid">
+        @foreach (var product in Model.FeaturedProducts)
+        {
+            <div class="product-card">
+                @if (product.is_featured)
+                {
+                    <div class="product-badge">
+                        <span class="badge-hot">HOT</span>
+                    </div>
+                }
+                <div class="product-image-wrapper">
+                    <img src="~/Content/Pic/images/@product.images"
+                         alt="@product.product_name"
+                         class="product-image" />
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">@product.product_name</h3>
+                    <div class="product-price-box">
+                        <span class="product-price">@product.sale_price.ToString("N0") đ</span>
+                        @if (product.original_price != 0 && product.original_price > product.sale_price)
+                        {
+                            <span class="product-original-price">@product.original_price.ToString("N0") đ</span>
+                            <span class="product-discount">-@product.DiscountPercent%</span>
+                        }
+                    </div>
+                    <div class="product-actions">
+                        <a href="@Url.Action("ProductDetail", "Home", new { id = product.product_id })"
+                           class="btn-view-detail">
+                            Xem chi tiết
+                        </a>
+                        <button class="btn-add-cart" onclick="addToCart(@product.product_id)">
+                            <i class="fa-solid fa-cart-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- New Products -->
+<div class="container">
+    <div class="section-header">
+        <h2 class="section-title">Sản Phẩm Mới</h2>
+        <a href="@Url.Action("Products", "Home", new { sort = "new" })" class="view-all-btn">
+            Xem tất cả <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+    <div class="product-grid">
+        @foreach (var product in Model.NewProducts)
+        {
+            <div class="product-card">
+                @if (product.is_new)
+                {
+                    <div class="product-badge">
+                        <span class="badge-new">MỚI</span>
+                    </div>
+                }
+                <div class="product-image-wrapper">
+                    <img src="~/Content/Pic/images/@product.images"
+                         alt="@product.product_name"
+                         class="product-image" />
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">@product.product_name</h3>
+                    <div class="product-price-box">
+                        <span class="product-price">@product.sale_price.ToString("N0") đ</span>
+                        @if (product.original_price != 0 && product.original_price > product.sale_price)
+                        {
+                            <span class="product-original-price">@product.original_price.ToString("N0") đ</span>
+                            <span class="product-discount">-@product.DiscountPercent%</span>
+                        }
+                    </div>
+                    <div class="product-actions">
+                        <a href="@Url.Action("ProductDetail", "Home", new { id = product.product_name })"
+                           class="btn-view-detail">
+                            Xem chi tiết
+                        </a>
+                        <button class="btn-add-cart" onclick="addToCart(@product.product_id)">
+                            <i class="fa-solid fa-cart-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Best Sellers -->
+<div class="container">
+    <div class="section-header">
+        <h2 class="section-title"> Bán Chạy Nhất</h2>
+        <a href="@Url.Action("Products", "Home", new { sort = "bestseller" })" class="view-all-btn">
+            Xem tất cả <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+    <div class="product-grid">
+        @foreach (var product in Model.BestSellerProducts)
+        {
+            <div class="product-card">
+                @if (product.total_sold > 100)
+                {
+                    <div class="product-badge">
+                        <span class="badge-hot">BÁN CHẠY</span>
+                    </div>
+                }
+                <div class="product-image-wrapper">
+                    <img src="~/Content/Pic/images/@product.images"
+                         alt="@product.product_name"
+                         class="product-image" />
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">@product.product_name</h3>
+                    <div class="product-price-box">
+                        <span class="product-price">@product.sale_price.ToString("N0") đ</span>
+                        @if (product.original_price > 0 && product.original_price > product.sale_price)
+                        {
+                            <span class="product-original-price">@product.original_price.ToString("N0") đ</span>
+                            <span class="product-discount">-@product.DiscountPercent%</span>
+                        }
+                    </div>
+                    <div class="product-actions">
+                        <a href="@Url.Action("ProductDetail", "Home", new { id = product.product_id })"
+                           class="btn-view-detail">
+                            Xem chi tiết
+                        </a>
+                        <button class="btn-add-cart" onclick="addToCart(@product.product_id)">
+                            <i class="fa-solid fa-cart-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Discount Products -->
+<div class="container">
+    <div class="section-header">
+        <h2 class="section-title"> Giảm Giá Sốc</h2>
+        <a href="@Url.Action("Products", "Home", new { sort = "discount" })" class="view-all-btn">
+            Xem tất cả <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+    <div class="product-grid">
+        @foreach (var product in Model.DiscountProducts)
+        {
+            <div class="product-card">
+                @if (product.DiscountPercent > 0)
+                {
+                    <div class="product-badge">
+                        <span class="badge-sale">-@product.DiscountPercent%</span>
+                    </div>
+                }
+                <div class="product-image-wrapper">
+                    <img src="~/Content/Pic/images/@product.images"
+                         alt="@product.product_name"
+                         class="product-image" />
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">@product.product_name</h3>
+                    <div class="product-price-box">
+                        <span class="product-price">@product.sale_price.ToString("N0") đ</span>
+                        @if (product.original_price > 0 && product.original_price > product.sale_price)
+                        {
+                            <span class="product-original-price">@product.original_price.ToString("N0") đ</span>
+                            <span class="product-discount">-@product.DiscountPercent%</span>
+                        }
+                    </div>
+                    <div class="product-actions">
+                        <a href="@Url.Action("ProductDetail", "Home", new { id = product.product_id })"
+                           class="btn-view-detail">
+                            Xem chi tiết
+                        </a>
+                        <button class="btn-add-cart" onclick="addToCart(@product.product_id)">
+                            <i class="fa-solid fa-cart-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    function addToCart(productId) {
+        // Implement add to cart functionality
+        console.log('Adding product to cart:', productId);
+        // You can add AJAX call here to add product to cart
+        alert('Đã thêm sản phẩm vào giỏ hàng!');
+    }
+
+    // Auto play carousel
+    document.addEventListener('DOMContentLoaded', function () {
+        var carousel = new bootstrap.Carousel(document.getElementById('heroCarousel'), {
+            interval: 5000,
+            wrap: true
+        });
+    });
+</script>
+<script src="~/Scripts/CustomJS/indexpage.js"></script>

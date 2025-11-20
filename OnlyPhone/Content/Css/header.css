@@ -1,0 +1,534 @@
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+}
+
+/* --- Header Main Section --- */
+.site-header {
+    background-color: #fdf6f8;
+    width: 100%;
+}
+
+.header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 50px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Logo Styling */
+.logo-page {
+    font-size: 20px;
+    font-weight: bold;
+    padding: 10px 46px 20px 30px;
+    position: relative;
+    border-radius: 8px;
+    font-family: "Monotype Corsiva", "Comic Sans MS", cursive;
+    color: black;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+    .logo-page:hover {
+        color: rgb(43, 98, 172);
+    }
+
+    .logo-page span {
+        position: absolute;
+        bottom: 10px;
+        left: 76%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        font-weight: normal;
+        color: #666;
+        letter-spacing: 1px;
+        font-family: "Monotype Corsiva", "Comic Sans MS", cursive;
+    }
+
+/* --- Search Bar --- */
+.header-search {
+    flex-grow: 1;
+    max-width: 600px;
+    margin: 0 40px;
+}
+
+.search-form {
+    display: flex;
+    width: 100%;
+    border: 1px solid #3e5cd0;
+    border-radius: 25px;
+    overflow: hidden;
+    background-color: #f9e8f0;
+}
+
+.search-input {
+    flex-grow: 1;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    background-color: #ffffff;
+    outline: none;
+}
+
+    .search-input::placeholder {
+        color: #e04e86;
+    }
+
+.search-button {
+    border: none;
+    background-color: rgb(67, 149, 181);
+    color: white;
+    padding: 0 20px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+    .search-button:hover {
+        background-color: #bdbdbd;
+    }
+
+/* --- Header Actions --- */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.action-item {
+    font-size: 24px;
+    color: #333;
+    position: relative;
+}
+
+.cart-count {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background-color: #333;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+}
+
+/* --- User Menu Dropdown --- */
+.user-menu-wrapper {
+    position: relative;
+}
+
+.user-dropdown {
+    display: none;
+    position: absolute;
+    right: -3rem;
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+    .user-dropdown::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        right: 20px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 8px solid #fff;
+    }
+
+.user-menu-wrapper:hover .user-dropdown {
+    display: block;
+}
+
+.user-dropdown-item {
+    display: block;
+    padding: 12px 20px;
+    color: #333;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+    .user-dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    .user-dropdown-item:hover {
+        background-color: #f9f9f9;
+        color: rgb(67, 149, 181);
+    }
+
+    .user-dropdown-item i {
+        margin-right: 10px;
+        width: 16px;
+        text-align: center;
+    }
+
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #333;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* --- Header Navigation Section --- */
+.header-nav {
+    background-color: rgb(139, 222, 255);
+    display: flex;
+    justify-content: center;
+}
+
+.main-menu {
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.menu-item {
+    position: relative;
+}
+
+    .menu-item > a {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        color: rgb(1, 1, 146);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        text-transform: uppercase;
+        transition: background-color 0.3s ease;
+    }
+
+        .menu-item > a:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+.menu-icon {
+    margin-right: 8px;
+}
+
+.chevron-icon {
+    margin-left: 8px;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+/* --- Submenu Styling (Level 1) --- */
+.submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #fff;
+    border: 1px solid #eee;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    z-index: 1000;
+    margin: 0;
+    padding: 0;
+}
+
+    .submenu li {
+        position: relative;
+    }
+
+        .submenu li a {
+            display: block;
+            padding: 12px 20px;
+            color: #333;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: background-color 0.3s ease;
+        }
+
+            .submenu li a:hover {
+                background-color: #f5f5f5;
+            }
+
+.menu-item.has-submenu:hover > .submenu {
+    display: block;
+}
+
+.menu-item.has-submenu:hover .chevron-icon {
+    transform: rotate(180deg);
+}
+
+/* --- Nested Submenu (Level 2) --- */
+.submenu .menu-item.has-submenu > a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+    .submenu .menu-item.has-submenu > a::after {
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: 10px;
+        margin-left: 10px;
+        transition: transform 0.3s ease;
+    }
+
+.submenu .submenu {
+    left: 100%;
+    top: 0;
+    margin-left: -1px;
+}
+
+
+
+/* --- Responsive Styles --- */
+
+/* Tablet - màn hình < 992px */
+@media (max-width: 991px) {
+    .header-main {
+        padding: 15px 20px;
+        flex-wrap: wrap;
+    }
+
+    .header-search {
+        order: 3;
+        margin: 15px 0 0 0;
+        max-width: 100%;
+        flex-basis: 100%;
+    }
+
+    .logo-page {
+        font-size: 18px;
+        padding: 10px 30px 20px 10px;
+    }
+
+        .logo-page span {
+            font-size: 10px;
+        }
+
+    .header-actions {
+        gap: 15px;
+    }
+
+    .action-item {
+        font-size: 20px;
+    }
+
+    /* User dropdown on mobile */
+    .user-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-radius: 16px 16px 0 0;
+        min-width: 100%;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+    }
+
+        .user-dropdown::before {
+            display: none;
+        }
+
+    .user-menu-wrapper:hover .user-dropdown {
+        display: none;
+    }
+
+    .user-menu-wrapper.active .user-dropdown {
+        display: block;
+        transform: translateY(0);
+    }
+
+    .user-dropdown-item {
+        padding: 16px 20px;
+        font-size: 16px;
+    }
+
+    /* Mobile Navigation */
+    .mobile-menu-toggle {
+        display: block;
+    }
+
+    .header-nav {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 280px;
+        height: 100vh;
+        background-color: #fff;
+        z-index: 9999;
+        overflow-y: auto;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+        .header-nav.active {
+            display: block;
+        }
+
+    .main-menu {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .menu-item {
+        width: 100%;
+        border-bottom: 1px solid #eee;
+    }
+
+        .menu-item > a {
+            justify-content: space-between;
+            padding: 15px 20px;
+            color: #333;
+            background-color: #fff;
+        }
+
+            .menu-item > a:hover {
+                background-color: #f5f5f5;
+            }
+
+    /* Submenu on Mobile (Level 1) */
+    .submenu {
+        position: static;
+        display: none;
+        box-shadow: none;
+        border: none;
+        background-color: #f9f9f9;
+        padding-left: 20px;
+    }
+
+    .menu-item.has-submenu.active > .submenu {
+        display: block;
+    }
+
+    .menu-item.has-submenu > a {
+        cursor: pointer;
+    }
+
+    /* Nested submenu on mobile (Level 2) */
+    .submenu .submenu {
+        background-color: #f0f0f0;
+        padding-left: 20px;
+        margin-left: 0;
+        position: static;
+    }
+
+    .submenu .menu-item.has-submenu > a::after {
+        content: '\f078';
+        transform: none;
+    }
+
+    .submenu .menu-item.has-submenu.active > a::after {
+        transform: rotate(180deg);
+    }
+
+    /* Mobile Menu Overlay */
+    .mobile-menu-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+    }
+
+        .mobile-menu-overlay.active {
+            display: block;
+        }
+
+    /* Close button for mobile menu */
+    .mobile-menu-close {
+        display: block;
+        padding: 20px;
+        text-align: right;
+        background-color: rgb(139, 222, 255);
+    }
+
+        .mobile-menu-close button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+        }
+}
+
+/* Mobile - màn hình < 576px */
+@media (max-width: 575px) {
+    .header-main {
+        padding: 10px 15px;
+    }
+
+    .logo-page {
+        font-size: 16px;
+        padding: 5px 20px 15px 5px;
+    }
+
+        .logo-page span {
+            font-size: 9px;
+            left: 70%;
+        }
+
+    .search-input {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+
+    .search-button {
+        padding: 0 15px;
+        font-size: 16px;
+    }
+
+    .action-item {
+        font-size: 18px;
+    }
+
+    .header-actions {
+        gap: 10px;
+    }
+
+    /* User dropdown on mobile */
+    .user-dropdown-item {
+        padding: 14px 20px;
+    }
+}
+
+footer {
+    background: #e0f2fe;
+    color: #333;
+}
+
+    footer a {
+        text-decoration: none;
+        color: #333;
+    }
