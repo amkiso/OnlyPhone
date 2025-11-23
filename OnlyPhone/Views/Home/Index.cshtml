@@ -44,27 +44,27 @@
     <div class="brand-section">
         
         <div class="brand-grid">
-            <a href="@Url.Action("Products", "Home", new { series = 1 })" class="brand-card">
+            <a href="@Url.Action("BySeries", "Product", new { id = 1 })" class="brand-card">
                 <div class="brand-logo"></div>
                 <p class="brand-name">Apple</p>
             </a>
-            <a href="@Url.Action("Products", "Home", new { series = 9 })" class="brand-card">
+            <a href="@Url.Action("BySeries", "Product", new { id = 9 })" class="brand-card">
                 <div class="brand-logo"></div>
                 <p class="brand-name">Samsung</p>
             </a>
-            <a href="@Url.Action("Products", "Home", new { series = 14 })" class="brand-card">
+            <a href="@Url.Action("BySeries", "Product", new { id = 14 })" class="brand-card">
                 <div class="brand-logo"></div>
                 <p class="brand-name">Xiaomi</p>
             </a>
-            <a href="@Url.Action("Products", "Home", new { series = 20 })" class="brand-card">
+            <a href="@Url.Action("BySeries", "Product", new { id = 20 })" class="brand-card">
                 <div class="brand-logo"></div>
                 <p class="brand-name">OPPO</p>
             </a>
-            <a href="@Url.Action("Products", "Home", new { series = 19 })" class="brand-card">
+            <a href="@Url.Action("BySeries", "Product", new { id = 19 })" class="brand-card">
                 <div class="brand-logo"></div>
                 <p class="brand-name">Vivo</p>
             </a>
-            <a href="@Url.Action("Products", "Home", new { series = 20 })" class="brand-card">
+            <a href="@Url.Action("BySeries", "Product", new { id = 20 })" class="brand-card">
                 <div class="brand-logo"></div>
                 <p class="brand-name">Realme</p>
             </a>
@@ -106,7 +106,7 @@
                         }
                     </div>
                     <div class="product-actions">
-                        <a href="@Url.Action("ProductDetail", "Home", new { id = product.product_id })"
+                        <a href="@Url.Action("Detail", "Product", new { id = product.product_id })"
                            class="btn-view-detail">
                             Xem chi tiết
                         </a>
@@ -154,7 +154,7 @@
                         }
                     </div>
                     <div class="product-actions">
-                        <a href="@Url.Action("ProductDetail", "Home", new { id = product.product_name })"
+                        <a href="@Url.Action("Detail", "Product", new { id = product.product_id })"
                            class="btn-view-detail">
                             Xem chi tiết
                         </a>
@@ -202,7 +202,7 @@
                         }
                     </div>
                     <div class="product-actions">
-                        <a href="@Url.Action("ProductDetail", "Home", new { id = product.product_id })"
+                        <a href="@Url.Action("Detail", "Product", new { id = product.product_id })"
                            class="btn-view-detail">
                             Xem chi tiết
                         </a>
@@ -250,7 +250,7 @@
                         }
                     </div>
                     <div class="product-actions">
-                        <a href="@Url.Action("ProductDetail", "Home", new { id = product.product_id })"
+                        <a href="@Url.Action("Detail", "Product", new { id = product.product_id })"
                            class="btn-view-detail">
                             Xem chi tiết
                         </a>

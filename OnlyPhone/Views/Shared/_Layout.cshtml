@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - My ASP.NET Application</title>
-    <link href="~/Content/Css/header.css" rel="stylesheet" />
-    <link href="~/Content/Css/subheader.css" rel="stylesheet" />
+    <title>@ViewBag.Title - OnlyPhone Store</title>
+
+    @Styles.Render("~/Content/Css/header.css")
     <link href="~/Content/FontAwesome/css/all.min.css" rel="stylesheet" />
     <link href="~/Content/Bootstrap/bootstrap.min.css" rel="stylesheet" />
     <style>
@@ -23,14 +23,14 @@
             </button>
 
             <div class="header-logo">
-                <a href="TrangChu.html" class="logo-page">
+                <a href="@Url.Action("Index", "Home")" class="logo-page">
                     OnlyPhone <span>Store</span>
                 </a>
             </div>
 
             <div class="header-search">
-                <form action="/search" class="search-form">
-                    <input type="text" placeholder="Bạn cần tìm..." class="search-input">
+                <form action="@Url.Action("Search", "Product")" method="get" class="search-form">
+                    <input type="text" name="q" placeholder="Bạn cần tìm..." class="search-input" required>
                     <button type="submit" class="search-button">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
@@ -50,8 +50,9 @@
             </div>
 
             <ul class="main-menu">
+                <!-- Danh mục sản phẩm -->
                 <li class="menu-item has-submenu">
-                    <a href="#" class="submenu-toggle">
+                    <a href="@Url.Action("Index", "Product")" class="submenu-toggle">
                         <span>
                             <i class="fa-solid fa-bars menu-icon"></i>
                             Danh mục sản phẩm
@@ -59,92 +60,159 @@
                         <i class="fa-solid fa-chevron-down chevron-icon"></i>
                     </a>
                     <ul class="submenu">
+                        <!-- iPhone -->
                         <li class="menu-item has-submenu">
-                            <a href="#" class="submenu-toggle" style="text-transform: none;">iPhone</a>
+                            <a href="@Url.Action("Index", "Product", new { supplier = "Apple" })" class="submenu-toggle" style="text-transform: none;">
+                                iPhone
+                            </a>
                             <ul class="submenu">
-                                <li><a href="#">17 series</a></li>
-                                <li><a href="#">16 series</a></li>
-                                <li><a href="#">15 series</a></li>
-                                <li><a href="#">14 series</a></li>
-                                <li><a href="#">13 series</a></li>
-                                <li><a href="#">SE series</a></li>
-                                <li><a href="#">iPhone Air</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone 17" })">17 series</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone 16" })">16 series</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone 15" })">15 series</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone 14" })">14 series</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone 13" })">13 series</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone SE" })">SE series</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone Air" })">iPhone Air</a></li>
                             </ul>
                         </li>
-                        <li class="menu-item has-submenu">
-                            <a href="#" class="submenu-toggle" style="text-transform: none;">SamSung</a>
-                            <ul class="submenu">
-                                <li><a href="#">Galaxy AI</a></li>
-                                <li><a href="#">Galaxy S25 series</a></li>
-                                <li><a href="#">Galaxy Z (Màn hình gập)</a></li>
-                                <li><a href="#">Galaxy S</a></li>
-                                <li><a href="#">Galaxy A</a></li>
-                                <li><a href="#">Galaxy M</a></li>
-                            </ul>
-                        </li>
-                        <li class="menu-item has-submenu">
-                            <a href="#" class="submenu-toggle" style="text-transform: none;">Xiaomi</a>
-                            <ul class="submenu">
-                                <li><a href="#">Xiaomi Mi</a></li>
-                                <li><a href="#">Xiaomi Redmi</a></li>
-                                <li><a href="#">Xiaomi Note 14</a></li>
-                            </ul>
-                        </li>
-                        <li class="menu-item has-submenu">
-                            <a href="#" class="submenu-toggle" style="text-transform: none;">Vivo</a>
-                            <ul class="submenu">
-                                <li><a href="#">Vivo X</a></li>
-                                <li><a href="#">Vivo V</a></li>
-                                <li><a href="#">Vivo Y</a></li>
-                            </ul>
-                        </li>
-                        <li class="menu-item"><a href="#">Realme</a></li>
 
-                        <li class="menu-item"><a href="#">HONOR</a></li>
-                        <li class="menu-item"><a href="#">TECNO</a></li>
-                        <li><a href="#">Best Seller</a></li>
+                        <!-- Samsung -->
+                        <li class="menu-item has-submenu">
+                            <a href="@Url.Action("Index", "Product", new { supplier = "Samsung" })" class="submenu-toggle" style="text-transform: none;">
+                                Samsung
+                            </a>
+                            <ul class="submenu">
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy AI" })">Galaxy AI</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy S25" })">Galaxy S25 series</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy Z" })">Galaxy Z (Màn hình gập)</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy S" })">Galaxy S</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy A" })">Galaxy A</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy M" })">Galaxy M</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- Xiaomi -->
+                        <li class="menu-item has-submenu">
+                            <a href="@Url.Action("Index", "Product", new { supplier = "Xiaomi" })" class="submenu-toggle" style="text-transform: none;">
+                                Xiaomi
+                            </a>
+                            <ul class="submenu">
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Xiaomi", series = "Xiaomi Mi" })">Xiaomi Mi</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Xiaomi", series = "Xiaomi Redmi" })">Xiaomi Redmi</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Xiaomi", series = "Xiaomi Note 14" })">Xiaomi Note 14</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- Vivo -->
+                        <li class="menu-item has-submenu">
+                            <a href="@Url.Action("Index", "Product", new { supplier = "Vivo" })" class="submenu-toggle" style="text-transform: none;">
+                                Vivo
+                            </a>
+                            <ul class="submenu">
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Vivo", series = "Vivo X" })">Vivo X</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Vivo", series = "Vivo V" })">Vivo V</a></li>
+                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Vivo", series = "Vivo Y" })">Vivo Y</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- Realme -->
+                        <li class="menu-item">
+                            <a href="@Url.Action("Index", "Product", new { supplier = "Realme" })">Realme</a>
+                        </li>
+
+                        <!-- HONOR -->
+                        <li class="menu-item">
+                            <a href="@Url.Action("Index", "Product", new { supplier = "HONOR" })">HONOR</a>
+                        </li>
+
+                        <!-- TECNO -->
+                        <li class="menu-item">
+                            <a href="@Url.Action("Index", "Product", new { supplier = "TECNO" })">TECNO</a>
+                        </li>
+
+                        <!-- Best Seller -->
+                        <li class="menu-item">
+                            <a href="@Url.Action("BestSeller", "Product")">Best Seller</a>
+                        </li>
                     </ul>
                 </li>
-                <li class="menu-item"><a href="#">Sản phẩm mới</a></li>
+
+                <!-- Sản phẩm mới -->
+                <li class="menu-item">
+                    <a href="@Url.Action("NewProducts", "Product")">
+                         Sản phẩm mới
+                    </a>
+                </li>
+
+                <!-- Về chúng tôi -->
                 <li class="menu-item has-submenu">
-                    <a href="#" class="submenu-toggle">
+                    <a href="@Url.Action("About", "Home")" class="submenu-toggle">
                         <span>Về chúng tôi</span>
                         <i class="fa-solid fa-chevron-down chevron-icon"></i>
                     </a>
                     <ul class="submenu">
-                        <li><a href="#">Nguồn Cảm hứng</a></li>
-                        <li><a href="#">Mục đích chính</a></li>
-                        <li><a href="#">Mẹo & Thủ thuật</a></li>
-                        <li><a href="#">Liên Hệ</a></li>
+                        <li><a href="@Url.Action("About", "Home", new { section = "inspiration" })">Nguồn Cảm hứng</a></li>
+                        <li><a href="@Url.Action("About", "Home", new { section = "mission" })">Mục đích chính</a></li>
+                        <li><a href="@Url.Action("About", "Home", new { section = "tips" })">Mẹo & Thủ thuật</a></li>
+                        <li><a href="@Url.Action("Contact", "Home")">Liên Hệ</a></li>
                     </ul>
                 </li>
-                <li class="menu-item"><a href="#">DEAL HOT Bất ngờ</a></li>
+
+                <!-- DEAL HOT -->
+                <li class="menu-item">
+                    <a href="@Url.Action("Deals", "Product")">
+                        DEAL HOT Bất ngờ
+                    </a>
+                </li>
+
+                <!-- Tin tức -->
                 <li class="menu-item has-submenu">
-                    <a href="#" class="submenu-toggle">
+                    <a href="@Url.Action("Index", "News")" class="submenu-toggle">
                         <span>Tin tức</span>
                         <i class="fa-solid fa-chevron-down chevron-icon"></i>
                     </a>
                     <ul class="submenu">
-                        <li><a href="#">Tin khuyến mãi</a></li>
-                        <li><a href="#">Sự kiện</a></li>
-                        <li><a href="#">Tuyển dụng</a></li>
+                        <li><a href="@Url.Action("Index", "News", new { category = "promotion" })">Tin khuyến mãi</a></li>
+                        <li><a href="@Url.Action("Index", "News", new { category = "event" })">Sự kiện</a></li>
+                        <li><a href="@Url.Action("Index", "News", new { category = "recruitment" })">Tuyển dụng</a></li>
                     </ul>
                 </li>
-                <li class="menu-item"><a href="#">Tra cứu đơn hàng</a></li>
+
+                <!-- Tra cứu đơn hàng -->
+                <li class="menu-item">
+                    <a href="@Url.Action("OrderHistory", "Account")">
+                        <i class="fa-solid fa-search"></i> Tra cứu đơn hàng
+                    </a>
+                </li>
             </ul>
         </nav>
     </header>
+
     <div class="container body-content">
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+            <div style="padding: 2rem 0; text-align: center; background: #f9fafb;">
+                <div style="margin-bottom: 1rem;">
+                    <a href="@Url.Action("Index", "Home")" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">
+                        OnlyPhone Store
+                    </a>
+                </div>
+                <div style="display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <a href="@Url.Action("About", "Home")">Về chúng tôi</a>
+                    <a href="@Url.Action("Contact", "Home")">Liên hệ</a>
+                    <a href="@Url.Action("Terms", "Home")">Điều khoản</a>
+                    <a href="@Url.Action("Privacy", "Home")">Chính sách</a>
+                </div>
+                <p style="color: #6b7280; font-size: 0.9rem;">
+                    &copy; @DateTime.Now.Year - OnlyPhone Store. All rights reserved.
+                </p>
+            </div>
         </footer>
     </div>
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
-    @Scripts.Render("~/Scripts/CustomJS/subheader.js")
     <script src="~/Scripts/CustomJS/header.js"></script>
     <script src="~/Scripts/Bootstrap/bootstrap.bundle.min.js"></script>
     @RenderSection("scripts", required: false)

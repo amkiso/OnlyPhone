@@ -16,8 +16,13 @@ namespace OnlyPhone
             routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{id}",
-                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
+                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional },
+                namespaces: new []{"OnlyPhone.Controllers"}
             );
+            routes.MapRoute(
+            name: "PageNotFound",
+            url: "{*url}", // Dấu * nghĩa là bắt tất cả mọi thứ còn lại
+            defaults: new { controller = "Error", action = "NotFound" });
         }
     }
 }

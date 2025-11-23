@@ -312,7 +312,7 @@
     .btn-buy-now {
         flex: 1;
         padding: 16px;
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        background: linear-gradient(135deg, #ef4444 0%, #8BDEFF 100%);
         color: white;
         border: none;
         border-radius: 12px;
@@ -578,7 +578,7 @@
                         <div class="spec-item">
                             <div class="spec-label">Tình trạng:</div>
                             <div class="spec-value">
-                                @if (Model.Product.IsInStock)
+                                @if (!Model.Product.IsInStock)
                                 {
                                     <span style="color: #10b981; font-weight: 600;">Còn hàng (@Model.Product.current_Quantity sản phẩm)</span>
                                 }
@@ -591,21 +591,10 @@
                     </div>
 
                     <!-- Stock Status -->
-                    <div class="stock-status @(Model.Product.IsInStock ? "in-stock" : "out-of-stock")">
-                        @if (Model.Product.IsInStock)
-                        {
-                            <i class="fa-solid fa-circle-check"></i>
-                            <text>Sẵn sàng giao hàng</text>
-                        }
-                        else
-                        {
-                            <i class="fa-solid fa-circle-xmark"></i>
-                            <text>Tạm hết hàng</text>
-                        }
-                    </div>
+                    
 
                     <!-- Quantity -->
-                    @if (Model.Product.IsInStock)
+                    @if (!Model.Product.IsInStock)
                     {
                         <div class="quantity-section">
                             <label class="quantity-label">Số lượng:</label>
@@ -638,7 +627,7 @@
                                 Thêm vào giỏ hàng
                             </button>
                             <button class="btn-buy-now" onclick="buyNow(@Model.Product.product_id)">
-                                <i class="fa-solid fa-bolt"></i>
+                                
                                 Mua ngay
                             </button>
                         </div>

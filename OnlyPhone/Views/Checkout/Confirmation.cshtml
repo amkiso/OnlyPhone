@@ -1,0 +1,493 @@
+﻿
+
+@model OnlyPhone.Models.OrderConfirmationViewModel
+@{
+    ViewBag.Title = "Đặt hàng thành công";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .confirmation-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .success-header {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-radius: 16px;
+        color: white;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+    }
+
+    .success-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        animation: scaleIn 0.5s ease;
+    }
+
+    @@keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+
+        to {
+            transform: scale(1);
+        }
+    }
+
+    .success-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .success-message {
+        font-size: 1.1rem;
+        opacity: 0.95;
+    }
+
+    .order-id {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1.5rem;
+        border-radius: 24px;
+        margin-top: 1rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+
+    .info-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .info-item {
+        padding: 0.75rem 0;
+    }
+
+    .info-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 24px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-confirmed {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .order-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .item-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+
+    .item-info {
+        flex: 1;
+    }
+
+    .item-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+
+    .item-price {
+        color: #3b82f6;
+        font-weight: 700;
+    }
+
+    .item-quantity {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .total-summary {
+        background: #f9fafb;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-top: 1.5rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            padding-top: 1rem;
+            margin-top: 0.5rem;
+            border-top: 2px solid #e5e7eb;
+        }
+
+    .summary-total {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #3b82f6;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+    .btn-secondary {
+        background: white;
+        color: #3b82f6;
+        border: 2px solid #3b82f6;
+    }
+
+        .btn-secondary:hover {
+            background: #eff6ff;
+        }
+
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 2rem;
+    }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #10b981;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -1.25rem;
+            top: 12px;
+            width: 2px;
+            height: calc(100% - 12px);
+            background: #e5e7eb;
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .timeline-item.pending::before {
+            background: #9ca3af;
+            box-shadow: 0 0 0 2px #9ca3af;
+        }
+
+    .timeline-content {
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .timeline-date {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    @@media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .success-title {
+            font-size: 1.5rem;
+        }
+
+        .success-icon {
+            font-size: 3rem;
+        }
+    }
+</style>
+
+<div class="confirmation-container">
+    <!-- Success Header -->
+    <div class="success-header">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h1 class="success-title">Đặt hàng thành công!</h1>
+        <p class="success-message">Cảm ơn bạn đã mua hàng tại OnlyPhone Store</p>
+        <div class="order-id">
+            Mã đơn hàng: <strong>@Model.OrderId</strong>
+        </div>
+    </div>
+
+    <!-- Order Information -->
+    <div class="info-section">
+        <h2 class="section-title">
+            <i class="fas fa-info-circle"></i>
+            Thông tin đơn hàng
+        </h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Ngày đặt hàng</div>
+                <div class="info-value">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Trạng thái</div>
+                <div class="info-value">
+                    <span class="status-badge status-pending">
+                        <i class="fas fa-clock"></i> @Model.OrderStatus
+                    </span>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Phương thức thanh toán</div>
+                <div class="info-value">@Model.PaymentMethod</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Trạng thái thanh toán</div>
+                <div class="info-value">@Model.PaymentStatus</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shipping Information -->
+    <div class="info-section">
+        <h2 class="section-title">
+            <i class="fas fa-shipping-fast"></i>
+            Thông tin giao hàng
+        </h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Người nhận</div>
+                <div class="info-value">@Model.RecipientName</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Số điện thoại</div>
+                <div class="info-value">@Model.PhoneNumber</div>
+            </div>
+            <div class="info-item" style="grid-column: 1 / -1;">
+                <div class="info-label">Địa chỉ giao hàng</div>
+                <div class="info-value">@Model.FullAddress</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Phương thức vận chuyển</div>
+                <div class="info-value">@Model.ShippingMethod</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Dự kiến giao hàng</div>
+                <div class="info-value">
+                    @if (Model.EstimatedDeliveryDate.HasValue)
+                    {
+                        @Model.EstimatedDeliveryDate.Value.ToString("dd/MM/yyyy")
+                    }
+                    else
+                    {
+                        <text>Đang cập nhật</text>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="info-section">
+        <h2 class="section-title">
+            <i class="fas fa-box"></i>
+            Sản phẩm đã đặt
+        </h2>
+        @foreach (var item in Model.Items)
+        {
+            <div class="order-item">
+                <img src="~/Content/Pic/images/@item.ImageUrl" alt="@item.ProductName" class="item-image" />
+                <div class="item-info">
+                    <div class="item-name">@item.ProductName</div>
+                    <div class="item-price">@item.Price.ToString("N0")đ</div>
+                    <div class="item-quantity">Số lượng: @item.Quantity</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="item-price">@item.Total.ToString("N0")đ</div>
+                </div>
+            </div>
+        }
+
+        <div class="total-summary">
+            <div class="summary-row">
+                <span>Tạm tính</span>
+                <span>@Model.Items.Sum(i => i.Total).ToString("N0")đ</span>
+            </div>
+            <div class="summary-row">
+                <span>Phí vận chuyển</span>
+                <span>@Model.ShippingFee.ToString("N0")đ</span>
+            </div>
+            <div class="summary-row">
+                <span>Tổng cộng</span>
+                <span class="summary-total">@Model.TotalAmount.ToString("N0")đ</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Timeline -->
+    <div class="info-section">
+        <h2 class="section-title">
+            <i class="fas fa-tasks"></i>
+            Quy trình đơn hàng
+        </h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-content">Đơn hàng đã được đặt</div>
+                <div class="timeline-date">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+            <div class="timeline-item pending">
+                <div class="timeline-content">Đang chờ xác nhận</div>
+                <div class="timeline-date">Đang xử lý...</div>
+            </div>
+            <div class="timeline-item pending">
+                <div class="timeline-content">Đang chuẩn bị hàng</div>
+                <div class="timeline-date">Chờ xác nhận</div>
+            </div>
+            <div class="timeline-item pending">
+                <div class="timeline-content">Đang vận chuyển</div>
+                <div class="timeline-date">Chờ xác nhận</div>
+            </div>
+            <div class="timeline-item pending">
+                <div class="timeline-content">Giao hàng thành công</div>
+                <div class="timeline-date">
+                    @if (Model.EstimatedDeliveryDate.HasValue)
+                    {
+                        <text>Dự kiến: @Model.EstimatedDeliveryDate.Value.ToString("dd/MM/yyyy")</text>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="@Url.Action("OrderHistory", "Account")" class="btn btn-primary">
+            <i class="fas fa-list"></i>
+            Xem lịch sử đơn hàng
+        </a>
+        <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">
+            <i class="fas fa-home"></i>
+            Về trang chủ
+        </a>
+        <button onclick="window.print()" class="btn btn-secondary">
+            <i class="fas fa-print"></i>
+            In đơn hàng
+        </button>
+    </div>
+
+    <!-- Additional Info -->
+    <div style="margin-top: 2rem; padding: 1.5rem; background: #f0f9ff; border-radius: 12px; border-left: 4px solid #3b82f6;">
+        <h3 style="color: #1e40af; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-info-circle"></i>
+            Lưu ý quan trọng
+        </h3>
+        <ul style="color: #1f2937; line-height: 1.8; margin-left: 1.5rem;">
+            <li>Vui lòng giữ mã đơn hàng để tra cứu và hỗ trợ</li>
+            <li>Kiểm tra kỹ sản phẩm khi nhận hàng</li>
+            <li>Liên hệ hotline: <strong>1900 xxxx</strong> nếu cần hỗ trợ</li>
+            <li>Email: <strong>support@onlyphone.com</strong></li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // Auto scroll to top on page load
+    window.scrollTo(0, 0);
+</script>

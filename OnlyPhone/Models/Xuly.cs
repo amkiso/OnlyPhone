@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using OnlyPhone.Models;
+using System.IO;
 
 namespace OnlyPhone.Models
 {
@@ -134,33 +135,38 @@ namespace OnlyPhone.Models
                 if (string.IsNullOrEmpty(description))
                     return new List<string> { "Đang cập nhật thông tin..." };
 
-                // Nếu có dấu ; thì split theo ;
-                if (description.Contains(";"))
-                {
-                    return description.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
-                                     .Select(s => s.Trim())
-                                     .ToList();
-                }
+                // Tách chuỗi thành từng phần
+                List<string> parts = description.Contains(";")
+                    ? description.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                 .Select(s => s.Trim())
+                                 .ToList()
+                    : new List<string> { description.Trim() };
 
-                // Nếu có .json thì đọc file JSON
-                if (description.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-                {
-                    string fullPath = HttpContext.Current.Server.MapPath($"~/Content/Json/{description}");
+                // Nếu danh sách rỗng thì trả về default
+                if (parts.Count == 0)
+                    return new List<string> { "Đang cập nhật thông tin..." };
 
-                    if (System.IO.File.Exists(fullPath))
+                // ------- THÊM NHÃN CHO 2 PHẦN ĐẦU -------
+                // 1. Màn hình:
+                if (parts.Count >= 1)
+                {
+                    if (!parts[0].StartsWith("Màn hình", StringComparison.OrdinalIgnoreCase))
                     {
-                        string jsonContent = System.IO.File.ReadAllText(fullPath);
-                        var descriptionObj = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(jsonContent);
-
-                        if (descriptionObj != null && descriptionObj.ContainsKey("description"))
-                        {
-                            return descriptionObj["description"];
-                        }
+                        parts[0] = "Màn hình: " + parts[0];
                     }
                 }
 
-                // Nếu không phải cả 2 trường hợp trên, trả về list có 1 phần tử
-                return new List<string> { description };
+                // 2. Kích cỡ:
+                if (parts.Count >= 2)
+                {
+                    if (!parts[1].StartsWith("Kích", StringComparison.OrdinalIgnoreCase)
+                        && !parts[1].StartsWith("Kích cỡ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        parts[1] = "Kích cỡ: " + parts[1];
+                    }
+                }
+
+                return parts;
             }
             catch (Exception ex)
             {
@@ -168,6 +174,7 @@ namespace OnlyPhone.Models
                 return new List<string> { "Lỗi tải thông tin sản phẩm" };
             }
         }
+
 
         // Method update Is_Featured cho sản phẩm (dành cho Admin)
         public bool UpdateProductFeaturedStatus(int productId, bool isFeatured)
@@ -619,7 +626,7 @@ namespace OnlyPhone.Models
         /// <summary>
         /// Lấy danh sách sản phẩm mới (Is_New = true)
         /// </summary>
-        private List<Product_Infomation> GetNewProducts(int count)
+        public List<Product_Infomation> GetNewProducts(int count)
         {
             try
             {
@@ -671,7 +678,7 @@ namespace OnlyPhone.Models
         /// <summary>
         /// Lấy danh sách sản phẩm bán chạy nhất (theo tổng số lượng đã bán)
         /// </summary>
-        private List<Product_Infomation> GetBestSellerProducts(int count)
+        public List<Product_Infomation> GetBestSellerProducts(int count)
         {
             try
             {
@@ -737,7 +744,7 @@ namespace OnlyPhone.Models
         /// <summary>
         /// Lấy danh sách sản phẩm giảm giá (có Original_Price > Sale_Price)
         /// </summary>
-        private List<Product_Infomation> GetDiscountProducts(int count)
+        public List<Product_Infomation> GetDiscountProducts(int count)
         {
             try
             {
@@ -971,7 +978,74 @@ namespace OnlyPhone.Models
                 return new List<Product_Infomation>();
             }
         }
+        // Overload mới hỗ trợ lọc theo cả Supplier và Series
+        public List<Product_Infomation> GetProductsBySupplier(string supplierName, string seriesName, int page = 1, int pageSize = 15)
+        {
+            try
+            {
+                // Sử dụng Query Syntax để dễ dàng join các bảng
+                var query = from p in da.Products
+                            join s in da.suppliers on p.supplier_ID equals s.supplier_ID
+                            join ps in da.PhoneSeries on p.Series_id equals ps.Series_id // Join thêm bảng Series để lọc
+                            where p.Product_Status == "selling"
+                            select new { p, s, ps };
 
+                // 1. Lọc theo Supplier (Nếu có)
+                if (!string.IsNullOrEmpty(supplierName))
+                {
+                    query = query.Where(x => x.s.supplier_name == supplierName);
+                }
+
+                // 2. Lọc theo Series (Tham số mới thêm vào)
+                if (!string.IsNullOrEmpty(seriesName))
+                {
+                    query = query.Where(x => x.ps.SeriesName == seriesName);
+                }
+
+                // 3. Sắp xếp
+                query = query.OrderByDescending(x => x.p.Is_Featured)
+                             .ThenByDescending(x => x.p.Created_Date);
+
+                // 4. Phân trang & Lấy dữ liệu
+                var resultList = query.Skip((page - 1) * pageSize)
+                                      .Take(pageSize)
+                                      .Select(x => new
+                                      {
+                                          Product = x.p,
+                                          SupplierName = x.s.supplier_name,
+                                          SeriesName = x.ps.SeriesName,
+                                          // Tính tổng đã bán
+                                          TotalSold = da.Orders_items
+                                                        .Where(oi => oi.Product_ID == x.p.Product_ID)
+                                                        .Sum(oi => (int?)oi.quantity) ?? 0
+                                      }).ToList();
+
+                // 5. Map sang Model Product_Infomation
+                return resultList.Select(x => new Product_Infomation
+                {
+                    product_id = x.Product.Product_ID,
+                    product_name = x.Product.Product_name,
+                    sale_price = x.Product.Sale_Price ?? 0,
+                    original_price = x.Product.Original_Price ?? 0,
+                    current_Quantity = x.Product.Current_Quantity,
+                    product_status = x.Product.Product_Status,
+                    images = x.Product.Product_Image,
+                    series_name = x.SeriesName,
+                    series_id = x.Product.Series_id,
+                    supplier_name = x.SupplierName,
+                    is_featured = x.Product.Is_Featured ?? false,
+                    is_new = x.Product.Is_New ?? false,
+                    total_sold = x.TotalSold,
+                    created_date = x.Product.Created_Date ?? DateTime.Now,
+                    product_description = ParseProductDescription(x.Product.Descriptions)
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetProductsBySupplier (Overload): {ex.Message}");
+                return new List<Product_Infomation>();
+            }
+        }
         /// <summary>
         /// Đếm tổng số sản phẩm theo supplier
         /// </summary>
@@ -989,11 +1063,894 @@ namespace OnlyPhone.Models
                 return 0;
             }
         }
+        // =====================================================
+        // CHECKOUT METHODS - THÊM VÀO CLASS Xuly (FIXED v2)
+        // =====================================================
 
+        /// <summary>
+        /// Lấy thông tin checkout cho các sản phẩm đã chọn
+        /// </summary>
+        public CheckoutViewModel GetCheckoutInfo(int userId, List<int> productIds)
+        {
+            try
+            {
+                var model = new CheckoutViewModel();
 
+                // 1. Lấy giỏ hàng
+                var cart = da.shopping_carts.FirstOrDefault(c => c.ID_user == userId);
+                if (cart == null)
+                {
+                    return model;
+                }
+
+                // 2. Lấy thông tin sản phẩm từ giỏ hàng
+                var cartItems = (from ci in da.cart_items
+                                 where ci.cart_ID == cart.cart_ID && productIds.Contains(ci.Product_ID)
+                                 join p in da.Products on ci.Product_ID equals p.Product_ID
+                                 select new CheckoutItem
+                                 {
+                                     ProductId = p.Product_ID,
+                                     ProductName = p.Product_name,
+                                     ImageUrl = p.Product_Image,
+                                     Price = ci.Sale_Price ?? p.Sale_Price ?? 0,
+                                     Quantity = ci.quantity ?? 1,
+                                     AvailableStock = p.Current_Quantity
+                                 }).ToList();
+
+                model.Items = cartItems;
+                model.SubTotal = cartItems.Sum(x => x.Total);
+
+                // 3. Lấy thông tin người dùng
+                model.UserInfo = GetUserShippingInfo(userId);
+
+                // 4. Lấy danh sách voucher khả dụng
+                model.AvailableVouchers = GetAvailableVouchers(userId, model.SubTotal);
+
+                // 5. Lấy phương thức thanh toán
+                model.PaymentMethods = GetPaymentMethods();
+                model.SelectedPaymentMethod = "COD";
+
+                // 6. Lấy phương thức vận chuyển
+                model.ShippingMethods = GetShippingMethods();
+                model.SelectedShippingMethod = "Standard";
+                model.ShippingFee = model.ShippingMethods.FirstOrDefault(s => s.Code == "Standard")?.Fee ?? 30000;
+
+                // 7. Tính tổng tiền
+                model.TotalAmount = model.SubTotal + model.ShippingFee - model.DiscountAmount;
+
+                return model;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetCheckoutInfo: {ex.Message}");
+                return new CheckoutViewModel();
+            }
+        }
+
+        /// <summary>
+        /// Lấy thông tin giao hàng của user
+        /// </summary>
+        public UserShippingInfo GetUserShippingInfo(int userId)
+        {
+            try
+            {
+                var userDetail = da.User_details.FirstOrDefault(u => u.ID_user == userId);
+                var user = da.Users.FirstOrDefault(u => u.ID_user == userId);
+
+                if (userDetail != null)
+                {
+                    return new UserShippingInfo
+                    {
+                        RecipientName = userDetail.full_name ?? "",
+                        PhoneNumber = userDetail.user_phone_number ?? "",
+                        Email = user?.user_email ?? "",
+                        Province = userDetail.Province ?? "",
+                        Ward = userDetail.Ward ?? "",
+                        AddressDetail = userDetail.user_address ?? ""
+                    };
+                }
+
+                return new UserShippingInfo
+                {
+                    Email = user?.user_email ?? ""
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetUserShippingInfo: {ex.Message}");
+                return new UserShippingInfo();
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách voucher khả dụng
+        /// </summary>
+        public List<VoucherInfo> GetAvailableVouchers(int userId, decimal orderValue)
+        {
+            try
+            {
+                var now = DateTime.Now;
+
+                return da.Vouchers
+                    .Where(v => v.IsActive == true
+                             && v.StartDate <= now
+                             && v.EndDate >= now
+                             && v.Quantity > v.QuantityUsed
+                             && (v.MinOrderValue == null || v.MinOrderValue <= orderValue))
+                    .Select(v => new VoucherInfo
+                    {
+                        VoucherId = v.VoucherID,
+                        Code = v.Code,
+                        Description = v.Descriptions,
+                        DiscountType = v.DiscountType,
+                        DiscountValue = v.DiscountValue,
+                        MaxDiscountAmount = v.MaxDiscountAmount,
+                        MinOrderValue = v.MinOrderValue ?? 0,
+                        EndDate = v.EndDate,
+                        RemainingQuantity = v.Quantity - v.QuantityUsed
+                    })
+                    .OrderByDescending(v => v.DiscountValue)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetAvailableVouchers: {ex.Message}");
+                return new List<VoucherInfo>();
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách phương thức thanh toán
+        /// </summary>
+        public List<PaymentMethodInfo> GetPaymentMethods()
+        {
+            return new List<PaymentMethodInfo>
+    {
+        new PaymentMethodInfo
+        {
+            Code = "COD",
+            Name = "Thanh toán khi nhận hàng (COD)",
+            Description = "Thanh toán bằng tiền mặt khi nhận hàng",
+            Icon = "fa-money-bill-wave",
+            IsAvailable = true
+        },
+        new PaymentMethodInfo
+        {
+            Code = "BankTransfer",
+            Name = "Chuyển khoản ngân hàng",
+            Description = "Chuyển khoản qua số tài khoản ngân hàng",
+            Icon = "fa-university",
+            IsAvailable = true
+        },
+        new PaymentMethodInfo
+        {
+            Code = "Momo",
+            Name = "Ví MoMo",
+            Description = "Thanh toán qua ví điện tử MoMo",
+            Icon = "fa-wallet",
+            IsAvailable = true
+        },
+        new PaymentMethodInfo
+        {
+            Code = "ZaloPay",
+            Name = "ZaloPay",
+            Description = "Thanh toán qua ví điện tử ZaloPay",
+            Icon = "fa-wallet",
+            IsAvailable = true
+        }
+    };
+        }
+
+        /// <summary>
+        /// Lấy danh sách phương thức vận chuyển
+        /// </summary>
+        public List<ShippingMethodInfo> GetShippingMethods()
+        {
+            return new List<ShippingMethodInfo>
+    {
+        new ShippingMethodInfo
+        {
+            Code = "Standard",
+            Name = "Giao hàng tiêu chuẩn",
+            Description = "Nhận hàng trong 3-5 ngày",
+            Fee = 30000,
+            EstimatedDays = 4
+        },
+        new ShippingMethodInfo
+        {
+            Code = "Fast",
+            Name = "Giao hàng nhanh",
+            Description = "Nhận hàng trong 1-2 ngày",
+            Fee = 50000,
+            EstimatedDays = 2
+        },
+        new ShippingMethodInfo
+        {
+            Code = "Express",
+            Name = "Giao hàng hỏa tốc",
+            Description = "Nhận hàng trong 24 giờ",
+            Fee = 80000,
+            EstimatedDays = 1
+        }
+    };
+        }
+
+        /// <summary>
+        /// Tính phí vận chuyển theo phương thức
+        /// </summary>
+        public decimal CalculateShippingFee(string shippingMethod)
+        {
+            var method = GetShippingMethods().FirstOrDefault(s => s.Code == shippingMethod);
+            return method?.Fee ?? 30000;
+        }
+
+        /// <summary>
+        /// Tính số tiền giảm giá từ voucher
+        /// </summary>
+        public decimal CalculateDiscount(int voucherId, decimal orderValue)
+        {
+            try
+            {
+                var voucher = da.Vouchers.FirstOrDefault(v => v.VoucherID == voucherId);
+
+                if (voucher == null || !voucher.IsActive || voucher.Quantity <= voucher.QuantityUsed)
+                    return 0;
+
+                if (voucher.MinOrderValue.HasValue && orderValue < voucher.MinOrderValue.Value)
+                    return 0;
+
+                var now = DateTime.Now;
+                if (now < voucher.StartDate || now > voucher.EndDate)
+                    return 0;
+
+                decimal discount = 0;
+
+                if (voucher.DiscountType == "PERCENT")
+                {
+                    discount = orderValue * voucher.DiscountValue / 100;
+                    if (voucher.MaxDiscountAmount.HasValue && discount > voucher.MaxDiscountAmount.Value)
+                        discount = voucher.MaxDiscountAmount.Value;
+                }
+                else if (voucher.DiscountType == "AMOUNT")
+                {
+                    discount = voucher.DiscountValue;
+                }
+
+                return discount;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in CalculateDiscount: {ex.Message}");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Kiểm tra tính hợp lệ của đơn hàng trước khi đặt
+        /// </summary>
+        public (bool IsValid, string ErrorMessage) ValidateOrder(int userId, List<int> productIds)
+        {
+            try
+            {
+                // Kiểm tra giỏ hàng
+                var cart = da.shopping_carts.FirstOrDefault(c => c.ID_user == userId);
+                if (cart == null)
+                    return (false, "Không tìm thấy giỏ hàng");
+
+                // Kiểm tra sản phẩm
+                var cartItems = da.cart_items
+                    .Where(ci => ci.cart_ID == cart.cart_ID && productIds.Contains(ci.Product_ID))
+                    .ToList();
+
+                if (!cartItems.Any())
+                    return (false, "Không có sản phẩm nào được chọn");
+
+                // Kiểm tra tồn kho
+                foreach (var item in cartItems)
+                {
+                    var product = da.Products.FirstOrDefault(p => p.Product_ID == item.Product_ID);
+                    if (product == null)
+                        return (false, $"Sản phẩm ID {item.Product_ID} không tồn tại");
+
+                    if (product.Current_Quantity < item.quantity)
+                        return (false, $"Sản phẩm {product.Product_name} không đủ số lượng trong kho");
+
+                    if (product.Product_Status != "Selling")
+                        return (false, $"Sản phẩm {product.Product_name} hiện không khả dụng");
+                }
+
+                return (true, "");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in ValidateOrder: {ex.Message}");
+                return (false, "Lỗi kiểm tra đơn hàng: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Tạo đơn hàng mới
+        /// </summary>
+        public OrderResult CreateOrder(int userId, CheckoutRequest request)
+        {
+            try
+            {
+                // 1. Validate đơn hàng
+                var validation = ValidateOrder(userId, request.ProductIds);
+                if (!validation.IsValid)
+                {
+                    return new OrderResult
+                    {
+                        Success = false,
+                        Message = validation.ErrorMessage,
+                        ErrorCode = "VALIDATION_ERROR"
+                    };
+                }
+
+                // 2. Tính toán các giá trị
+                var cart = da.shopping_carts.FirstOrDefault(c => c.ID_user == userId);
+                var cartItems = da.cart_items
+                    .Where(ci => ci.cart_ID == cart.cart_ID && request.ProductIds.Contains(ci.Product_ID))
+                    .ToList();
+
+                decimal subTotal = cartItems.Sum(ci => (ci.Sale_Price ?? 0) * (ci.quantity ?? 1));
+                decimal shippingFee = CalculateShippingFee(request.ShippingMethod);
+                decimal discountAmount = request.VoucherId.HasValue
+                    ? CalculateDiscount(request.VoucherId.Value, subTotal)
+                    : 0;
+                decimal totalAmount = subTotal + shippingFee - discountAmount;
+
+                // 3. Tạo Order ID (max 10 chars: ORDxxxxxx)
+                // Lấy số đơn hàng cuối cùng để tạo số tuần tự
+                int nextOrderNumber = 1;
+                var lastOrder = da.Orders.OrderByDescending(o => o.Order_ID).FirstOrDefault();
+                if (lastOrder != null && lastOrder.Order_ID.StartsWith("ORD"))
+                {
+                    int.TryParse(lastOrder.Order_ID.Substring(3), out nextOrderNumber);
+                    nextOrderNumber++;
+                }
+                string orderId = "ORD" + nextOrderNumber.ToString("000000"); // ORD000001
+
+                // 4. Tạo đơn hàng
+                var order = new Order
+                {
+                    Order_ID = orderId,
+                    ID_user = userId,
+                    VoucherID = request.VoucherId,
+                    Order_Date = DateTime.Now,
+                    StatusID = 1,
+                    Total_Amount = totalAmount
+                };
+                da.Orders.InsertOnSubmit(order);
+
+                // 5. Tạo chi tiết đơn hàng (Order_item_ID max 10 chars)
+                int itemIndex = 1;
+                foreach (var cartItem in cartItems)
+                {
+                    var orderItem = new Orders_item
+                    {
+                        Order_item_ID = orderId.Replace("ORD", "OI") + itemIndex.ToString("00"), // OI00000101
+                        Order_ID = orderId,
+                        Product_ID = cartItem.Product_ID,
+                        quantity = cartItem.quantity,
+                        Sale_Price = cartItem.Sale_Price
+                    };
+                    da.Orders_items.InsertOnSubmit(orderItem);
+                    itemIndex++;
+                }
+
+                // 6. Cập nhật tồn kho
+                foreach (var cartItem in cartItems)
+                {
+                    var product = da.Products.FirstOrDefault(p => p.Product_ID == cartItem.Product_ID);
+                    if (product != null)
+                    {
+                        product.Current_Quantity -= (int)cartItem.quantity;
+                    }
+                }
+
+                // 7. Cập nhật voucher nếu có
+                if (request.VoucherId.HasValue)
+                {
+                    var voucher = da.Vouchers.FirstOrDefault(v => v.VoucherID == request.VoucherId.Value);
+                    if (voucher != null)
+                    {
+                        voucher.QuantityUsed++;
+                    }
+                }
+
+                // 8. Tạo thông tin giao hàng
+                var shipping = new Shipping
+                {
+                    Order_ID = orderId,
+                    Recipient_Name = request.ShippingInfo.RecipientName,
+                    Phone_Number = request.ShippingInfo.PhoneNumber,
+                    Email = request.ShippingInfo.Email,
+                    Province = request.ShippingInfo.Province,
+                    District = request.ShippingInfo.District,
+                    Ward = request.ShippingInfo.Ward,
+                    Address_Detail = request.ShippingInfo.AddressDetail,
+                    Full_Address = request.ShippingInfo.FullAddress,
+                    Shipping_Method = request.ShippingMethod,
+                    Shipping_Fee = shippingFee,
+                    Estimated_Delivery_Date = DateTime.Now.AddDays(GetShippingMethods()
+                        .FirstOrDefault(s => s.Code == request.ShippingMethod)?.EstimatedDays ?? 3),
+                    Shipping_Status = "Pending",
+                    Notes = request.ShippingInfo.Notes,
+                    Created_At = DateTime.Now
+                };
+                da.Shippings.InsertOnSubmit(shipping);
+
+                // 9. Tạo payment (PaymentID max 10 chars)
+                string paymentId = orderId.Replace("ORD", "PAY"); // PAY000001
+                var payment = new Payment
+                {
+                    PaymentID = paymentId,
+                    cart_ID = cart.cart_ID,
+                    Order_ID = orderId,
+                    Payment_Method = request.PaymentMethod,
+                    Payment_Status = request.PaymentMethod == "COD" ? "Chờ thanh toán" : "Đã thanh toán",
+                    Payment_Date = DateTime.Now,
+                    Amount = totalAmount
+                };
+                da.Payments.InsertOnSubmit(payment);
+
+                // 10. Xóa sản phẩm khỏi giỏ hàng
+                foreach (var item in cartItems)
+                {
+                    da.cart_items.DeleteOnSubmit(item);
+                }
+
+                // 11. Submit changes
+                da.SubmitChanges();
+
+                return new OrderResult
+                {
+                    Success = true,
+                    Message = "Đặt hàng thành công",
+                    OrderId = orderId,
+                    TotalAmount = totalAmount
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in CreateOrder: {ex.Message}");
+                return new OrderResult
+                {
+                    Success = false,
+                    Message = "Đã xảy ra lỗi khi đặt hàng: " + ex.Message,
+                    ErrorCode = "SYSTEM_ERROR"
+                };
+            }
+        }
+
+        /// <summary>
+        /// Lấy thông tin đơn hàng để hiển thị trang xác nhận
+        /// </summary>
+        public OrderConfirmationViewModel GetOrderConfirmation(string orderId)
+        {
+            try
+            {
+                var order = da.Orders.FirstOrDefault(o => o.Order_ID == orderId);
+                if (order == null)
+                    return null;
+
+                var shipping = da.Shippings.FirstOrDefault(s => s.Order_ID == orderId);
+                var payment = da.Payments.FirstOrDefault(p => p.Order_ID == orderId);
+                var status = da.OrderStatus.FirstOrDefault(s => s.StatusID == order.StatusID);
+
+                var orderItems = (from oi in da.Orders_items
+                                  where oi.Order_ID == orderId
+                                  join p in da.Products on oi.Product_ID equals p.Product_ID
+                                  select new CheckoutItem
+                                  {
+                                      ProductId = p.Product_ID,
+                                      ProductName = p.Product_name,
+                                      ImageUrl = p.Product_Image,
+                                      Price = oi.Sale_Price ?? 0,
+                                      Quantity = oi.quantity ?? 1
+                                  }).ToList();
+
+                // Lấy status name - thử nhiều cách
+                string statusName = "Đang xử lý";
+                if (status != null)
+                {
+                    try
+                    {
+                        // Cách 1: Thử trực tiếp các tên có thể
+                        var statusType = status.GetType();
+
+                        // Thử Status_Name
+                        var prop = statusType.GetProperty("Status_Name");
+                        if (prop != null)
+                        {
+                            statusName = prop.GetValue(status)?.ToString() ?? "Đang xử lý";
+                        }
+                        else
+                        {
+                            // Thử StatusName
+                            prop = statusType.GetProperty("StatusName");
+                            if (prop != null)
+                            {
+                                statusName = prop.GetValue(status)?.ToString() ?? "Đang xử lý";
+                            }
+                            else
+                            {
+                                // Thử Name
+                                prop = statusType.GetProperty("Name");
+                                if (prop != null)
+                                {
+                                    statusName = prop.GetValue(status)?.ToString() ?? "Đang xử lý";
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Nếu lỗi thì dùng giá trị mặc định
+                        statusName = "Đang xử lý";
+                    }
+                }
+
+                return new OrderConfirmationViewModel
+                {
+                    OrderId = orderId,
+                    OrderDate = order.Order_Date ?? DateTime.Now,
+                    OrderStatus = statusName,
+                    TotalAmount = order.Total_Amount ?? 0,
+                    PaymentMethod = payment?.Payment_Method ?? "",
+                    PaymentStatus = payment?.Payment_Status ?? "",
+                    RecipientName = shipping?.Recipient_Name ?? "",
+                    PhoneNumber = shipping?.Phone_Number ?? "",
+                    FullAddress = shipping?.Full_Address ?? "",
+                    ShippingMethod = shipping?.Shipping_Method ?? "",
+                    ShippingFee = shipping?.Shipping_Fee ?? 0,
+                    EstimatedDeliveryDate = shipping?.Estimated_Delivery_Date,
+                    Items = orderItems
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetOrderConfirmation: {ex.Message}");
+                return null;
+            }
+        }
+        /// <summary>
+        /// Lấy thông tin profile của user
+        /// </summary>
+        public UserProfileViewModel GetUserProfile(int userId)
+        {
+            try
+            {
+                var user = da.Users.FirstOrDefault(u => u.ID_user == userId);
+                if (user == null)
+                    return null;
+
+                var userDetail = da.User_details.FirstOrDefault(ud => ud.ID_user == userId);
+
+                return new UserProfileViewModel
+                {
+                    UserId = userId,
+                    FullName = userDetail?.full_name ?? "Chưa cập nhật",
+                    Email = user.user_email,
+                    PhoneNumber = userDetail?.user_phone_number ?? "Chưa cập nhật",
+                    Province = userDetail?.Province,
+                    Ward = userDetail?.Ward,
+                    AddressDetail = userDetail?.user_address,
+                    AvatarUrl = userDetail?.user_pic ?? "noAvt.jpg",
+                    CreatedDate = userDetail?.date_create,
+                    LastModified = userDetail?.last_change,
+                    IsActive = userDetail?.user_status ?? false,
+                    RoleType = user.user_type,
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetUserProfile: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật thông tin profile
+        /// </summary>
+        public UpdateProfileResult UpdateUserProfile(EditProfileRequest request)
+        {
+            try
+            {
+                var userDetail = da.User_details.FirstOrDefault(ud => ud.ID_user == request.UserId);
+
+                if (userDetail == null)
+                {
+                    return new UpdateProfileResult
+                    {
+                        Success = false,
+                        Message = "Không tìm thấy thông tin người dùng",
+                        ErrorCode = "USER_NOT_FOUND"
+                    };
+                }
+
+                // Cập nhật thông tin
+                userDetail.full_name = request.FullName;
+                userDetail.user_phone_number = request.PhoneNumber;
+                userDetail.Province = request.Province;
+                userDetail.Ward = request.Ward;
+                userDetail.user_address = request.AddressDetail;
+                // last_change sẽ tự động update bởi trigger
+
+                da.SubmitChanges();
+
+                return new UpdateProfileResult
+                {
+                    Success = true,
+                    Message = "Cập nhật thông tin thành công"
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in UpdateUserProfile: {ex.Message}");
+                return new UpdateProfileResult
+                {
+                    Success = false,
+                    Message = "Đã xảy ra lỗi khi cập nhật thông tin: " + ex.Message,
+                    ErrorCode = "SYSTEM_ERROR"
+                };
+            }
+        }
+
+        /// <summary>
+        /// Upload avatar với tên file unique
+        /// </summary>
+        public AvatarUploadResult UploadAvatar(int userId, HttpPostedFileBase file, string serverPath)
+        {
+            try
+            {
+                // Validate file
+                if (file == null || file.ContentLength == 0)
+                {
+                    return new AvatarUploadResult
+                    {
+                        Success = false,
+                        Message = "Vui lòng chọn file ảnh"
+                    };
+                }
+
+                // Validate file type
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    return new AvatarUploadResult
+                    {
+                        Success = false,
+                        Message = "Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif)"
+                    };
+                }
+
+                // Validate file size (max 5MB)
+                if (file.ContentLength > 5 * 1024 * 1024)
+                {
+                    return new AvatarUploadResult
+                    {
+                        Success = false,
+                        Message = "Kích thước file không được vượt quá 5MB"
+                    };
+                }
+
+                // Tạo tên file unique: userId_timestamp_random.extension
+                // VD: 123_20251122151030_a3f2b1.jpg
+                string uniqueFileName = $"{userId}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N").Substring(0, 6)}{fileExtension}";
+
+                // Đường dẫn đầy đủ
+                string avatarFolder = Path.Combine(serverPath, "Content", "Pic", "Avartar");
+
+                // Tạo thư mục nếu chưa tồn tại
+                if (!Directory.Exists(avatarFolder))
+                {
+                    Directory.CreateDirectory(avatarFolder);
+                }
+
+                string fullPath = Path.Combine(avatarFolder, uniqueFileName);
+
+                // Xóa avatar cũ nếu có (trừ noAvt.jpg)
+                var userDetail = da.User_details.FirstOrDefault(ud => ud.ID_user == userId);
+                if (userDetail != null && !string.IsNullOrEmpty(userDetail.user_pic) && userDetail.user_pic != "noAvt.jpg")
+                {
+                    string oldAvatarPath = Path.Combine(avatarFolder, userDetail.user_pic);
+                    if (File.Exists(oldAvatarPath))
+                    {
+                        try
+                        {
+                            File.Delete(oldAvatarPath);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Error deleting old avatar: {ex.Message}");
+                        }
+                    }
+                }
+
+                // Save file
+                file.SaveAs(fullPath);
+
+                // Cập nhật database
+                if (userDetail != null)
+                {
+                    userDetail.user_pic = uniqueFileName;
+                    da.SubmitChanges();
+                }
+
+                return new AvatarUploadResult
+                {
+                    Success = true,
+                    Message = "Upload ảnh đại diện thành công",
+                    FileName = uniqueFileName,
+                    FilePath = $"~/Content/Pic/Avartar/{uniqueFileName}",
+                    FileSize = file.ContentLength
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in UploadAvatar: {ex.Message}");
+                return new AvatarUploadResult
+                {
+                    Success = false,
+                    Message = "Đã xảy ra lỗi khi upload ảnh: " + ex.Message
+                };
+            }
+        }
+
+        /// <summary>
+        /// Đổi mật khẩu
+        /// </summary>
+        public UpdateProfileResult ChangePassword(ChangePasswordRequest request)
+        {
+            try
+            {
+                var user = da.Users.FirstOrDefault(u => u.ID_user == request.UserId);
+
+                if (user == null)
+                {
+                    return new UpdateProfileResult
+                    {
+                        Success = false,
+                        Message = "Không tìm thấy người dùng",
+                        ErrorCode = "USER_NOT_FOUND"
+                    };
+                }
+
+                // Verify current password
+                string hashedCurrentPassword = HashPassword(request.CurrentPassword);
+                if (user.user_password != hashedCurrentPassword)
+                {
+                    return new UpdateProfileResult
+                    {
+                        Success = false,
+                        Message = "Mật khẩu hiện tại không đúng",
+                        ErrorCode = "WRONG_PASSWORD"
+                    };
+                }
+
+                // Update new password
+                user.user_password = HashPassword(request.NewPassword);
+                da.SubmitChanges();
+
+                return new UpdateProfileResult
+                {
+                    Success = true,
+                    Message = "Đổi mật khẩu thành công"
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in ChangePassword: {ex.Message}");
+                return new UpdateProfileResult
+                {
+                    Success = false,
+                    Message = "Đã xảy ra lỗi khi đổi mật khẩu: " + ex.Message,
+                    ErrorCode = "SYSTEM_ERROR"
+                };
+            }
+        }
+
+        /// <summary>
+        /// Kiểm tra email đã tồn tại chưa (dùng cho validation)
+        /// </summary>
+        public bool IsEmailExists(string email, int? excludeUserId = null)
+        {
+            try
+            {
+                var query = da.Users.Where(u => u.user_email == email);
+
+                if (excludeUserId.HasValue)
+                {
+                    query = query.Where(u => u.ID_user != excludeUserId.Value);
+                }
+
+                return query.Any();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in IsEmailExists: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Kiểm tra số điện thoại đã tồn tại chưa
+        /// </summary>
+        public bool IsPhoneExists(string phone, int? excludeUserId = null)
+        {
+            try
+            {
+                var query = da.User_details.Where(ud => ud.user_phone_number == phone);
+
+                if (excludeUserId.HasValue)
+                {
+                    query = query.Where(ud => ud.ID_user != excludeUserId.Value);
+                }
+
+                return query.Any();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in IsPhoneExists: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách đơn hàng của user (cho trang Order History)
+        /// </summary>
+        public List<OrderHistoryItem> GetUserOrderHistory(int userId, int pageNumber = 1, int pageSize = 10)
+        {
+            try
+            {
+                var orders = (from o in da.Orders
+                              where o.ID_user == userId
+                              join s in da.OrderStatus on o.StatusID equals s.StatusID
+                              orderby o.Order_Date descending
+                              select new
+                              {
+                                  Order = o,
+                                  StatusName = s.StatusName ?? s.StatusName ?? "Đang xử lý",
+                                  ItemCount = da.Orders_items.Where(oi => oi.Order_ID == o.Order_ID).Count()
+                              })
+                            .Skip((pageNumber - 1) * pageSize)
+                            .Take(pageSize)
+                            .ToList();
+
+                return orders.Select(x => new OrderHistoryItem
+                {
+                    OrderId = x.Order.Order_ID,
+                    OrderDate = x.Order.Order_Date ?? DateTime.Now,
+                    TotalAmount = x.Order.Total_Amount ?? 0,
+                    StatusName = x.StatusName,
+                    ItemCount = x.ItemCount
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetUserOrderHistory: {ex.Message}");
+                return new List<OrderHistoryItem>();
+            }
+        }
+
+        // =====================================================
+        // HELPER MODEL FOR ORDER HISTORY
+        // =====================================================
+        
     }
 
-
+    public class OrderHistoryItem
+    {
+        public string OrderId { get; set; }
+        public DateTime OrderDate { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string StatusName { get; set; }
+        public int ItemCount { get; set; }
+    }
     // Model mới cho thông tin Series
     public class SeriesInfo
     {

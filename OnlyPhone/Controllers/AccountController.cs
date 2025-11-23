@@ -26,6 +26,275 @@ namespace OnlyPhone.Controllers
         {
             return View();
         }
+        [HttpGet]
+        public ActionResult Profile()
+        {
+            try
+            {
+                // Kiểm tra đăng nhập
+                if (Session["UserID"] == null)
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+
+                int userId = (int)Session["UserID"];
+
+                // Lấy thông tin profile
+                var model = xl.GetUserProfile(userId);
+
+                if (model == null)
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy thông tin người dùng";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in Profile: {ex.Message}");
+                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi tải thông tin";
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        // =====================================================
+        // GET: Account/EditProfile
+        // =====================================================
+        [HttpGet]
+        public ActionResult EditProfile()
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+
+                int userId = (int)Session["UserID"];
+                var profile = xl.GetUserProfile(userId);
+
+                if (profile == null)
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy thông tin người dùng";
+                    return RedirectToAction("Profile");
+                }
+
+                // Map to EditProfileRequest
+                var model = new EditProfileRequest
+                {
+                    UserId = profile.UserId,
+                    FullName = profile.FullName,
+                    PhoneNumber = profile.PhoneNumber,
+                    Province = profile.Province,
+                    Ward = profile.Ward,
+                    AddressDetail = profile.AddressDetail
+                };
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in EditProfile GET: {ex.Message}");
+                TempData["ErrorMessage"] = "Đã xảy ra lỗi";
+                return RedirectToAction("Profile");
+            }
+        }
+
+        // =====================================================
+        // POST: Account/EditProfile
+        // =====================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditProfile(EditProfileRequest model)
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+
+                int userId = (int)Session["UserID"];
+                model.UserId = userId;
+
+                if (!ModelState.IsValid)
+                {
+                    TempData["ErrorMessage"] = "Vui lòng kiểm tra lại thông tin";
+                    return View(model);
+                }
+
+                // Kiểm tra số điện thoại đã tồn tại
+                if (xl.IsPhoneExists(model.PhoneNumber, userId))
+                {
+                    TempData["ErrorMessage"] = "Số điện thoại đã được sử dụng";
+                    return View(model);
+                }
+
+                // Upload avatar nếu có
+                if (model.AvatarFile != null && model.AvatarFile.ContentLength > 0)
+                {
+                    var uploadResult = xl.UploadAvatar(userId, model.AvatarFile, Server.MapPath("~/"));
+
+                    if (!uploadResult.Success)
+                    {
+                        TempData["ErrorMessage"] = uploadResult.Message;
+                        return View(model);
+                    }
+                }
+
+                // Cập nhật thông tin
+                var result = xl.UpdateUserProfile(model);
+
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = "Cập nhật thông tin thành công";
+                    return RedirectToAction("Profile");
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = result.Message;
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in EditProfile POST: {ex.Message}");
+                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi cập nhật thông tin";
+                return View(model);
+            }
+        }
+
+        // =====================================================
+        // POST: Account/UploadAvatar (AJAX)
+        // =====================================================
+        [HttpPost]
+        public JsonResult UploadAvatar(HttpPostedFileBase avatarFile)
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+                }
+
+                int userId = (int)Session["UserID"];
+
+                if (avatarFile == null || avatarFile.ContentLength == 0)
+                {
+                    return Json(new { success = false, message = "Vui lòng chọn file ảnh" });
+                }
+
+                var result = xl.UploadAvatar(userId, avatarFile, Server.MapPath("~/"));
+
+                if (result.Success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = result.Message,
+                        fileName = result.FileName,
+                        filePath = Url.Content(result.FilePath)
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = result.Message });
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in UploadAvatar: {ex.Message}");
+                return Json(new { success = false, message = "Đã xảy ra lỗi khi upload ảnh" });
+            }
+        }
+
+        // =====================================================
+        // GET: Account/ChangePassword
+        // =====================================================
+        [HttpGet]
+        public ActionResult ChangePassword()
+        {
+            if (Session["UserID"] == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            return View(new ChangePasswordRequest());
+        }
+
+        // =====================================================
+        // POST: Account/ChangePassword
+        // =====================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ChangePassword(ChangePasswordRequest model)
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+
+                int userId = (int)Session["UserID"];
+                model.UserId = userId;
+
+                if (!ModelState.IsValid)
+                {
+                    TempData["ErrorMessage"] = "Vui lòng kiểm tra lại thông tin";
+                    return View(model);
+                }
+
+                var result = xl.ChangePassword(model);
+
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = "Đổi mật khẩu thành công";
+                    return RedirectToAction("Profile");
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = result.Message;
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in ChangePassword: {ex.Message}");
+                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi đổi mật khẩu";
+                return View(model);
+            }
+        }
+
+        // =====================================================
+        // GET: Account/OrderHistory
+        // =====================================================
+        [HttpGet]
+        public ActionResult OrderHistory(int page = 1)
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+
+                int userId = (int)Session["UserID"];
+                var orders = xl.GetUserOrderHistory(userId, page, 10);
+
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalOrders = orders.Count;
+
+                return View(orders);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in OrderHistory: {ex.Message}");
+                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi tải lịch sử đơn hàng";
+                return RedirectToAction("Profile");
+            }
+        }
         public ActionResult FogotPassword()
         {
             return View();
@@ -90,7 +359,7 @@ namespace OnlyPhone.Controllers
 
                 // Lưu vào Session
                 Session["UserSession"] = userSession;
-                Session["UserId"] = user.ID_user;
+                Session["UserID"] = user.ID_user;
                 Session["Username"] = user.users_name;
                 Session["Email"] = user.user_email;
                 Session["UserType"] = user.user_type;
@@ -275,8 +544,8 @@ namespace OnlyPhone.Controllers
                 var notification = new Notification
                 {
                     ID_user = newUser.ID_user,
-                    Title = "Chào mừng đến với TechStore!",
-                    Message = $"Xin chào {username}, cảm ơn bạn đã đăng ký tài khoản tại TechStore. Chúc bạn có trải nghiệm mua sắm tuyệt vời!",
+                    Title = "Chào mừng đến với OnlyPhone!",
+                    Message = $"Xin chào {username}, cảm ơn bạn đã đăng ký tài khoản tại OnlyPhone. Chúc bạn có trải nghiệm mua sắm tuyệt vời!",
                     Type = "System",
                     IsRead = false,
                     Created_At = DateTime.Now

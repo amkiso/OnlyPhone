@@ -178,17 +178,17 @@ namespace OnlyPhone.Models
 
            
                 <div class='feature'>
-                    <div style='font-size: 32px;'>🚚</div>
+                    
                     <h3>Giao hàng nhanh trên toàn quốc</h3>
                     <p>Bạn đặt, chúng tôi giao hàng dù bất kể bạn ở đâu, đơn hàng cũng sẽ đến được tay bạn</p>
                 </div>
                 <div class='feature'>
-                    <div style='font-size: 32px;'>💳</div>
+                    
                     <h3>Thanh toán đa dạng</h3>
                     <p>Hỗ trợ nhiều hình thức thanh toán</p>
                 </div>
                 <div class='feature'>
-                    <div style='font-size: 32px;'>🎁</div>
+                    
                     <h3>Ưu đãi độc quyền</h3>
                     <p>Nhận voucher và khuyến mãi hấp dẫn</p>
                 </div>

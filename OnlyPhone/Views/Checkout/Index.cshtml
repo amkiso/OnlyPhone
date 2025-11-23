@@ -1,0 +1,594 @@
+﻿
+
+@model OnlyPhone.Models.CheckoutViewModel
+@{
+    ViewBag.Title = "Thanh toán";
+    var products = TempData["SelectedProducts"] as string ?? "";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .checkout-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .checkout-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 2rem;
+    }
+
+    .checkout-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+        .form-label .required {
+            color: #ef4444;
+            margin-left: 0.25rem;
+        }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    /* Product Items */
+    .checkout-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .item-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+
+    .item-info {
+        flex: 1;
+    }
+
+    .item-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+
+    .item-price {
+        color: #3b82f6;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .item-quantity {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Payment & Shipping Methods */
+    .method-options {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .method-option {
+        position: relative;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .method-option:hover {
+            border-color: #3b82f6;
+            background-color: #f0f9ff;
+        }
+
+        .method-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+            .method-option input[type="radio"]:checked + .method-content {
+                border-color: #3b82f6;
+            }
+
+            .method-option input[type="radio"]:checked ~ .method-check {
+                display: block;
+            }
+
+        .method-option.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+    .method-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .method-icon {
+        font-size: 1.5rem;
+        color: #3b82f6;
+    }
+
+    .method-details {
+        flex: 1;
+    }
+
+    .method-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .method-description {
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+
+    .method-fee {
+        font-weight: 600;
+        color: #3b82f6;
+    }
+
+    .method-check {
+        display: none;
+        color: #10b981;
+        font-size: 1.25rem;
+    }
+
+    /* Voucher */
+    .voucher-input-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+        .voucher-input-group input {
+            flex: 1;
+        }
+
+    .btn-apply-voucher {
+        padding: 0.75rem 1.5rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .btn-apply-voucher:hover {
+            background: #2563eb;
+        }
+
+    .voucher-list {
+        margin-top: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .voucher-item {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .voucher-item:hover {
+            border-color: #3b82f6;
+            background-color: #f0f9ff;
+        }
+
+        .voucher-item.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+    .voucher-code {
+        font-weight: 700;
+        color: #3b82f6;
+        font-size: 1.1rem;
+    }
+
+    .voucher-desc {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin: 0.5rem 0;
+    }
+
+    .voucher-discount {
+        color: #10b981;
+        font-weight: 600;
+    }
+
+    /* Order Summary */
+    .order-summary {
+        position: sticky;
+        top: 2rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+    .summary-label {
+        color: #6b7280;
+    }
+
+    .summary-value {
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .summary-total {
+        background: #f3f4f6;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+        .summary-total .summary-row {
+            border-bottom: none;
+            padding: 0.5rem 0;
+        }
+
+        .summary-total .summary-label {
+            font-size: 1.1rem;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .summary-total .summary-value {
+            font-size: 1.5rem;
+            color: #3b82f6;
+        }
+
+    .btn-place-order {
+        width: 100%;
+        padding: 1rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+    }
+
+        .btn-place-order:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-place-order:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    /* Responsive */
+    @@media (max-width: 992px) {
+        .checkout-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .order-summary {
+            position: static;
+            order: -1;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .alert-danger {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .alert-success {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+</style>
+
+<div class="checkout-container">
+    <h1 style="margin-bottom: 2rem; color: #1f2937;">
+        <i class="fas fa-shopping-cart"></i> Thanh toán đơn hàng
+    </h1>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form id="checkoutForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" id="selectedProducts" value="@products" />
+
+        <div class="checkout-grid">
+            <!-- Left Column -->
+            <div class="checkout-left">
+                <!-- Shipping Information -->
+                <div class="checkout-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-map-marker-alt"></i> Thông tin giao hàng
+                    </h2>
+
+                    <div class="form-group">
+                        <label class="form-label">Họ và tên người nhận <span class="required">*</span></label>
+                        @Html.TextBoxFor(m => m.UserInfo.RecipientName, new { @class = "form-control", required = "required" })
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Số điện thoại <span class="required">*</span></label>
+                            @Html.TextBoxFor(m => m.UserInfo.PhoneNumber, new { @class = "form-control", required = "required", placeholder = "0xxx xxx xxx" })
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            @Html.TextBoxFor(m => m.UserInfo.Email, new { @class = "form-control", type = "email", placeholder = "example@email.com" })
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Tỉnh/Thành phố <span class="required">*</span></label>
+                            @Html.TextBoxFor(m => m.UserInfo.Province, new { @class = "form-control", required = "required", list = "provinceList" })
+                            <datalist id="provinceList"></datalist>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Quận/Huyện <span class="required">*</span></label>
+                            @Html.TextBoxFor(m => m.UserInfo.District, new { @class = "form-control", required = "required" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Phường/Xã</label>
+                        @Html.TextBoxFor(m => m.UserInfo.Ward, new { @class = "form-control" })
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Địa chỉ chi tiết <span class="required">*</span></label>
+                        @Html.TextAreaFor(m => m.UserInfo.AddressDetail, new { @class = "form-control", rows = "3", required = "required", placeholder = "Số nhà, tên đường..." })
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Ghi chú</label>
+                        @Html.TextAreaFor(m => m.UserInfo.Notes, new { @class = "form-control", rows = "2", placeholder = "Ghi chú về đơn hàng, ví dụ: giao giờ hành chính..." })
+                    </div>
+                </div>
+
+                <!-- Shipping Method -->
+                <div class="checkout-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-shipping-fast"></i> Phương thức vận chuyển
+                    </h2>
+                    <div class="method-options">
+                        @foreach (var method in Model.ShippingMethods)
+                        {
+                            <label class="method-option @(method.Code == Model.SelectedShippingMethod ? "selected" : "")">
+                                <input type="radio"
+                                       name="SelectedShippingMethod"
+                                       value="@method.Code"
+                                       data-fee="@method.Fee"
+                                       @(method.Code == Model.SelectedShippingMethod ? "checked" : "")
+                                       onchange="updateShippingFee()" />
+                                <div class="method-content">
+                                    <i class="fas fa-truck method-icon"></i>
+                                    <div class="method-details">
+                                        <div class="method-name">@method.Name</div>
+                                        <div class="method-description">@method.Description</div>
+                                    </div>
+                                    <div class="method-fee">@method.Fee.ToString("N0")đ</div>
+                                    <i class="fas fa-check-circle method-check"></i>
+                                </div>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="checkout-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-credit-card"></i> Phương thức thanh toán
+                    </h2>
+                    <div class="method-options">
+                        @foreach (var method in Model.PaymentMethods)
+                        {
+                            <label class="method-option @(method.Code == Model.SelectedPaymentMethod ? "selected" : "")">
+                                <input type="radio"
+                                       name="SelectedPaymentMethod"
+                                       value="@method.Code"
+                                       @(method.Code == Model.SelectedPaymentMethod ? "checked" : "") />
+                                <div class="method-content">
+                                    <i class="fas @method.Icon method-icon"></i>
+                                    <div class="method-details">
+                                        <div class="method-name">@method.Name</div>
+                                        <div class="method-description">@method.Description</div>
+                                    </div>
+                                    <i class="fas fa-check-circle method-check"></i>
+                                </div>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Voucher -->
+                <div class="checkout-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-ticket-alt"></i> Mã giảm giá
+                    </h2>
+                    <div class="voucher-input-group">
+                        <input type="text"
+                               id="voucherCode"
+                               class="form-control"
+                               placeholder="Nhập mã giảm giá" />
+                        <button type="button"
+                                class="btn-apply-voucher"
+                                onclick="applyVoucher()">
+                            Áp dụng
+                        </button>
+                    </div>
+
+                    @if (Model.AvailableVouchers.Any())
+                    {
+                        <div class="voucher-list">
+                            <h4 style="margin: 1rem 0 0.5rem; color: #6b7280; font-size: 0.9rem;">
+                                Voucher khả dụng
+                            </h4>
+                            @foreach (var voucher in Model.AvailableVouchers)
+                            {
+                                <div class="voucher-item" onclick="selectVoucher(@voucher.VoucherId, '@voucher.Code')">
+                                    <div class="voucher-code">@voucher.Code</div>
+                                    <div class="voucher-desc">@voucher.Description</div>
+                                    <div class="voucher-discount">
+                                        <i class="fas fa-tag"></i> @voucher.DisplayText
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #9ca3af; margin-top: 0.5rem;">
+                                        <i class="far fa-clock"></i> HSD: @voucher.EndDate.ToString("dd/MM/yyyy")
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Right Column - Order Summary -->
+            <div class="checkout-right">
+                <div class="checkout-section order-summary">
+                    <h2 class="section-title">
+                        <i class="fas fa-receipt"></i> Thông tin đơn hàng
+                    </h2>
+
+                    <div class="order-items">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="checkout-item">
+                                <img src="~/Content/Pic/images/@item.ImageUrl" alt="@item.ProductName" class="item-image" />
+                                <div class="item-info">
+                                    <div class="item-name">@item.ProductName</div>
+                                    <div class="item-price">@item.Price.ToString("N0")đ</div>
+                                    <div class="item-quantity">Số lượng: @item.Quantity</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="summary-row">
+                        <span class="summary-label">Tạm tính</span>
+                        <span class="summary-value" id="subTotal">@Model.SubTotal.ToString("N0")đ</span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span class="summary-label">Phí vận chuyển</span>
+                        <span class="summary-value" id="shippingFee">@Model.ShippingFee.ToString("N0")đ</span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span class="summary-label">Giảm giá</span>
+                        <span class="summary-value" id="discount" style="color: #10b981;">-@Model.DiscountAmount.ToString("N0")đ</span>
+                    </div>
+
+                    <div class="summary-total">
+                        <div class="summary-row">
+                            <span class="summary-label">Tổng cộng</span>
+                            <span class="summary-value" id="totalAmount">@Model.TotalAmount.ToString("N0")đ</span>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="selectedVoucherId" name="SelectedVoucherId" value="@Model.SelectedVoucherId" />
+
+                    <button type="submit" class="btn-place-order" id="btnPlaceOrder">
+                        <i class="fas fa-check-circle"></i> Đặt hàng
+                    </button>
+
+                    <div style="text-align: center; margin-top: 1rem; color: #6b7280; font-size: 0.85rem;">
+                        <i class="fas fa-shield-alt"></i> Thông tin của bạn được bảo mật
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+    <script src="~/Scripts/CustomJS/checkout.js"></script>

@@ -268,7 +268,7 @@
     .btn-view-detail {
         flex: 1;
         padding: 10px;
-        background: #3b82f6;
+        background: linear-gradient(135deg,#3b82f6,#8BDEFF);
         color: white;
         border: none;
         border-radius: 10px;
@@ -536,18 +536,7 @@
                                 }
                             </div>
 
-                            <div class="product-stock @(product.IsInStock ? "" : "out-of-stock")">
-                                @if (product.IsInStock)
-                                {
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    <text> Còn hàng</text>
-                                }
-                                else
-                                {
-                                    <i class="fa-solid fa-circle-xmark"></i>
-                                    <text> Hết hàng</text>
-                                }
-                            </div>
+                           
 
                             <div class="product-actions">
                                 <a href="@Url.Action("Detail", "Product", new { id = product.product_id })"
@@ -556,7 +545,7 @@
                                 </a>
                                 <button class="btn-add-cart"
                                         onclick="addToCart(@product.product_id)"
-                                        @(product.IsInStock ? "" : "disabled")>
+                                        @(product.IsInStock ? "" : "enable")>
                                     <i class="fa-solid fa-cart-plus"></i>
                                 </button>
                             </div>

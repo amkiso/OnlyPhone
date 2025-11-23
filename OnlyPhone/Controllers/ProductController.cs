@@ -9,7 +9,7 @@ namespace OnlyPhone.Controllers
 {
     public class ProductController : Controller
     {
-        private Xuly xl = new Xuly();
+         Xuly xl = new Xuly();
 
         // GET: Product/Index - Danh sách tất cả sản phẩm
         public ActionResult Index(int series = 0, string sort = "featured", int page = 1)
@@ -123,6 +123,7 @@ namespace OnlyPhone.Controllers
 
             return View("Index", model);
         }
+        
 
         // POST: Product/AddToCart - Thêm vào giỏ hàng (AJAX)
         [HttpPost]
@@ -210,11 +211,31 @@ namespace OnlyPhone.Controllers
             }
             base.Dispose(disposing);
         }
-    }
 
+        [HttpGet]
+        public JsonResult GetCartCount()
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return Json(new { success = true, cartCount = 0 }, JsonRequestBehavior.AllowGet);
+                }
+
+                int userId = (int)Session["UserID"];
+                int cartCount = xl.GetCartItemCount(userId);
+
+                return Json(new { success = true, cartCount = cartCount }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+    }
     #region ViewModels
 
-    // ViewModel cho trang chi tiết sản phẩm
+        // ViewModel cho trang chi tiết sản phẩm
     public class ProductDetailViewModel
     {
         public Product_Infomation Product { get; set; }
