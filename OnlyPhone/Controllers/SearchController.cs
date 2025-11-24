@@ -13,7 +13,7 @@ namespace OnlyPhone.Controllers
 
         // GET: Search
         // Trang hiển thị kết quả tìm kiếm đầy đủ
-        public ActionResult Index(string q, int page = 1)
+        public ActionResult SearchResult(string q, int page = 1)
         {
             if (string.IsNullOrWhiteSpace(q))
             {

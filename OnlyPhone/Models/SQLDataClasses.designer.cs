@@ -11,15 +11,15 @@
 
 namespace OnlyPhone.Models
 {
+	using System;
+	using System.Collections.Generic;
+	using System.ComponentModel;
+	using System.Data;
 	using System.Data.Linq;
 	using System.Data.Linq.Mapping;
-	using System.Data;
-	using System.Collections.Generic;
-	using System.Reflection;
 	using System.Linq;
 	using System.Linq.Expressions;
-	using System.ComponentModel;
-	using System;
+	using System.Reflection;
 	using System.Configuration;
 	
 	
@@ -84,7 +84,7 @@ namespace OnlyPhone.Models
 			OnCreated();
 		}
         public SQLDataClassesDataContext() :
-				base(ConfigurationManager.ConnectionStrings["PhoneSellerConnectionString"].ConnectionString, mappingSource)
+               base(ConfigurationManager.ConnectionStrings["PhoneSellerConnectionString"].ConnectionString, mappingSource)
         {
             OnCreated();
         }
@@ -226,25 +226,16 @@ namespace OnlyPhone.Models
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.FunctionAttribute(Name="dbo.sp_GetProductsWithFilter")]
-		public ISingleResult<sp_GetProductsWithFilterResult> sp_GetProductsWithFilter([global::System.Data.Linq.Mapping.ParameterAttribute(Name="SeriesID", DbType="Int")] System.Nullable<int> seriesID, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="SortBy", DbType="VarChar(20)")] string sortBy, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="PageNumber", DbType="Int")] System.Nullable<int> pageNumber, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="PageSize", DbType="Int")] System.Nullable<int> pageSize)
+		[global::System.Data.Linq.Mapping.FunctionAttribute(Name="dbo.fn_LevenshteinDistance", IsComposable=true)]
+		public System.Nullable<int> fn_LevenshteinDistance([global::System.Data.Linq.Mapping.ParameterAttribute(DbType="NVarChar(4000)")] string string1, [global::System.Data.Linq.Mapping.ParameterAttribute(DbType="NVarChar(4000)")] string string2)
 		{
-			IExecuteResult result = this.ExecuteMethodCall(this, ((MethodInfo)(MethodInfo.GetCurrentMethod())), seriesID, sortBy, pageNumber, pageSize);
-			return ((ISingleResult<sp_GetProductsWithFilterResult>)(result.ReturnValue));
+			return ((System.Nullable<int>)(this.ExecuteMethodCall(this, ((MethodInfo)(MethodInfo.GetCurrentMethod())), string1, string2).ReturnValue));
 		}
 		
-		[global::System.Data.Linq.Mapping.FunctionAttribute(Name="dbo.sp_SearchProducts")]
-		public ISingleResult<sp_SearchProductsResult> sp_SearchProducts([global::System.Data.Linq.Mapping.ParameterAttribute(Name="SearchTerm", DbType="NVarChar(200)")] string searchTerm, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="MinSimilarity", DbType="Decimal(5,2)")] System.Nullable<decimal> minSimilarity, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="PageNumber", DbType="Int")] System.Nullable<int> pageNumber, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="PageSize", DbType="Int")] System.Nullable<int> pageSize, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="SeriesID", DbType="Int")] System.Nullable<int> seriesID)
+		[global::System.Data.Linq.Mapping.FunctionAttribute(Name="dbo.fn_SimilarityPercent", IsComposable=true)]
+		public System.Nullable<decimal> fn_SimilarityPercent([global::System.Data.Linq.Mapping.ParameterAttribute(DbType="NVarChar(4000)")] string string1, [global::System.Data.Linq.Mapping.ParameterAttribute(DbType="NVarChar(4000)")] string string2)
 		{
-			IExecuteResult result = this.ExecuteMethodCall(this, ((MethodInfo)(MethodInfo.GetCurrentMethod())), searchTerm, minSimilarity, pageNumber, pageSize, seriesID);
-			return ((ISingleResult<sp_SearchProductsResult>)(result.ReturnValue));
-		}
-		
-		[global::System.Data.Linq.Mapping.FunctionAttribute(Name="dbo.sp_QuickSearchProducts")]
-		public ISingleResult<sp_QuickSearchProductsResult> sp_QuickSearchProducts([global::System.Data.Linq.Mapping.ParameterAttribute(Name="SearchTerm", DbType="NVarChar(200)")] string searchTerm, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="MaxResults", DbType="Int")] System.Nullable<int> maxResults)
-		{
-			IExecuteResult result = this.ExecuteMethodCall(this, ((MethodInfo)(MethodInfo.GetCurrentMethod())), searchTerm, maxResults);
-			return ((ISingleResult<sp_QuickSearchProductsResult>)(result.ReturnValue));
+			return ((System.Nullable<decimal>)(this.ExecuteMethodCall(this, ((MethodInfo)(MethodInfo.GetCurrentMethod())), string1, string2).ReturnValue));
 		}
 		
 		[global::System.Data.Linq.Mapping.FunctionAttribute(Name="dbo.sp_CreateOrderWithShipping")]
@@ -270,6 +261,27 @@ namespace OnlyPhone.Models
 			orderId = ((string)(result.GetParameterValue(14)));
 			totalAmount = ((System.Nullable<decimal>)(result.GetParameterValue(15)));
 			return ((int)(result.ReturnValue));
+		}
+		
+		[global::System.Data.Linq.Mapping.FunctionAttribute(Name="dbo.sp_SearchProducts")]
+		public ISingleResult<sp_SearchProductsResult> sp_SearchProducts([global::System.Data.Linq.Mapping.ParameterAttribute(Name="SearchTerm", DbType="NVarChar(200)")] string searchTerm, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="MinSimilarity", DbType="Decimal(5,2)")] System.Nullable<decimal> minSimilarity, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="PageNumber", DbType="Int")] System.Nullable<int> pageNumber, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="PageSize", DbType="Int")] System.Nullable<int> pageSize, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="SeriesID", DbType="Int")] System.Nullable<int> seriesID)
+		{
+			IExecuteResult result = this.ExecuteMethodCall(this, ((MethodInfo)(MethodInfo.GetCurrentMethod())), searchTerm, minSimilarity, pageNumber, pageSize, seriesID);
+			return ((ISingleResult<sp_SearchProductsResult>)(result.ReturnValue));
+		}
+		
+		[global::System.Data.Linq.Mapping.FunctionAttribute(Name="dbo.sp_GetProductsWithFilter")]
+		public ISingleResult<sp_GetProductsWithFilterResult> sp_GetProductsWithFilter([global::System.Data.Linq.Mapping.ParameterAttribute(Name="SeriesID", DbType="Int")] System.Nullable<int> seriesID, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="SortBy", DbType="VarChar(20)")] string sortBy, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="PageNumber", DbType="Int")] System.Nullable<int> pageNumber, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="PageSize", DbType="Int")] System.Nullable<int> pageSize)
+		{
+			IExecuteResult result = this.ExecuteMethodCall(this, ((MethodInfo)(MethodInfo.GetCurrentMethod())), seriesID, sortBy, pageNumber, pageSize);
+			return ((ISingleResult<sp_GetProductsWithFilterResult>)(result.ReturnValue));
+		}
+		
+		[global::System.Data.Linq.Mapping.FunctionAttribute(Name="dbo.sp_QuickSearchProducts")]
+		public ISingleResult<sp_QuickSearchProductsResult> sp_QuickSearchProducts([global::System.Data.Linq.Mapping.ParameterAttribute(Name="SearchTerm", DbType="NVarChar(200)")] string searchTerm, [global::System.Data.Linq.Mapping.ParameterAttribute(Name="MaxResults", DbType="Int")] System.Nullable<int> maxResults)
+		{
+			IExecuteResult result = this.ExecuteMethodCall(this, ((MethodInfo)(MethodInfo.GetCurrentMethod())), searchTerm, maxResults);
+			return ((ISingleResult<sp_QuickSearchProductsResult>)(result.ReturnValue));
 		}
 	}
 	
@@ -4543,6 +4555,266 @@ namespace OnlyPhone.Models
 		}
 	}
 	
+	public partial class sp_SearchProductsResult
+	{
+		
+		private int _Product_ID;
+		
+		private string _Product_name;
+		
+		private System.Nullable<decimal> _Sale_Price;
+		
+		private System.Nullable<decimal> _Original_Price;
+		
+		private string _Product_Image;
+		
+		private int _Current_Quantity;
+		
+		private string _Product_Status;
+		
+		private string _SeriesName;
+		
+		private string _supplier_name;
+		
+		private System.Nullable<bool> _Is_Featured;
+		
+		private System.Nullable<bool> _Is_New;
+		
+		private int _Total_Sold;
+		
+		private System.Nullable<decimal> _SimilarityScore;
+		
+		private System.Nullable<int> _TotalRecords;
+		
+		public sp_SearchProductsResult()
+		{
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Product_ID", DbType="Int NOT NULL")]
+		public int Product_ID
+		{
+			get
+			{
+				return this._Product_ID;
+			}
+			set
+			{
+				if ((this._Product_ID != value))
+				{
+					this._Product_ID = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Product_name", DbType="NVarChar(200)")]
+		public string Product_name
+		{
+			get
+			{
+				return this._Product_name;
+			}
+			set
+			{
+				if ((this._Product_name != value))
+				{
+					this._Product_name = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Sale_Price", DbType="Decimal(18,2)")]
+		public System.Nullable<decimal> Sale_Price
+		{
+			get
+			{
+				return this._Sale_Price;
+			}
+			set
+			{
+				if ((this._Sale_Price != value))
+				{
+					this._Sale_Price = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Original_Price", DbType="Decimal(18,2)")]
+		public System.Nullable<decimal> Original_Price
+		{
+			get
+			{
+				return this._Original_Price;
+			}
+			set
+			{
+				if ((this._Original_Price != value))
+				{
+					this._Original_Price = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Product_Image", DbType="VarChar(255)")]
+		public string Product_Image
+		{
+			get
+			{
+				return this._Product_Image;
+			}
+			set
+			{
+				if ((this._Product_Image != value))
+				{
+					this._Product_Image = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Current_Quantity", DbType="Int NOT NULL")]
+		public int Current_Quantity
+		{
+			get
+			{
+				return this._Current_Quantity;
+			}
+			set
+			{
+				if ((this._Current_Quantity != value))
+				{
+					this._Current_Quantity = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Product_Status", DbType="NVarChar(20)")]
+		public string Product_Status
+		{
+			get
+			{
+				return this._Product_Status;
+			}
+			set
+			{
+				if ((this._Product_Status != value))
+				{
+					this._Product_Status = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_SeriesName", DbType="NVarChar(100)")]
+		public string SeriesName
+		{
+			get
+			{
+				return this._SeriesName;
+			}
+			set
+			{
+				if ((this._SeriesName != value))
+				{
+					this._SeriesName = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_supplier_name", DbType="NVarChar(50)")]
+		public string supplier_name
+		{
+			get
+			{
+				return this._supplier_name;
+			}
+			set
+			{
+				if ((this._supplier_name != value))
+				{
+					this._supplier_name = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Is_Featured", DbType="Bit")]
+		public System.Nullable<bool> Is_Featured
+		{
+			get
+			{
+				return this._Is_Featured;
+			}
+			set
+			{
+				if ((this._Is_Featured != value))
+				{
+					this._Is_Featured = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Is_New", DbType="Bit")]
+		public System.Nullable<bool> Is_New
+		{
+			get
+			{
+				return this._Is_New;
+			}
+			set
+			{
+				if ((this._Is_New != value))
+				{
+					this._Is_New = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Total_Sold", DbType="Int NOT NULL")]
+		public int Total_Sold
+		{
+			get
+			{
+				return this._Total_Sold;
+			}
+			set
+			{
+				if ((this._Total_Sold != value))
+				{
+					this._Total_Sold = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_SimilarityScore", DbType="Decimal(5,2)")]
+		public System.Nullable<decimal> SimilarityScore
+		{
+			get
+			{
+				return this._SimilarityScore;
+			}
+			set
+			{
+				if ((this._SimilarityScore != value))
+				{
+					this._SimilarityScore = value;
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_TotalRecords", DbType="Int")]
+		public System.Nullable<int> TotalRecords
+		{
+			get
+			{
+				return this._TotalRecords;
+			}
+			set
+			{
+				if ((this._TotalRecords != value))
+				{
+					this._TotalRecords = value;
+				}
+			}
+		}
+	}
+	
 	public partial class sp_GetProductsWithFilterResult
 	{
 		
@@ -4836,266 +5108,6 @@ namespace OnlyPhone.Models
 				if ((this._Series_id != value))
 				{
 					this._Series_id = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_TotalRecords", DbType="Int")]
-		public System.Nullable<int> TotalRecords
-		{
-			get
-			{
-				return this._TotalRecords;
-			}
-			set
-			{
-				if ((this._TotalRecords != value))
-				{
-					this._TotalRecords = value;
-				}
-			}
-		}
-	}
-	
-	public partial class sp_SearchProductsResult
-	{
-		
-		private int _Product_ID;
-		
-		private string _Product_name;
-		
-		private System.Nullable<decimal> _Sale_Price;
-		
-		private System.Nullable<decimal> _Original_Price;
-		
-		private string _Product_Image;
-		
-		private int _Current_Quantity;
-		
-		private string _Product_Status;
-		
-		private string _SeriesName;
-		
-		private string _supplier_name;
-		
-		private System.Nullable<bool> _Is_Featured;
-		
-		private System.Nullable<bool> _Is_New;
-		
-		private int _Total_Sold;
-		
-		private System.Nullable<decimal> _SimilarityScore;
-		
-		private System.Nullable<int> _TotalRecords;
-		
-		public sp_SearchProductsResult()
-		{
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Product_ID", DbType="Int NOT NULL")]
-		public int Product_ID
-		{
-			get
-			{
-				return this._Product_ID;
-			}
-			set
-			{
-				if ((this._Product_ID != value))
-				{
-					this._Product_ID = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Product_name", DbType="NVarChar(200)")]
-		public string Product_name
-		{
-			get
-			{
-				return this._Product_name;
-			}
-			set
-			{
-				if ((this._Product_name != value))
-				{
-					this._Product_name = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Sale_Price", DbType="Decimal(18,2)")]
-		public System.Nullable<decimal> Sale_Price
-		{
-			get
-			{
-				return this._Sale_Price;
-			}
-			set
-			{
-				if ((this._Sale_Price != value))
-				{
-					this._Sale_Price = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Original_Price", DbType="Decimal(18,2)")]
-		public System.Nullable<decimal> Original_Price
-		{
-			get
-			{
-				return this._Original_Price;
-			}
-			set
-			{
-				if ((this._Original_Price != value))
-				{
-					this._Original_Price = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Product_Image", DbType="VarChar(255)")]
-		public string Product_Image
-		{
-			get
-			{
-				return this._Product_Image;
-			}
-			set
-			{
-				if ((this._Product_Image != value))
-				{
-					this._Product_Image = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Current_Quantity", DbType="Int NOT NULL")]
-		public int Current_Quantity
-		{
-			get
-			{
-				return this._Current_Quantity;
-			}
-			set
-			{
-				if ((this._Current_Quantity != value))
-				{
-					this._Current_Quantity = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Product_Status", DbType="NVarChar(20)")]
-		public string Product_Status
-		{
-			get
-			{
-				return this._Product_Status;
-			}
-			set
-			{
-				if ((this._Product_Status != value))
-				{
-					this._Product_Status = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_SeriesName", DbType="NVarChar(100)")]
-		public string SeriesName
-		{
-			get
-			{
-				return this._SeriesName;
-			}
-			set
-			{
-				if ((this._SeriesName != value))
-				{
-					this._SeriesName = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_supplier_name", DbType="NVarChar(50)")]
-		public string supplier_name
-		{
-			get
-			{
-				return this._supplier_name;
-			}
-			set
-			{
-				if ((this._supplier_name != value))
-				{
-					this._supplier_name = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Is_Featured", DbType="Bit")]
-		public System.Nullable<bool> Is_Featured
-		{
-			get
-			{
-				return this._Is_Featured;
-			}
-			set
-			{
-				if ((this._Is_Featured != value))
-				{
-					this._Is_Featured = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Is_New", DbType="Bit")]
-		public System.Nullable<bool> Is_New
-		{
-			get
-			{
-				return this._Is_New;
-			}
-			set
-			{
-				if ((this._Is_New != value))
-				{
-					this._Is_New = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Total_Sold", DbType="Int NOT NULL")]
-		public int Total_Sold
-		{
-			get
-			{
-				return this._Total_Sold;
-			}
-			set
-			{
-				if ((this._Total_Sold != value))
-				{
-					this._Total_Sold = value;
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_SimilarityScore", DbType="Decimal(5,2)")]
-		public System.Nullable<decimal> SimilarityScore
-		{
-			get
-			{
-				return this._SimilarityScore;
-			}
-			set
-			{
-				if ((this._SimilarityScore != value))
-				{
-					this._SimilarityScore = value;
 				}
 			}
 		}

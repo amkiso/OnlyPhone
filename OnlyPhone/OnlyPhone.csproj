@@ -239,6 +239,7 @@
     <Content Include="Content\Css\Index.css" />
     <Content Include="Content\Css\profile.css" />
     <Content Include="Content\Css\Register.css" />
+    <Content Include="Content\Css\seachbox.css" />
     <Content Include="Content\Css\subheader.css" />
     <Content Include="Content\FontAwesome\css\all.css" />
     <Content Include="Content\FontAwesome\css\all.min.css" />
@@ -6182,6 +6183,7 @@
     <Content Include="Scripts\CustomJS\indexpage.js" />
     <Content Include="Scripts\CustomJS\Profile.js" />
     <Content Include="Scripts\CustomJS\Register.js" />
+    <Content Include="Scripts\CustomJS\searchbox.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -6208,6 +6210,7 @@
     <Content Include="Views\Error\Error404.cshtml" />
     <Content Include="Views\Account\OrderDetail.cshtml" />
     <Content Include="Views\Account\OrderHistory.cshtml" />
+    <Content Include="Views\Search\SearchResult.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

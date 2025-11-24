@@ -199,6 +199,58 @@
       <Association Name="User_User_detail" Member="User_detail" ThisKey="ID_user" OtherKey="ID_user" Type="User_detail" Cardinality="One" />
     </Type>
   </Table>
+  <Function Name="dbo.fn_LevenshteinDistance" Method="fn_LevenshteinDistance" IsComposable="true">
+    <Parameter Name="string1" Type="System.String" DbType="NVarChar(4000)" />
+    <Parameter Name="string2" Type="System.String" DbType="NVarChar(4000)" />
+    <Return Type="System.Int32" />
+  </Function>
+  <Function Name="dbo.fn_SimilarityPercent" Method="fn_SimilarityPercent" IsComposable="true">
+    <Parameter Name="string1" Type="System.String" DbType="NVarChar(4000)" />
+    <Parameter Name="string2" Type="System.String" DbType="NVarChar(4000)" />
+    <Return Type="System.Decimal" />
+  </Function>
+  <Function Name="dbo.sp_CreateOrderWithShipping" Method="sp_CreateOrderWithShipping">
+    <Parameter Name="UserId" Parameter="userId" Type="System.Int32" DbType="Int" />
+    <Parameter Name="ProductIds" Parameter="productIds" Type="System.String" DbType="VarChar(MAX)" />
+    <Parameter Name="VoucherId" Parameter="voucherId" Type="System.Int32" DbType="Int" />
+    <Parameter Name="RecipientName" Parameter="recipientName" Type="System.String" DbType="NVarChar(100)" />
+    <Parameter Name="PhoneNumber" Parameter="phoneNumber" Type="System.String" DbType="VarChar(15)" />
+    <Parameter Name="Email" Parameter="email" Type="System.String" DbType="VarChar(100)" />
+    <Parameter Name="Province" Parameter="province" Type="System.String" DbType="NVarChar(100)" />
+    <Parameter Name="District" Parameter="district" Type="System.String" DbType="NVarChar(100)" />
+    <Parameter Name="Ward" Parameter="ward" Type="System.String" DbType="NVarChar(100)" />
+    <Parameter Name="AddressDetail" Parameter="addressDetail" Type="System.String" DbType="NVarChar(255)" />
+    <Parameter Name="PaymentMethod" Parameter="paymentMethod" Type="System.String" DbType="NVarChar(50)" />
+    <Parameter Name="ShippingMethod" Parameter="shippingMethod" Type="System.String" DbType="NVarChar(50)" />
+    <Parameter Name="ShippingFee" Parameter="shippingFee" Type="System.Decimal" DbType="Decimal(18,2)" />
+    <Parameter Name="Notes" Parameter="notes" Type="System.String" DbType="NVarChar(500)" />
+    <Parameter Name="OrderId" Parameter="orderId" Type="System.String" DbType="VarChar(10)" Direction="InOut" />
+    <Parameter Name="TotalAmount" Parameter="totalAmount" Type="System.Decimal" DbType="Decimal(18,2)" Direction="InOut" />
+    <Return Type="System.Int32" />
+  </Function>
+  <Function Name="dbo.sp_SearchProducts" Method="sp_SearchProducts">
+    <Parameter Name="SearchTerm" Parameter="searchTerm" Type="System.String" DbType="NVarChar(200)" />
+    <Parameter Name="MinSimilarity" Parameter="minSimilarity" Type="System.Decimal" DbType="Decimal(5,2)" />
+    <Parameter Name="PageNumber" Parameter="pageNumber" Type="System.Int32" DbType="Int" />
+    <Parameter Name="PageSize" Parameter="pageSize" Type="System.Int32" DbType="Int" />
+    <Parameter Name="SeriesID" Parameter="seriesID" Type="System.Int32" DbType="Int" />
+    <ElementType Name="sp_SearchProductsResult">
+      <Column Name="Product_ID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Product_name" Type="System.String" DbType="NVarChar(200)" CanBeNull="true" />
+      <Column Name="Sale_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Original_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Product_Image" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
+      <Column Name="Current_Quantity" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Product_Status" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="SeriesName" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
+      <Column Name="supplier_name" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Is_Featured" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Is_New" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Total_Sold" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="SimilarityScore" Type="System.Decimal" DbType="Decimal(5,2)" CanBeNull="true" />
+      <Column Name="TotalRecords" Type="System.Int32" DbType="Int" CanBeNull="true" />
+    </ElementType>
+  </Function>
   <Function Name="dbo.sp_GetProductsWithFilter" Method="sp_GetProductsWithFilter">
     <Parameter Name="SeriesID" Parameter="seriesID" Type="System.Int32" DbType="Int" />
     <Parameter Name="SortBy" Parameter="sortBy" Type="System.String" DbType="VarChar(20)" />
@@ -224,29 +276,6 @@
       <Column Name="TotalRecords" Type="System.Int32" DbType="Int" CanBeNull="true" />
     </ElementType>
   </Function>
-  <Function Name="dbo.sp_SearchProducts" Method="sp_SearchProducts">
-    <Parameter Name="SearchTerm" Parameter="searchTerm" Type="System.String" DbType="NVarChar(200)" />
-    <Parameter Name="MinSimilarity" Parameter="minSimilarity" Type="System.Decimal" DbType="Decimal(5,2)" />
-    <Parameter Name="PageNumber" Parameter="pageNumber" Type="System.Int32" DbType="Int" />
-    <Parameter Name="PageSize" Parameter="pageSize" Type="System.Int32" DbType="Int" />
-    <Parameter Name="SeriesID" Parameter="seriesID" Type="System.Int32" DbType="Int" />
-    <ElementType Name="sp_SearchProductsResult">
-      <Column Name="Product_ID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="Product_name" Type="System.String" DbType="NVarChar(200)" CanBeNull="true" />
-      <Column Name="Sale_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
-      <Column Name="Original_Price" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
-      <Column Name="Product_Image" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
-      <Column Name="Current_Quantity" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="Product_Status" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
-      <Column Name="SeriesName" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
-      <Column Name="supplier_name" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
-      <Column Name="Is_Featured" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
-      <Column Name="Is_New" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
-      <Column Name="Total_Sold" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="SimilarityScore" Type="System.Decimal" DbType="Decimal(5,2)" CanBeNull="true" />
-      <Column Name="TotalRecords" Type="System.Int32" DbType="Int" CanBeNull="true" />
-    </ElementType>
-  </Function>
   <Function Name="dbo.sp_QuickSearchProducts" Method="sp_QuickSearchProducts">
     <Parameter Name="SearchTerm" Parameter="searchTerm" Type="System.String" DbType="NVarChar(200)" />
     <Parameter Name="MaxResults" Parameter="maxResults" Type="System.Int32" DbType="Int" />
@@ -259,24 +288,5 @@
       <Column Name="SeriesName" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
       <Column Name="SimilarityScore" Type="System.Decimal" DbType="Decimal(5,2)" CanBeNull="true" />
     </ElementType>
-  </Function>
-  <Function Name="dbo.sp_CreateOrderWithShipping" Method="sp_CreateOrderWithShipping">
-    <Parameter Name="UserId" Parameter="userId" Type="System.Int32" DbType="Int" />
-    <Parameter Name="ProductIds" Parameter="productIds" Type="System.String" DbType="VarChar(MAX)" />
-    <Parameter Name="VoucherId" Parameter="voucherId" Type="System.Int32" DbType="Int" />
-    <Parameter Name="RecipientName" Parameter="recipientName" Type="System.String" DbType="NVarChar(100)" />
-    <Parameter Name="PhoneNumber" Parameter="phoneNumber" Type="System.String" DbType="VarChar(15)" />
-    <Parameter Name="Email" Parameter="email" Type="System.String" DbType="VarChar(100)" />
-    <Parameter Name="Province" Parameter="province" Type="System.String" DbType="NVarChar(100)" />
-    <Parameter Name="District" Parameter="district" Type="System.String" DbType="NVarChar(100)" />
-    <Parameter Name="Ward" Parameter="ward" Type="System.String" DbType="NVarChar(100)" />
-    <Parameter Name="AddressDetail" Parameter="addressDetail" Type="System.String" DbType="NVarChar(255)" />
-    <Parameter Name="PaymentMethod" Parameter="paymentMethod" Type="System.String" DbType="NVarChar(50)" />
-    <Parameter Name="ShippingMethod" Parameter="shippingMethod" Type="System.String" DbType="NVarChar(50)" />
-    <Parameter Name="ShippingFee" Parameter="shippingFee" Type="System.Decimal" DbType="Decimal(18,2)" />
-    <Parameter Name="Notes" Parameter="notes" Type="System.String" DbType="NVarChar(500)" />
-    <Parameter Name="OrderId" Parameter="orderId" Type="System.String" DbType="VarChar(10)" Direction="InOut" />
-    <Parameter Name="TotalAmount" Parameter="totalAmount" Type="System.Decimal" DbType="Decimal(18,2)" Direction="InOut" />
-    <Return Type="System.Int32" />
   </Function>
 </Database>

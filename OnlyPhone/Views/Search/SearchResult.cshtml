@@ -1,0 +1,85 @@
+﻿@using OnlyPhone.Models
+@model SearchResultViewModel
+
+@{
+    ViewBag.Title = "Kết quả tìm kiếm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="search-results-wrapper">
+    <div class="container">
+        <h2 class="search-header-title">
+            Kết quả tìm kiếm cho: "<strong>@Model.SearchTerm</strong>"
+            <small style="font-size: 0.6em; color: #666">(@Model.TotalResults sản phẩm)</small>
+        </h2>
+
+        @if (Model.Products == null || !Model.Products.Any())
+        {
+            <div class="alert alert-warning text-center" role="alert">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                Rất tiếc, chúng tôi không tìm thấy sản phẩm nào phù hợp với từ khóa của bạn.
+            </div>
+            <div class="text-center mt-4">
+                <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Quay về trang chủ</a>
+            </div>
+        }
+        else
+        {
+            <div class="product-grid">
+                @foreach (var item in Model.Products)
+                {
+                    <div class="product-card">
+                        <a href="@Url.Action("Detail", "Product", new { id = item.product_id })">
+                            <img src="~/Content/Pic/Images/@item.images" class="card-img-top" alt="@item.product_name">
+                        </a>
+
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="@Url.Action("Detail", "Product", new { id = item.product_id })" class="text-dark" style="text-decoration:none;">
+                                    @item.product_name
+                                </a>
+                            </h5>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="card-price">@string.Format("{0:N0}₫", item.sale_price)</span>
+                                    @if (item.original_price > item.sale_price)
+                                    {
+                                        <br />
+                                        <span class="card-original-price">@string.Format("{0:N0}₫", item.original_price)</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="product-actions">
+                                <a href="@Url.Action("Detail", "Product", new { id = item.product_id })" class="btn-view-detail">
+                                    Xem chi tiết
+                                </a>
+
+                                <button type="button" class="btn-add-cart" onclick="addToCart(@item.product_id)" title="Thêm vào giỏ hàng">
+                                    <i class="fa-solid fa-cart-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            if (Model.TotalPages > 1)
+            {
+                <div class="d-flex justify-content-center mt-4">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", "Search", new { q = Model.SearchTerm, page = i })">@i</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                </div>
+            }
+        }
+    </div>
+</div>

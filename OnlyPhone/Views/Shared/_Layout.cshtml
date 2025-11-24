@@ -7,6 +7,7 @@
 
     @Styles.Render("~/Content/Css/header.css")
     <link href="~/Content/FontAwesome/css/all.min.css" rel="stylesheet" />
+    <link href="~/Content/Css/seachbox.css" rel="stylesheet" />
     <link href="~/Content/Bootstrap/bootstrap.min.css" rel="stylesheet" />
     <style>
         a {
@@ -29,12 +30,23 @@
             </div>
 
             <div class="header-search">
-                <form action="@Url.Action("Search", "Product")" method="get" class="search-form">
-                    <input type="text" name="q" placeholder="Bạn cần tìm..." class="search-input" required>
-                    <button type="submit" class="search-button">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </button>
-                </form>
+                <div class="search-container">
+                    <form action="@Url.Action("SearchResult", "Search")" method="get" class="search-form">
+                        <input type="text"
+                               id="headerSearchInput"
+                               name="q"
+                               placeholder="Bạn cần tìm điện thoại gì..."
+                               class="search-input"
+                               autocomplete="off"
+                               required>
+                        <button type="submit" class="search-button">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </form>
+
+                    <div id="searchResultsDropdown" class="search-suggestions-box">
+                    </div>
+                </div>
             </div>
 
             @Html.Action("HeaderParaticalView", "Home")
@@ -140,7 +152,7 @@
                 <!-- Sản phẩm mới -->
                 <li class="menu-item">
                     <a href="@Url.Action("NewProducts", "Product")">
-                         Sản phẩm mới
+                        Sản phẩm mới
                     </a>
                 </li>
 
@@ -213,6 +225,7 @@
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+    <script src="~/Scripts/CustomJS/searchbox.js"></script>
     <script src="~/Scripts/CustomJS/header.js"></script>
     <script src="~/Scripts/Bootstrap/bootstrap.bundle.min.js"></script>
     @RenderSection("scripts", required: false)

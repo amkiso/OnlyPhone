@@ -1,0 +1,259 @@
+﻿/* ========================================= */
+/* 1. QUICK SEARCH DROPDOWN (AUTOCOMPLETE)   */
+/* ========================================= */
+.search-container {
+    position: relative;
+    width: 100%;
+}
+
+.search-suggestions-box {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #3e5cd0; /* Màu viền xanh khớp header */
+    border-top: none;
+    border-radius: 0 0 15px 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    z-index: 9999;
+    display: none; /* Ẩn mặc định */
+    overflow: hidden;
+    margin-top: 2px;
+}
+
+    .search-suggestions-box.active {
+        display: block;
+    }
+
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none !important;
+    color: #333;
+}
+
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    .suggestion-item:hover {
+        background-color: #f9e8f0; /* Màu nền hồng nhạt khớp header */
+    }
+
+.suggestion-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 15px;
+    border: 1px solid #eee;
+}
+
+.suggestion-info {
+    flex: 1;
+}
+
+.suggestion-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    color: #333;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 280px;
+}
+
+.suggestion-price {
+    font-size: 13px;
+    color: #e04e86; /* Màu hồng đậm cho giá */
+    font-weight: bold;
+}
+
+    .suggestion-price del {
+        color: #999;
+        font-size: 11px;
+        margin-left: 8px;
+        font-weight: normal;
+    }
+
+.no-results-suggestion {
+    padding: 15px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+/* ========================================= */
+/* 2. FULL SEARCH RESULT PAGE (GRID VIEW)    */
+/* ========================================= */
+.search-results-wrapper {
+    padding: 30px 0;
+    background-color: #f5f5f5;
+    min-height: 60vh;
+}
+
+.search-header-title {
+    margin-bottom: 25px;
+    color: #3e5cd0;
+    border-bottom: 2px solid #e04e86;
+    padding-bottom: 10px;
+    display: inline-block;
+}
+/* ========================================= */
+/* 2. FULL SEARCH RESULT PAGE (GRID VIEW)    */
+/* ========================================= */
+.search-results-wrapper {
+    padding: 30px 0;
+    background-color: #f5f5f5;
+    min-height: 60vh;
+}
+
+.search-header-title {
+    margin-bottom: 25px;
+    color: #3e5cd0;
+    border-bottom: 2px solid #e04e86;
+    padding-bottom: 10px;
+    display: inline-block;
+}
+
+.product-grid {
+    display: grid;
+    /* Grid tự động chia cột, tối thiểu 250px để thẻ không bị quá hẹp */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+/* [FIX QUAN TRỌNG] Thiết lập Flexbox cho thẻ cha */
+.product-card {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden; /* Ẩn phần tràn nếu có */
+    /* Flex column để các phần tử con xếp dọc và lấp đầy chiều cao Grid */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        border-color: #3e5cd0;
+    }
+
+/* Ảnh không được co lại (shrink) */
+.card-img-top {
+    width: 100%;
+    height: 200px;
+    object-fit: contain; /* Đảm bảo ảnh không bị méo */
+    padding: 10px;
+    flex-shrink: 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* [FIX QUAN TRỌNG] Card body chiếm phần còn lại */
+.product-card .card-body {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Tự động giãn nở để lấp đầy khoảng trống còn lại */
+    /* KHÔNG dùng height: 100% ở đây nữa */
+}
+
+/* Tên sản phẩm */
+.product-card .card-title {
+    font-size: 16px;
+    line-height: 1.4;
+    margin-bottom: 15px;
+    /* Đẩy giá và nút xuống đáy nếu tên ngắn */
+    flex-grow: 1;
+}
+
+    .product-card .card-title a {
+        color: #333;
+        text-decoration: none;
+        font-weight: 600;
+        /* Giới hạn 2 dòng cho tên, quá dài sẽ hiện ... */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+/* Giá sản phẩm */
+.price-section {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.card-price {
+    color: #d70018;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.card-original-price {
+    text-decoration: line-through;
+    color: #999;
+    font-size: 14px;
+}
+
+/* Các nút bấm (Giữ nguyên style đẹp của bạn) */
+.product-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto; /* Đảm bảo luôn nằm dưới cùng của card-body */
+}
+
+.btn-view-detail {
+    flex: 1;
+    padding: 10px;
+    background: linear-gradient(135deg, #8BDEFF, #3b82f6);
+    color: white !important;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none !important;
+    text-align: center;
+    font-size: 14px;
+    white-space: nowrap; /* Tránh xuống dòng chữ */
+}
+
+    .btn-view-detail:hover {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+    }
+
+.btn-add-cart {
+    padding: 10px 14px;
+    background: white;
+    border: 1px solid #3b82f6;
+    color: #3b82f6;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .btn-add-cart:hover {
+        background: #3b82f6;
+        color: white;
+        transform: translateY(-2px);
+    }
