@@ -1937,10 +1937,145 @@ namespace OnlyPhone.Models
             }
         }
 
-        // =====================================================
-        // HELPER MODEL FOR ORDER HISTORY
-        // =====================================================
-        
+        /// <summary>
+        /// Lấy SeriesId từ tên Series
+        /// </summary>
+        public int GetSeriesIdByName(string seriesName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(seriesName))
+                    return 0;
+
+                var series = da.PhoneSeries.FirstOrDefault(s => s.SeriesName == seriesName);
+                return series?.Series_id ?? 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetSeriesIdByName: {ex.Message}");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách tất cả nhà cung cấp
+        /// </summary>
+        public List<SupplierInfo> GetAllSuppliers()
+        {
+            try
+            {
+                return da.suppliers
+                    .Select(s => new SupplierInfo
+                    {
+                        SupplierId = s.supplier_ID,
+                        SupplierName = s.supplier_name,
+                        ProductCount = da.Products
+                            .Where(p => p.supplier_ID == s.supplier_ID && p.Product_Status == "selling")
+                            .Count()
+                    })
+                    .Where(s => s.ProductCount > 0)
+                    .OrderBy(s => s.SupplierName)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetAllSuppliers: {ex.Message}");
+                return new List<SupplierInfo>();
+            }
+        }
+
+        /// <summary>
+        /// Đếm tổng số sản phẩm theo supplier và series
+        /// </summary>
+        public int GetTotalProductsBySupplierAndSeries(string supplierName, string seriesName)
+        {
+            try
+            {
+                return da.Products
+                    .Join(da.suppliers, p => p.supplier_ID, s => s.supplier_ID, (p, s) => new { p, s })
+                    .Join(da.PhoneSeries, x => x.p.Series_id, ps => ps.Series_id, (x, ps) => new { x.p, x.s, ps })
+                    .Where(x => x.s.supplier_name == supplierName
+                             && x.ps.SeriesName == seriesName
+                             && x.p.Product_Status == "selling")
+                    .Count();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetTotalProductsBySupplierAndSeries: {ex.Message}");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Lấy sản phẩm theo supplier và series
+        /// </summary>
+        public List<Product_Infomation> GetProductsBySupplierAndSeries(string supplierName, string seriesName, int page = 1, int pageSize = 15)
+        {
+            try
+            {
+                var query = from p in da.Products
+                            join s in da.suppliers on p.supplier_ID equals s.supplier_ID
+                            join ps in da.PhoneSeries on p.Series_id equals ps.Series_id
+                            where p.Product_Status == "selling"
+                            select new { p, s, ps };
+
+                // Lọc theo Supplier
+                if (!string.IsNullOrEmpty(supplierName))
+                {
+                    query = query.Where(x => x.s.supplier_name == supplierName);
+                }
+
+                // Lọc theo Series
+                if (!string.IsNullOrEmpty(seriesName))
+                {
+                    query = query.Where(x => x.ps.SeriesName == seriesName);
+                }
+
+                // Sắp xếp
+                query = query.OrderByDescending(x => x.p.Is_Featured)
+                             .ThenByDescending(x => x.p.Created_Date);
+
+                // Phân trang
+                var resultList = query.Skip((page - 1) * pageSize)
+                                      .Take(pageSize)
+                                      .Select(x => new
+                                      {
+                                          Product = x.p,
+                                          SupplierName = x.s.supplier_name,
+                                          SeriesName = x.ps.SeriesName,
+                                          TotalSold = da.Orders_items
+                                                        .Where(oi => oi.Product_ID == x.p.Product_ID)
+                                                        .Sum(oi => (int?)oi.quantity) ?? 0
+                                      }).ToList();
+
+                // Map sang Product_Infomation
+                return resultList.Select(x => new Product_Infomation
+                {
+                    product_id = x.Product.Product_ID,
+                    product_name = x.Product.Product_name,
+                    sale_price = x.Product.Sale_Price ?? 0,
+                    original_price = x.Product.Original_Price ?? 0,
+                    current_Quantity = x.Product.Current_Quantity,
+                    product_status = x.Product.Product_Status,
+                    images = x.Product.Product_Image,
+                    series_name = x.SeriesName,
+                    series_id = x.Product.Series_id,
+                    supplier_name = x.SupplierName,
+                    is_featured = x.Product.Is_Featured ?? false,
+                    is_new = x.Product.Is_New ?? false,
+                    total_sold = x.TotalSold,
+                    created_date = x.Product.Created_Date ?? DateTime.Now,
+                    product_description = ParseProductDescription(x.Product.Descriptions)
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetProductsBySupplierAndSeries: {ex.Message}");
+                return new List<Product_Infomation>();
+            }
+        }
+
+
     }
 
     public class OrderHistoryItem
@@ -1958,5 +2093,10 @@ namespace OnlyPhone.Models
         public string SeriesName { get; set; }
         public int ProductCount { get; set; }
     }
-
+    public class SupplierInfo
+    {
+        public int SupplierId { get; set; }
+        public string SupplierName { get; set; }
+        public int ProductCount { get; set; }
+    }
 }

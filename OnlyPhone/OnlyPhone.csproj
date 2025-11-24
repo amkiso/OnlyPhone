@@ -6113,7 +6113,7 @@
     <Content Include="Content\Pic\images\xiaomi-redmi-note-14-pro-thumbnew-600x600.jpg" />
     <Content Include="Content\Pic\images\xiaomi-redmi-note-14-pro-xanh-thumbnew-600x600.jpg" />
     <Content Include="Content\Pic\images\xiaomi-redmi-note-14-thumb-600x600.jpg" />
-    <Content Include="Content\Pic\UserAvatar\noAvt.jpg" />
+    <Content Include="Content\Pic\Avartar\noAvt.jpg" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Bootstrap\Site.css" />
@@ -6179,8 +6179,8 @@
     <Content Include="Scripts\CustomJS\checkout.js" />
     <Content Include="Scripts\CustomJS\header.js" />
     <Content Include="Scripts\CustomJS\indexpage.js" />
+    <Content Include="Scripts\CustomJS\Profile.js" />
     <Content Include="Scripts\CustomJS\Register.js" />
-    <Content Include="Scripts\CustomJS\subheader.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

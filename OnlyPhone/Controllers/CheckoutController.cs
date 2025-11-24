@@ -201,7 +201,12 @@ namespace OnlyPhone.Controllers
                 return RedirectToAction("Index", "Home");
             }
         }
+        public ActionResult History()
+        {
+            ViewBag.Message = "Lịch sử mua hàng";
 
+            return View();
+        }
         // =====================================================
         // POST: Checkout/CalculateTotal (AJAX)
         // =====================================================

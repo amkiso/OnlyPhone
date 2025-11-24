@@ -61,6 +61,8 @@ namespace OnlyPhone.Models
         public string SearchTerm { get; set; }
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
+        public string CurrentSupplier { get; set; }
+        public string CurrentSeries { get; set; }
         public int PageSize { get; set; }
         public bool HasMore { get; set; }
         public int TotalProducts { get; set; }

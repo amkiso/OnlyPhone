@@ -344,7 +344,9 @@ namespace OnlyPhone.Controllers
                 // Đếm thông báo chưa đọc
                 int unreadNotifications = db.Notifications
                     .Count(n => n.ID_user == user.ID_user && n.IsRead == false);
-
+                var userdetails = db.User_details.FirstOrDefault(ud => ud.ID_user == user.ID_user);
+                userdetails.user_status = true;
+                db.SubmitChanges();
                 // Tạo session user
                 var userSession = new UserSessionModel
                 {
@@ -379,14 +381,9 @@ namespace OnlyPhone.Controllers
                 }
 
                 // Redirect dựa theo role
-                if (user.user_type == "Admin" || user.user_type == "Staff")
-                {
-                    return RedirectToAction("Dashboard", "Manage");
-                }
-                else
-                {
+                
                     return RedirectToAction("Index", "Home");
-                }
+                
             }
             catch (Exception ex)
             {
@@ -398,9 +395,12 @@ namespace OnlyPhone.Controllers
         // GET: Account/Logout
         public ActionResult Logout()
         {
+            var userdetail = db.User_details.FirstOrDefault(ud => ud.ID_user == (int)Session["UserID"]);
+            userdetail.user_status = false;
+            db.SubmitChanges();
             Session.Clear();
             Session.Abandon();
-
+            
             // Xóa cookie Remember Me
             if (Request.Cookies["UserLogin"] != null)
             {
