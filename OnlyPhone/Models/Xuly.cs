@@ -2075,9 +2075,294 @@ namespace OnlyPhone.Models
             }
         }
 
+        /// <summary>
+        /// Lấy chi tiết đơn hàng theo OrderId
+        /// </summary>
+        public OrderDetailViewModel GetOrderDetail(string orderId, int userId)
+        {
+            try
+            {
+                var order = da.Orders.FirstOrDefault(o => o.Order_ID == orderId && o.ID_user == userId);
+                if (order == null)
+                    return null;
 
+                var shipping = da.Shippings.FirstOrDefault(s => s.Order_ID == orderId);
+                var payment = da.Payments.FirstOrDefault(p => p.Order_ID == orderId);
+                var status = da.OrderStatus.FirstOrDefault(s => s.StatusID == order.StatusID);
+
+                // Lấy voucher nếu có
+                Voucher voucher = null;
+                if (order.VoucherID.HasValue)
+                {
+                    voucher = da.Vouchers.FirstOrDefault(v => v.VoucherID == order.VoucherID.Value);
+                }
+
+                // Lấy danh sách sản phẩm
+                var orderItems = (from oi in da.Orders_items
+                                  where oi.Order_ID == orderId
+                                  join p in da.Products on oi.Product_ID equals p.Product_ID
+                                  select new OrderItemDetail
+                                  {
+                                      ProductId = p.Product_ID,
+                                      ProductName = p.Product_name,
+                                      ImageUrl = p.Product_Image,
+                                      Price = oi.Sale_Price ?? 0,
+                                      Quantity = oi.quantity ?? 1
+                                  }).ToList();
+
+                // Tính toán
+                decimal subTotal = orderItems.Sum(i => i.Total);
+                decimal discountAmount = 0;
+
+                if (voucher != null)
+                {
+                    if (voucher.DiscountType == "PERCENT")
+                    {
+                        discountAmount = subTotal * voucher.DiscountValue / 100;
+                        if (voucher.MaxDiscountAmount.HasValue && discountAmount > voucher.MaxDiscountAmount.Value)
+                            discountAmount = voucher.MaxDiscountAmount.Value;
+                    }
+                    else
+                    {
+                        discountAmount = voucher.DiscountValue;
+                    }
+                }
+
+                return new OrderDetailViewModel
+                {
+                    OrderId = orderId,
+                    OrderDate = order.Order_Date ?? DateTime.Now,
+                    StatusId = order.StatusID,
+                    StatusName = status?.StatusName ?? "Đang xử lý",
+                    TotalAmount = order.Total_Amount ?? 0,
+
+                    PaymentMethod = payment?.Payment_Method ?? "",
+                    PaymentStatus = payment?.Payment_Status ?? "",
+
+                    RecipientName = shipping?.Recipient_Name ?? "",
+                    PhoneNumber = shipping?.Phone_Number ?? "",
+                    Email = shipping?.Email ?? "",
+                    FullAddress = shipping?.Full_Address ?? "",
+                    ShippingMethod = shipping?.Shipping_Method ?? "",
+                    ShippingFee = shipping?.Shipping_Fee ?? 0,
+                    ShippingStatus = shipping?.Shipping_Status ?? "",
+                    TrackingNumber = shipping?.Tracking_Number ?? "",
+                    EstimatedDeliveryDate = shipping?.Estimated_Delivery_Date,
+                    ActualDeliveryDate = shipping?.Actual_Delivery_Date,
+
+                    Items = orderItems,
+
+                    VoucherCode = voucher?.Code,
+                    VoucherDescription = voucher?.Descriptions,
+                    DiscountAmount = discountAmount,
+                    SubTotal = subTotal
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetOrderDetail: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Hủy đơn hàng
+        /// </summary>
+        public (bool Success, string Message) CancelOrder(string orderId, int userId, string reason = "")
+        {
+            try
+            {
+                var order = da.Orders.FirstOrDefault(o => o.Order_ID == orderId && o.ID_user == userId);
+
+                if (order == null)
+                    return (false, "Không tìm thấy đơn hàng");
+
+                // Chỉ cho phép hủy đơn hàng có StatusID <= 2 (Pending, Processing)
+                if (order.StatusID > 2)
+                    return (false, "Không thể hủy đơn hàng đã được xác nhận hoặc đang giao");
+
+                // Cập nhật trạng thái đơn hàng
+                order.StatusID = 6; // Cancelled
+
+                // Cập nhật trạng thái shipping
+                var shipping = da.Shippings.FirstOrDefault(s => s.Order_ID == orderId);
+                if (shipping != null)
+                {
+                    shipping.Shipping_Status = "Đã hủy";
+                    shipping.Updated_At = DateTime.Now;
+                }
+
+                // Cập nhật trạng thái payment
+                var payment = da.Payments.FirstOrDefault(p => p.Order_ID == orderId);
+                if (payment != null)
+                {
+                    payment.Payment_Status = "Đã hủy";
+                }
+
+                // Hoàn lại số lượng sản phẩm
+                var orderItems = da.Orders_items.Where(oi => oi.Order_ID == orderId).ToList();
+                foreach (var item in orderItems)
+                {
+                    var product = da.Products.FirstOrDefault(p => p.Product_ID == item.Product_ID);
+                    if (product != null)
+                    {
+                        product.Current_Quantity += item.quantity ?? 0;
+                    }
+                }
+
+                // Hoàn lại voucher nếu có
+                if (order.VoucherID.HasValue)
+                {
+                    var voucher = da.Vouchers.FirstOrDefault(v => v.VoucherID == order.VoucherID.Value);
+                    if (voucher != null)
+                    {
+                        voucher.QuantityUsed--;
+                    }
+                }
+
+                // Tạo thông báo
+                var notification = new Notification
+                {
+                    ID_user = userId,
+                    Title = "Đơn hàng đã được hủy",
+                    Message = $"Đơn hàng {orderId} đã được hủy thành công. {(string.IsNullOrEmpty(reason) ? "" : "Lý do: " + reason)}",
+                    Type = "Order",
+                    Related_ID = orderId,
+                    IsRead = false,
+                    Created_At = DateTime.Now
+                };
+                da.Notifications.InsertOnSubmit(notification);
+
+                da.SubmitChanges();
+
+                return (true, "Hủy đơn hàng thành công");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in CancelOrder: {ex.Message}");
+                return (false, "Đã xảy ra lỗi khi hủy đơn hàng: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Đặt lại đơn hàng (thêm sản phẩm vào giỏ hàng)
+        /// </summary>
+        public (bool Success, string Message) ReorderOrder(string orderId, int userId)
+        {
+            try
+            {
+                var order = da.Orders.FirstOrDefault(o => o.Order_ID == orderId && o.ID_user == userId);
+
+                if (order == null)
+                    return (false, "Không tìm thấy đơn hàng");
+
+                // Lấy danh sách sản phẩm từ đơn hàng
+                var orderItems = da.Orders_items.Where(oi => oi.Order_ID == orderId).ToList();
+
+                if (!orderItems.Any())
+                    return (false, "Đơn hàng không có sản phẩm");
+
+                // Lấy hoặc tạo giỏ hàng
+                var cart = GetOrCreateCart(userId);
+
+                int addedCount = 0;
+                foreach (var item in orderItems)
+                {
+                    var product = da.Products.FirstOrDefault(p => p.Product_ID == item.Product_ID);
+
+                    // Kiểm tra sản phẩm còn hàng
+                    if (product == null || product.Product_Status != "selling")
+                        continue;
+
+                    // Kiểm tra số lượng tồn kho
+                    int quantityToAdd = item.quantity ?? 1;
+                    if (product.Current_Quantity < quantityToAdd)
+                        quantityToAdd = product.Current_Quantity;
+
+                    if (quantityToAdd <= 0)
+                        continue;
+
+                    // Thêm vào giỏ hàng
+                    var existingCartItem = da.cart_items.FirstOrDefault(
+                        ci => ci.cart_ID == cart.cart_ID && ci.Product_ID == item.Product_ID
+                    );
+
+                    if (existingCartItem != null)
+                    {
+                        existingCartItem.quantity += quantityToAdd;
+                    }
+                    else
+                    {
+                        var cartItem = new cart_item
+                        {
+                            cart_ID = cart.cart_ID,
+                            Product_ID = (int)item.Product_ID,
+                            quantity = quantityToAdd,
+                            Sale_Price = product.Sale_Price
+                        };
+                        da.cart_items.InsertOnSubmit(cartItem);
+                    }
+
+                    addedCount++;
+                }
+
+                if (addedCount == 0)
+                    return (false, "Không có sản phẩm nào còn hàng để thêm vào giỏ");
+
+                cart.update_at = DateTime.Now;
+                da.SubmitChanges();
+
+                return (true, $"Đã thêm {addedCount} sản phẩm vào giỏ hàng");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in ReorderOrder: {ex.Message}");
+                return (false, "Đã xảy ra lỗi khi đặt lại đơn hàng: " + ex.Message);
+            }
+        }
+        /// <summary>
+        /// Lấy danh sách đơn hàng của user với StatusId
+        /// </summary>
+        public List<OrderHistoryItemExtended> GetUserOrderHistoryExtended(int userId, int pageNumber = 1, int pageSize = 10)
+        {
+            try
+            {
+                var orders = (from o in da.Orders
+                              where o.ID_user == userId
+                              join s in da.OrderStatus on o.StatusID equals s.StatusID
+                              orderby o.Order_Date descending
+                              select new
+                              {
+                                  Order = o,
+                                  StatusName = s.StatusName,
+                                  StatusId = s.StatusID,
+                                  ItemCount = da.Orders_items.Where(oi => oi.Order_ID == o.Order_ID).Count()
+                              })
+                            .Skip((pageNumber - 1) * pageSize)
+                            .Take(pageSize)
+                            .ToList();
+
+                return orders.Select(x => new OrderHistoryItemExtended
+                {
+                    OrderId = x.Order.Order_ID,
+                    OrderDate = x.Order.Order_Date ?? DateTime.Now,
+                    TotalAmount = x.Order.Total_Amount ?? 0,
+                    StatusName = x.StatusName,
+                    StatusId = x.StatusId,
+                    ItemCount = x.ItemCount
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetUserOrderHistoryExtended: {ex.Message}");
+                return new List<OrderHistoryItemExtended>();
+            }
+        }
     }
-
+    public class OrderHistoryItemExtended : OrderHistoryItem
+    {
+        public int StatusId { get; set; }
+    }
     public class OrderHistoryItem
     {
         public string OrderId { get; set; }

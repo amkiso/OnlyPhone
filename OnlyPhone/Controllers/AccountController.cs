@@ -209,6 +209,209 @@ namespace OnlyPhone.Controllers
             }
         }
 
+        [HttpGet]
+        public JsonResult GetRecentOrders()
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" }, JsonRequestBehavior.AllowGet);
+                }
+
+                int userId = (int)Session["UserID"];
+                var orders = xl.GetUserOrderHistory(userId, 1, 5);
+
+                return Json(new
+                {
+                    success = true,
+                    data = orders.Select(o => new
+                    {
+                        orderId = o.OrderId,
+                        orderDate = o.OrderDate,
+                        statusName = o.StatusName,
+                        totalAmount = o.TotalAmount,
+                        itemCount = o.ItemCount
+                    })
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetRecentOrders: {ex.Message}");
+                return Json(new { success = false, message = "Đã xảy ra lỗi" }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        // =====================================================
+        // API: Get Order History với pagination và filter
+        // =====================================================
+        [HttpGet]
+        public JsonResult GetOrderHistory(int page = 1, int pageSize = 10, string statusFilter = "")
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" }, JsonRequestBehavior.AllowGet);
+                }
+
+                int userId = (int)Session["UserID"];
+
+                // Lấy danh sách đơn hàng
+                var allOrders = xl.GetUserOrderHistory(userId, 1, 1000); // Lấy tất cả
+
+                // Filter theo status nếu có
+                if (!string.IsNullOrEmpty(statusFilter))
+                {
+                    int statusId = int.Parse(statusFilter);
+                    allOrders = allOrders.Where(o => GetStatusId(o.StatusName) == statusId).ToList();
+                }
+
+                // Tính tổng số trang
+                int totalOrders = allOrders.Count;
+                int totalPages = (int)Math.Ceiling(totalOrders / (double)pageSize);
+
+                // Pagination
+                var orders = allOrders
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        orders = orders.Select(o => new
+                        {
+                            orderId = o.OrderId,
+                            orderDate = o.OrderDate,
+                            statusId = GetStatusId(o.StatusName),
+                            statusName = o.StatusName,
+                            totalAmount = o.TotalAmount,
+                            itemCount = o.ItemCount
+                        }),
+                        totalOrders = totalOrders,
+                        totalPages = totalPages,
+                        currentPage = page
+                    }
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetOrderHistory: {ex.Message}");
+                return Json(new { success = false, message = "Đã xảy ra lỗi" }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        // =====================================================
+        // API: Cancel Order (cập nhật từ AJAX sang API)
+        // =====================================================
+        [HttpPost]
+        public JsonResult CancelOrder(string orderId, string reason = "")
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+                }
+
+                int userId = (int)Session["UserID"];
+                var result = xl.CancelOrder(orderId, userId, reason);
+
+                return Json(new { success = result.Success, message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in CancelOrder: {ex.Message}");
+                return Json(new { success = false, message = "Đã xảy ra lỗi khi hủy đơn hàng" });
+            }
+        }
+
+        // =====================================================
+        // API: Reorder Order (cập nhật từ AJAX sang API)
+        // =====================================================
+        [HttpPost]
+        public JsonResult ReorderOrder(string orderId)
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+                }
+
+                int userId = (int)Session["UserID"];
+                var result = xl.ReorderOrder(orderId, userId);
+
+                return Json(new { success = result.Success, message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in ReorderOrder: {ex.Message}");
+                return Json(new { success = false, message = "Đã xảy ra lỗi" });
+            }
+        }
+
+        // =====================================================
+        // Helper: Map StatusName to StatusId
+        // =====================================================
+        private int GetStatusId(string statusName)
+        {
+            if (string.IsNullOrEmpty(statusName))
+                return 0;
+
+            if (statusName.Contains("Chờ") || statusName.Contains("Pending"))
+                return 1;
+            if (statusName.Contains("Đang xử lý") || statusName.Contains("Processing"))
+                return 2;
+            if (statusName.Contains("Xác nhận") || statusName.Contains("Confirmed"))
+                return 3;
+            if (statusName.Contains("Đang giao") || statusName.Contains("Shipping"))
+                return 4;
+            if (statusName.Contains("Hoàn thành") || statusName.Contains("Delivered"))
+                return 5;
+            if (statusName.Contains("Hủy") || statusName.Contains("Cancelled"))
+                return 6;
+
+            return 0;
+        }
+        // GET: Account/OrderDetail
+        [HttpGet]
+        public ActionResult OrderDetail(string id)
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+
+                if (string.IsNullOrEmpty(id))
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy mã đơn hàng";
+                    return RedirectToAction("OrderHistory");
+                }
+
+                int userId = (int)Session["UserID"];
+                var model = xl.GetOrderDetail(id, userId);
+
+                if (model == null)
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy đơn hàng";
+                    return RedirectToAction("OrderHistory");
+                }
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in OrderDetail: {ex.Message}");
+                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi tải thông tin đơn hàng";
+                return RedirectToAction("OrderHistory");
+            }
+        }
         // =====================================================
         // GET: Account/ChangePassword
         // =====================================================

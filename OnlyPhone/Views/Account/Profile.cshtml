@@ -12,126 +12,270 @@
     <title>@ViewBag.Title</title>
     <link href="~/Content/Css/profile.css" rel="stylesheet" />
     <link href="~/Content/FontAwesome/css/all.min.css" rel="stylesheet" />
+   
 </head>
 <body>
     <div class="container">
-        <header>
-            <div class="avatar-wrap" id="avatarWrap" title="Avatar người dùng">
-                <img id="avatarImg" class="avatar" src="@Url.Content(Model.AvatarPath)" alt="avatar">
-                <div class="avatar-overlay" id="avatarOverlay">
-                    <i class="fas fa-camera"></i>
-                    <span>Thay đổi ảnh</span>
+        <!-- Profile Card -->
+        <div class="profile-card">
+            <header>
+                <div class="avatar-wrap" id="avatarWrap" title="Avatar người dùng">
+                    <img id="avatarImg" class="avatar" src="@Url.Content(Model.AvatarPath)" alt="avatar">
+                    <div class="avatar-overlay" id="avatarOverlay">
+                        <i class="fas fa-camera"></i>
+                        <span>Thay đổi ảnh</span>
+                    </div>
                 </div>
+            </header>
+
+            <main class="card" role="main" aria-labelledby="profileTitle">
+                <div class="card-inner">
+                    <h2 id="profileTitle" style="margin:0 0 8px 0;">Thông tin cá nhân</h2>
+
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-error">
+                            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+                        </div>
+                    }
+
+                    <form id="profileForm" method="post" action="@Url.Action("EditProfile", "Account")" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="userId" name="UserId" value="@Model.UserId" />
+                        <input type="hidden" id="currentAvatar" value="@Model.AvatarUrl" />
+
+                        <div class="row">
+                            <label for="fullName">Họ và tên <span class="required">*</span></label>
+                            <input id="fullName" name="FullName" type="text" class="value" value="@Model.FullName" aria-label="Họ tên" readonly required>
+                        </div>
+
+                        <div class="row">
+                            <label for="email">Email</label>
+                            <input id="email" type="email" class="value" value="@Model.Email" aria-label="Email" readonly disabled>
+                        </div>
+
+                        <div class="row">
+                            <label for="phone">Số điện thoại <span class="required">*</span></label>
+                            <input id="phone" name="PhoneNumber" type="text" class="value" value="@Model.PhoneNumber" aria-label="Số điện thoại" readonly required>
+                        </div>
+
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block; margin-bottom:10px;">Địa chỉ</label>
+                            <div class="address-grid">
+                                <div>
+                                    <select id="province" name="Province" aria-label="Tỉnh / Thành phố" disabled>
+                                        <option value="">Chọn tỉnh / thành phố</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input id="ward" name="Ward" type="text" class="value" value="@Model.Ward" placeholder="Nhập phường / xã" aria-label="Phường / Xã" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row" style="margin-bottom:0.5rem">
+                            <label for="addressDetail">Địa chỉ chi tiết</label>
+                            <input id="addressDetail" name="AddressDetail" type="text" class="value" value="@Model.AddressDetail" placeholder="Số nhà, tên đường..." readonly>
+                        </div>
+
+                        <div class="row" style="margin-bottom:0.5rem">
+                            <label>Ngày tạo tài khoản</label>
+                            <div style="flex:1;">
+                                <div class="meta" id="createdAt">@(Model.CreatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật")</div>
+                            </div>
+                        </div>
+
+                        <div class="row" style="margin-bottom:0.5rem">
+                            <label>Cập nhật lần cuối</label>
+                            <div style="flex:1;">
+                                <div class="meta" id="lastModified">@(Model.LastModified?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật")</div>
+                            </div>
+                        </div>
+
+                        <div class="row" style="margin-top:6px;">
+                            <label></label>
+                            <div style="display:flex;flex-direction:column;gap:8px;">
+                                <div class="small">Bạn có thể thay đổi avatar khi ở chế độ chỉnh sửa.</div>
+                                <div style="display:flex;gap:10px;">
+                                    <input id="avatarInput" name="AvatarFile" type="file" accept="image/jpeg,image/png,image/jpg,image/gif" style="display:none">
+                                    <button class="btn" id="changeBtn" type="button" disabled>
+                                        <i class="fas fa-camera"></i> Thay đổi avatar
+                                    </button>
+                                    <button class="btn ghost" id="resetBtn" type="button" disabled>
+                                        <i class="fas fa-undo"></i> Khôi phục
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="actions" style="margin-top:6px;">
+                            <a href="@Url.Action("Index", "Home")" class="btn ghost" style="text-decoration:none;">
+                                <i class="fas fa-home"></i> Trang chủ
+                            </a>
+                            <button class="btn ghost" id="editBtn" type="button">
+                                <i class="fas fa-edit"></i> Sửa
+                            </button>
+                            <button class="btn" id="saveBtn" type="submit" disabled>
+                                <i class="fas fa-save"></i> Lưu
+                            </button>
+                            <a href="@Url.Action("ChangePassword", "Account")" class="btn ghost">
+                                <i class="fas fa-key"></i> Đổi mật khẩu
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+
+        <!-- Orders Section -->
+        <div class="orders-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-box"></i>
+                    Đơn hàng gần đây
+                </h2>
+                <a href="@Url.Action("OrderHistory", "Account")" class="btn-view-all">
+                    <span>Xem tất cả</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
-        </header>
 
-        <main class="card" role="main" aria-labelledby="profileTitle">
-            <div class="card-inner">
-                <h2 id="profileTitle" style="margin:0 0 8px 0;">Thông tin cá nhân</h2>
-
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
-                    </div>
-                }
-
-                @if (TempData["ErrorMessage"] != null)
-                {
-                    <div class="alert alert-error">
-                        <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
-                    </div>
-                }
-
-                <form id="profileForm" method="post" action="@Url.Action("EditProfile", "Account")" enctype="multipart/form-data">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" id="userId" name="UserId" value="@Model.UserId" />
-                    <input type="hidden" id="currentAvatar" value="@Model.AvatarUrl" />
-
-                    <div class="row">
-                        <label for="fullName">Họ và tên <span class="required">*</span></label>
-                        <input id="fullName" name="FullName" type="text" class="value" value="@Model.FullName" aria-label="Họ tên" readonly required>
-                    </div>
-
-                    <div class="row">
-                        <label for="email">Email</label>
-                        <input id="email" type="email" class="value" value="@Model.Email" aria-label="Email" readonly disabled>
-                    </div>
-
-                    <div class="row">
-                        <label for="phone">Số điện thoại <span class="required">*</span></label>
-                        <input id="phone" name="PhoneNumber" type="text" class="value" value="@Model.PhoneNumber" aria-label="Số điện thoại" readonly required>
-                    </div>
-
-                    <div style="margin-bottom:1rem;">
-                        <label style="display:block; margin-bottom:10px;">Địa chỉ</label>
-                        <div class="address-grid">
-                            <div>
-                                <select id="province" name="Province" aria-label="Tỉnh / Thành phố" disabled>
-                                    <option value="">Chọn tỉnh / thành phố</option>
-                                </select>
-                            </div>
-                            <div>
-                                <input id="ward" name="Ward" type="text" class="value" value="@Model.Ward" placeholder="Nhập phường / xã" aria-label="Phường / Xã" readonly>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row" style="margin-bottom:0.5rem">
-                        <label for="addressDetail">Địa chỉ chi tiết</label>
-                        <input id="addressDetail" name="AddressDetail" type="text" class="value" value="@Model.AddressDetail" placeholder="Số nhà, tên đường..." readonly>
-                    </div>
-
-                    <div class="row" style="margin-bottom:0.5rem">
-                        <label>Ngày tạo tài khoản</label>
-                        <div style="flex:1;">
-                            <div class="meta" id="createdAt">@(Model.CreatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật")</div>
-                        </div>
-                    </div>
-
-                    <div class="row" style="margin-bottom:0.5rem">
-                        <label>Cập nhật lần cuối</label>
-                        <div style="flex:1;">
-                            <div class="meta" id="lastModified">@(Model.LastModified?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật")</div>
-                        </div>
-                    </div>
-
-                    <div class="row" style="margin-top:6px;">
-                        <label></label>
-                        <div style="display:flex;flex-direction:column;gap:8px;">
-                            <div class="small">Bạn có thể thay đổi avatar khi ở chế độ chỉnh sửa.</div>
-                            <div style="display:flex;gap:10px;">
-                                <input id="avatarInput" name="AvatarFile" type="file" accept="image/jpeg,image/png,image/jpg,image/gif" style="display:none">
-                                <button class="btn" id="changeBtn" type="button" disabled>
-                                    <i class="fas fa-camera"></i> Thay đổi avatar
-                                </button>
-                                <button class="btn ghost" id="resetBtn" type="button" disabled>
-                                    <i class="fas fa-undo"></i> Khôi phục
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="actions" style="margin-top:6px;">
-                        <a href="@Url.Action("Index", "Home")" class="btn ghost" style="text-decoration:none;">
-                            <i class="fas fa-home"></i> Trang chủ
-                        </a>
-                        <button class="btn ghost" id="editBtn" type="button">
-                            <i class="fas fa-edit"></i> Sửa
-                        </button>
-                        <button class="btn" id="saveBtn" type="submit" disabled>
-                            <i class="fas fa-save"></i> Lưu
-                        </button>
-                        <a href="@Url.Action("ChangePassword", "Account")" class="btn ghost">
-                            <i class="fas fa-key"></i> Đổi mật khẩu
-                        </a>
-                    </div>
-                </form>
+            <div id="ordersContainer" class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Đang tải đơn hàng...</p>
             </div>
-        </main>
+        </div>
     </div>
 
-    <script src="~/Scripts/jquery-3.7.1.min.js"></script>
+    <script src="~/Scripts/Bootstrap/jquery-3.7.0.min.js"></script>
     <script src="~/Scripts/CustomJS/Profile.js"></script>
+    <script>
+    // Load recent orders using Fetch API
+    document.addEventListener('DOMContentLoaded', function() {
+        loadRecentOrders();
+    });
+
+    async function loadRecentOrders() {
+        try {
+            // Gọi API sử dụng fetch
+            const response = await fetch('@Url.Action("GetRecentOrders", "Account")', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            // Kiểm tra nếu server trả về lỗi (vd: 404, 500)
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            // Chuyển đổi dữ liệu nhận được sang JSON
+            const result = await response.json();
+
+            // Logic xử lý dữ liệu giống hệt code cũ
+            if (result.success) {
+                displayOrders(result.data);
+            } else {
+                showEmptyOrders();
+            }
+        } catch (error) {
+            // Xử lý khi có lỗi mạng hoặc lỗi server
+            console.error('Error loading orders:', error);
+            showEmptyOrders();
+        }
+    }
+
+    function displayOrders(orders) {
+        if (!orders || orders.length === 0) {
+            showEmptyOrders();
+            return;
+        }
+
+        let html = '<div class="orders-list">';
+        orders.forEach(function(order) {
+            html += `
+                <div class="order-item" onclick="window.location.href='@Url.Action("OrderDetail", "Account")?id=${order.orderId}'">
+                    <div class="order-header">
+                        <span class="order-id">
+                            <i class="fas fa-hashtag"></i> ${order.orderId}
+                        </span>
+                        <span class="order-status" style="background-color: ${getStatusColor(order.statusName)}">
+                            ${order.statusName}
+                        </span>
+                    </div>
+                    <div class="order-body">
+                        <div>
+                            <i class="fas fa-calendar"></i> ${formatDate(order.orderDate)}
+                        </div>
+                        <div>
+                            <i class="fas fa-box"></i> ${order.itemCount} sản phẩm
+                        </div>
+                        <div class="order-total">
+                            ${formatCurrency(order.totalAmount)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        // Vẫn dùng jQuery để render HTML cho tiện (vì dự án bạn đang có sẵn jQuery)
+        $('#ordersContainer').html(html);
+    }
+
+    function showEmptyOrders() {
+        $('#ordersContainer').html(`
+            <div class="empty-orders">
+                <i class="fas fa-box-open"></i>
+                <p>Bạn chưa có đơn hàng nào</p>
+                <a href="@Url.Action("Index", "Home")" class="btn">
+                    <i class="fas fa-shopping-bag"></i> Mua sắm ngay
+                </a>
+            </div>
+        `);
+    }
+
+    function getStatusColor(statusName) {
+        if (!statusName) return '#6B7280'; // Xử lý null safety
+
+        if (statusName.includes('Chờ') || statusName.includes('Pending'))
+            return '#FFA500';
+        if (statusName.includes('Xử lý') || statusName.includes('Processing'))
+            return '#3B82F6';
+        if (statusName.includes('Xác nhận') || statusName.includes('Confirmed'))
+            return '#10B981';
+        if (statusName.includes('Đang giao') || statusName.includes('Shipping'))
+            return '#8B4513';
+        if (statusName.includes('Hoàn thành') || statusName.includes('Delivered'))
+            return '#22C55E';
+        if (statusName.includes('Hủy') || statusName.includes('Cancelled'))
+            return '#EF4444';
+        return '#6B7280';
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(amount);
+    }
+    </script>
 </body>
 </html>

@@ -1,0 +1,547 @@
+﻿@model List<OnlyPhone.Models.OrderHistoryItem>
+@{
+    ViewBag.Title = "Lịch sử đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    :root {
+        --primary: #0ea5e9; /* Màu xanh hiện đại hơn */
+        --primary-soft: #e0f2fe;
+        --text-dark: #334155;
+        --text-gray: #64748b;
+        --border-color: #e2e8f0;
+        --bg-page: #f8fafc;
+        --white: #ffffff;
+    }
+
+    body {
+        background-color: var(--bg-page);
+        color: var(--text-dark);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .order-history-page {
+        padding: 24px 0; /* Giảm padding tổng thể */
+        min-height: 100vh;
+    }
+
+    /* Header Section - Gọn hơn */
+    .page-header {
+        background: transparent;
+        padding: 0 0 20px 0;
+        margin-bottom: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: none;
+        box-shadow: none;
+    }
+
+    .page-title {
+        font-size: 20px; /* Giảm size chữ */
+        font-weight: 700;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .page-title i {
+        color: var(--primary);
+        font-size: 18px;
+    }
+
+    .filter-section {
+        display: flex;
+        gap: 10px;
+    }
+
+    .filter-select {
+        padding: 6px 12px; /* Input nhỏ gọn hơn */
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 13px;
+        background-color: var(--white);
+        color: var(--text-dark);
+        outline: none;
+        cursor: pointer;
+    }
+
+    .filter-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+
+    .btn-back {
+        padding: 6px 12px;
+        background: var(--white);
+        color: var(--text-gray);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .btn-back:hover {
+        background: var(--text-dark);
+        color: var(--white);
+        border-color: var(--text-dark);
+    }
+
+    /* Orders List - Thiết kế lại dạng thẻ ngang */
+    .orders-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px; /* Khoảng cách giữa các đơn hàng nhỏ hơn */
+    }
+
+    .order-card {
+        background: var(--white);
+        border-radius: 8px; /* Bo góc nhẹ hơn */
+        border: 1px solid var(--border-color);
+        padding: 16px; /* Padding trong thẻ nhỏ hơn */
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: relative;
+    }
+
+    .order-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transform: translateY(-1px);
+    }
+
+    /* Layout mới cho Desktop: Hàng ngang */
+    @@media (min-width: 768px) {
+        .order-card {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Chia cột trong card */
+        .order-section-main { flex: 2; }
+        .order-section-info { flex: 2; display: flex; gap: 24px; }
+        .order-section-status { flex: 1; text-align: right; }
+        .order-section-actions { flex: 1; display: flex; justify-content: flex-end; gap: 8px; }
+    }
+
+    /* Main Info (ID + Date) */
+    .order-id {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-dark);
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .order-date {
+        font-size: 12px;
+        color: var(--text-gray);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Info Stats (Money + Items) */
+    .info-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-gray);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-dark);
+    }
+
+    .info-value.price {
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 15px;
+    }
+
+    /* Badge Trạng thái - Style pills nhỏ */
+    .order-status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    /* Buttons - Nhỏ và tinh tế hơn */
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        transition: all 0.2s;
+        height: 32px; /* Chiều cao cố định nhỏ */
+        white-space: nowrap;
+    }
+
+    .btn-primary {
+        background: var(--white);
+        color: var(--primary);
+        border: 1px solid var(--primary);
+    }
+    .btn-primary:hover {
+        background: var(--primary);
+        color: var(--white);
+    }
+
+    .btn-secondary { /* Nút xem chi tiết mặc định */
+        background: var(--bg-page);
+        color: var(--text-dark);
+        border: 1px solid transparent;
+    }
+    .btn-secondary:hover {
+        background: #e2e8f0;
+    }
+
+    .btn-danger-ghost {
+        background: transparent;
+        color: #ef4444;
+        border: 1px solid #fee2e2;
+    }
+    .btn-danger-ghost:hover {
+        background: #fee2e2;
+        border-color: #ef4444;
+    }
+
+    /* Empty State & Loading */
+    .empty-state, .loading {
+        background: var(--white);
+        padding: 40px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px dashed var(--border-color);
+    }
+
+    .empty-state i, .loading i {
+        font-size: 32px;
+        color: #cbd5e1;
+        margin-bottom: 12px;
+    }
+
+    .empty-state h3 { font-size: 16px; margin: 0 0 4px 0; color: var(--text-dark); }
+    .empty-state p { font-size: 13px; color: var(--text-gray); margin-bottom: 16px; }
+
+    /* Pagination - Minimalist */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 24px;
+    }
+
+    .page-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        background: var(--white);
+        color: var(--text-gray);
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .page-btn:hover:not(:disabled) {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .page-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
+
+<div class="order-history-page">
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">
+                Lịch sử đơn hàng
+            </h1>
+
+            <div class="filter-section">
+                <select id="statusFilter" class="filter-select">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="1">Chờ xử lý</option>
+                    <option value="2">Đang xử lý</option>
+                    <option value="3">Đã xác nhận</option>
+                    <option value="4">Đang giao hàng</option>
+                    <option value="5">Đã giao hàng</option>
+                    <option value="6">Đã hủy</option>
+                </select>
+
+                <a href="@Url.Action("Profile", "Account")" class="btn-back">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+            </div>
+        </div>
+
+        <div id="ordersContainer">
+            <div class="loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p style="font-size: 13px; margin:0">Đang tải...</p>
+            </div>
+        </div>
+
+        <div id="paginationContainer"></div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    let currentPage = 1;
+    let currentStatus = '';
+    const pageSize = 10;
+
+    $(document).ready(function() {
+        loadOrders(1, '');
+
+        $('#statusFilter').change(function() {
+            currentStatus = $(this).val();
+            currentPage = 1;
+            loadOrders(currentPage, currentStatus);
+        });
+    });
+
+    function loadOrders(page, statusFilter) {
+        // Giữ loading nhỏ gọn
+        $('#ordersContainer').css('opacity', '0.6');
+
+        $.ajax({
+            url: '@Url.Action("GetOrderHistory", "Account")',
+            type: 'GET',
+            data: {
+                page: page,
+                pageSize: pageSize,
+                statusFilter: statusFilter
+            },
+            success: function(response) {
+                $('#ordersContainer').css('opacity', '1');
+                if (response.success) {
+                    if (response.data && response.data.orders && response.data.orders.length > 0) {
+                        displayOrders(response.data.orders);
+                        displayPagination(response.data.totalPages, page);
+                    } else {
+                        showEmptyState();
+                    }
+                } else {
+                    showEmptyState();
+                }
+            },
+            error: function() {
+                $('#ordersContainer').html('<div class="empty-state"><p>Lỗi tải dữ liệu.</p></div>');
+            }
+        });
+    }
+
+    // Render HTML mới - Cấu trúc thẻ ngang
+    function displayOrders(orders) {
+        let html = '<div class="orders-container">';
+
+        orders.forEach(function(order) {
+            // Xác định style màu cho Badge dựa trên JS logic cũ nhưng áp dụng class CSS mới
+            const statusConfig = getStatusConfig(order.statusName);
+
+            html += `
+                <div class="order-card">
+                    <div class="order-section-main">
+                        <span class="order-id">#${order.orderId}</span>
+                        <div class="order-date">
+                            <i class="fa-regular fa-clock" style="font-size: 10px;"></i>
+                            ${formatDate(order.orderDate)}
+                        </div>
+                    </div>
+
+                    <div class="order-section-info">
+                        <div class="info-group">
+                            <span class="info-label">Sản phẩm</span>
+                            <span class="info-value">${order.itemCount}</span>
+                        </div>
+                        <div class="info-group">
+                            <span class="info-label">Tổng tiền</span>
+                            <span class="info-value price">${formatCurrency(order.totalAmount)}</span>
+                        </div>
+                    </div>
+
+                    <div class="order-section-status">
+                        <span class="order-status-badge"
+                              style="background-color: ${statusConfig.bg}; color: ${statusConfig.text}">
+                            ${order.statusName}
+                        </span>
+                    </div>
+
+                    <div class="order-section-actions">
+                        <a href="@Url.Action("OrderDetail", "Account")?id=${order.orderId}"
+                           class="btn-action btn-secondary" title="Xem chi tiết">
+                            <i class="fa-solid fa-angle-right"></i> Chi tiết
+                        </a>
+
+                        <button onclick="reorderOrder('${order.orderId}')"
+                                class="btn-action btn-primary" title="Đặt lại">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+
+                        ${order.statusId <= 2 ? `
+                            <button onclick="cancelOrder('${order.orderId}')"
+                                    class="btn-action btn-danger-ghost" title="Hủy đơn">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        $('#ordersContainer').html(html);
+    }
+
+    function displayPagination(totalPages, currentPage) {
+        if (totalPages <= 1) {
+            $('#paginationContainer').html('');
+            return;
+        }
+
+        let html = '<div class="pagination">';
+
+        // Prev
+        html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''}
+                 onclick="changePage(${currentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+
+        // Numbers - Logic rút gọn: Chỉ hiện trang đầu, cuối và trang hiện tại
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}"
+                         onclick="changePage(${i})">${i}</button>`;
+            } else if (i === currentPage - 2 || i === currentPage + 2) {
+                html += `<span style="display:flex;align-items:flex-end;color:#cbd5e1;font-size:12px">...</span>`;
+            }
+        }
+
+        // Next
+        html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''}
+                 onclick="changePage(${currentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+
+        html += '</div>';
+        $('#paginationContainer').html(html);
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        loadOrders(currentPage, currentStatus);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showEmptyState() {
+        $('#ordersContainer').html(`
+            <div class="empty-state">
+                <i class="fa-solid fa-box-open"></i>
+                <h3>Chưa có đơn hàng nào</h3>
+                <p>Bạn chưa thực hiện đơn hàng nào gần đây.</p>
+                <a href="@Url.Action("Index", "Home")" class="btn-action btn-primary">
+                    Mua sắm ngay
+                </a>
+            </div>
+        `);
+        $('#paginationContainer').html('');
+    }
+
+    // Logic xử lý (giữ nguyên logic gốc, chỉ alert gọn lại nếu muốn)
+    function cancelOrder(orderId) {
+        if (!confirm('Hủy đơn hàng này?')) return;
+        const reason = prompt('Lý do hủy (không bắt buộc):');
+
+        $.ajax({
+            url: '@Url.Action("CancelOrder", "Account")',
+            type: 'POST',
+            data: { orderId: orderId, reason: reason },
+            success: function(response) {
+                alert(response.message);
+                if(response.success) loadOrders(currentPage, currentStatus);
+            },
+            error: function() { alert('Lỗi hệ thống'); }
+        });
+    }
+
+    function reorderOrder(orderId) {
+        if (!confirm('Thêm sản phẩm từ đơn này vào giỏ hàng?')) return;
+
+        $.ajax({
+            url: '@Url.Action("ReorderOrder", "Account")',
+            type: 'POST',
+            data: { orderId: orderId },
+            success: function(response) {
+                if (response.success) {
+                    window.location.href = '@Url.Action("Index", "Cart")';
+                } else {
+                    alert(response.message);
+                }
+            }
+        });
+    }
+
+    // Helper: Trả về cặp màu nền/chữ cho badge nhẹ nhàng hơn (Pastel Colors)
+    function getStatusConfig(statusName) {
+        const s = statusName.toLowerCase();
+        // Chờ: Vàng nhạt
+        if (s.includes('chờ') || s.includes('pending'))
+            return { bg: '#fff7ed', text: '#c2410c' };
+        // Xử lý: Xanh dương nhạt
+        if (s.includes('xử lý') || s.includes('processing'))
+            return { bg: '#eff6ff', text: '#1d4ed8' };
+        // Xác nhận/Giao: Tím nhạt/Xanh biển
+        if (s.includes('xác nhận') || s.includes('đang giao'))
+            return { bg: '#f0f9ff', text: '#0369a1' };
+        // Hoàn thành: Xanh lá nhạt
+        if (s.includes('hoàn thành') || s.includes('đã giao'))
+            return { bg: '#f0fdf4', text: '#15803d' };
+        // Hủy: Đỏ nhạt
+        if (s.includes('hủy') || s.includes('cancelled'))
+            return { bg: '#fef2f2', text: '#b91c1c' };
+
+        return { bg: '#f1f5f9', text: '#475569' }; // Mặc định xám
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+    }
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    }
+</script>

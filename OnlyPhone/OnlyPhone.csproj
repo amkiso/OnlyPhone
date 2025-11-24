@@ -195,6 +195,7 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Controllers\SearchController.cs" />
+    <Compile Include="Models\OrderDetailViewModel.cs" />
     <Compile Include="Models\UserProfileViewModels.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -6205,6 +6206,8 @@
     <Content Include="Views\Checkout\Confirmation.cshtml" />
     <Content Include="Views\Account\ChangePassword.cshtml" />
     <Content Include="Views\Error\Error404.cshtml" />
+    <Content Include="Views\Account\OrderDetail.cshtml" />
+    <Content Include="Views\Account\OrderHistory.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

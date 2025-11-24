@@ -1,0 +1,720 @@
+﻿@model OnlyPhone.Models.OrderDetailViewModel
+@{
+    ViewBag.Title = "Chi tiết đơn hàng #" + Model.OrderId;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    :root {
+        --primary-color: #8BDEFF;
+        --primary-dark: #6BC5E8;
+    }
+
+    .order-detail-container {
+        padding: 30px 0;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        min-height: 100vh;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb-custom {
+        background: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(139, 222, 255, 0.15);
+    }
+
+        .breadcrumb-custom a {
+            color: var(--primary-dark);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+            .breadcrumb-custom a:hover {
+                color: var(--primary-color);
+            }
+
+        .breadcrumb-custom span {
+            color: #64748b;
+            margin: 0 10px;
+        }
+
+    /* Order Header */
+    .order-detail-header {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 10px rgba(139, 222, 255, 0.2);
+        border-left: 5px solid var(--primary-color);
+    }
+
+    .order-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .order-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .order-status-badge {
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .order-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        padding-top: 15px;
+        border-top: 2px solid #f1f5f9;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+        .meta-item i {
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .meta-item strong {
+            color: #1e293b;
+        }
+
+    /* Detail Grid */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 25px;
+        margin-bottom: 25px;
+    }
+
+    /* Products Section */
+    .products-section {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(139, 222, 255, 0.2);
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .section-title i {
+            color: var(--primary-color);
+        }
+
+    .product-item {
+        display: flex;
+        gap: 15px;
+        padding: 15px;
+        border-radius: 10px;
+        border: 2px solid #f1f5f9;
+        margin-bottom: 15px;
+        transition: all 0.3s;
+    }
+
+        .product-item:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 10px rgba(139, 222, 255, 0.2);
+        }
+
+    .product-image {
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    .product-details {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .product-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 8px;
+    }
+
+    .product-price-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .product-quantity {
+        font-size: 14px;
+        color: #64748b;
+    }
+
+    .product-price {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary-dark);
+    }
+
+    /* Summary Section */
+    .summary-section {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(139, 222, 255, 0.2);
+        height: fit-content;
+        position: sticky;
+        top: 20px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 14px;
+    }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            padding-top: 15px;
+            border-top: 2px solid var(--primary-color);
+            margin-top: 10px;
+        }
+
+    .summary-label {
+        color: #64748b;
+    }
+
+    .summary-value {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .summary-total {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary-dark);
+    }
+
+    .voucher-info {
+        background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .voucher-code {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 4px;
+    }
+
+    .voucher-desc {
+        font-size: 12px;
+        color: #0891b2;
+    }
+
+    /* Info Sections */
+    .info-sections {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+    }
+
+    .info-section {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(139, 222, 255, 0.2);
+    }
+
+    .info-row {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+    .info-label {
+        font-size: 13px;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .info-value {
+        font-size: 14px;
+        color: #1e293b;
+    }
+
+    .tracking-number {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-weight: 700;
+        display: inline-block;
+        font-size: 14px;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+        cursor: pointer;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        min-width: 150px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        color: white;
+    }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(139, 222, 255, 0.4);
+            color: white;
+        }
+
+    .btn-secondary {
+        background: white;
+        color: var(--primary-dark);
+        border: 2px solid var(--primary-color);
+    }
+
+        .btn-secondary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+    .btn-danger {
+        background: #fee2e2;
+        color: #dc2626;
+        border: 2px solid #fca5a5;
+    }
+
+        .btn-danger:hover {
+            background: #fca5a5;
+            color: white;
+        }
+
+    /* Responsive */
+    @@media (max-width: 992px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-section {
+            position: static;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .order-title-row {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .product-item {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .product-image {
+            margin: 0 auto;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="order-detail-container">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb-custom">
+            <a href="@Url.Action("Index", "Home")">
+                <i class="fa-solid fa-home"></i> Trang chủ
+            </a>
+            <span>/</span>
+            <a href="@Url.Action("OrderHistory", "Account")">
+                Lịch sử đơn hàng
+            </a>
+            <span>/</span>
+            <span>@Model.OrderId</span>
+        </div>
+
+        <!-- Order Header -->
+        <div class="order-detail-header">
+            <div class="order-title-row">
+                <h1 class="order-title">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    @Model.OrderId
+                </h1>
+                <span class="order-status-badge" style="background-color: @GetStatusColor(Model.StatusId);">
+                    @Model.StatusName
+                </span>
+            </div>
+
+            <div class="order-meta">
+                <div class="meta-item">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>Ngày đặt: <strong>@Model.OrderDate.ToString("dd/MM/yyyy HH:mm:ss")</strong></span>
+                </div>
+                <div class="meta-item">
+                    <i class="fa-solid fa-credit-card"></i>
+                    <span>Thanh toán: <strong>@Model.PaymentMethod</strong></span>
+                </div>
+                <div class="meta-item">
+                    <i class="fa-solid fa-truck"></i>
+                    <span>Vận chuyển: <strong>@Model.ShippingMethod</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Grid -->
+        <div class="detail-grid">
+            <!-- Products Section -->
+            <div class="products-section">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-box"></i>
+                    Sản phẩm (@Model.Items.Count)
+                </h2>
+
+                @foreach (var item in Model.Items)
+                {
+                    <div class="product-item">
+                        <img src="@Url.Content("~/Content/Pic/images/" + item.ImageUrl)"
+                             alt="@item.ProductName"
+                             class="product-image"
+                             onerror="this.src='@Url.Content("~/Content/Pic/images/no-image.jpg")'" />
+
+                        <div class="product-details">
+                            <div class="product-name">@item.ProductName</div>
+                            <div class="product-price-info">
+                                <span class="product-quantity">
+                                    <i class="fa-solid fa-xmark"></i> @item.Quantity x @item.Price.ToString("N0")đ
+                                </span>
+                                <span class="product-price">@item.Total.ToString("N0")đ</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Summary Section -->
+            <div class="summary-section">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-receipt"></i>
+                    Tổng quan đơn hàng
+                </h2>
+
+                @if (!string.IsNullOrEmpty(Model.VoucherCode))
+                {
+                    <div class="voucher-info">
+                        <div class="voucher-code">
+                            <i class="fa-solid fa-ticket"></i> @Model.VoucherCode
+                        </div>
+                        <div class="voucher-desc">@Model.VoucherDescription</div>
+                    </div>
+                }
+
+                <div class="summary-row">
+                    <span class="summary-label">Tạm tính</span>
+                    <span class="summary-value">@Model.SubTotal.ToString("N0") đ</span>
+                </div>
+
+                <div class="summary-row">
+                    <span class="summary-label">Phí vận chuyển</span>
+                    <span class="summary-value">@Model.ShippingFee.ToString("N0") đ</span>
+                </div>
+
+                @if (Model.DiscountAmount > 0)
+                {
+                    <div class="summary-row">
+                        <span class="summary-label">Giảm giá</span>
+                        <span class="summary-value" style="color: #10b981;">-@Model.DiscountAmount.ToString("N0") đ</span>
+                    </div>
+                }
+
+                <div class="summary-row">
+                    <span class="summary-label">Tổng cộng</span>
+                    <span class="summary-total">@Model.TotalAmount.ToString("N0") đ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Sections -->
+        <div class="info-sections">
+            <!-- Shipping Info -->
+            <div class="info-section">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-truck"></i>
+                    Thông tin giao hàng
+                </h2>
+
+                <div class="info-row">
+                    <span class="info-label">Người nhận</span>
+                    <span class="info-value">@Model.RecipientName</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Số điện thoại</span>
+                    <span class="info-value">@Model.PhoneNumber</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Email))
+                {
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">@Model.Email</span>
+                    </div>
+                }
+
+                <div class="info-row">
+                    <span class="info-label">Địa chỉ</span>
+                    <span class="info-value">@Model.FullAddress</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Trạng thái</span>
+                    <span class="info-value">
+                        <span style="color: @GetShippingStatusColor(Model.ShippingStatus); font-weight: 600;">
+                            @Model.ShippingStatus
+                        </span>
+                    </span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.TrackingNumber))
+                {
+                    <div class="info-row">
+                        <span class="info-label">Mã vận đơn</span>
+                        <span class="tracking-number">@Model.TrackingNumber</span>
+                    </div>
+                }
+
+                @if (Model.EstimatedDeliveryDate.HasValue)
+                {
+                    <div class="info-row">
+                        <span class="info-label">Dự kiến giao</span>
+                        <span class="info-value">@Model.EstimatedDeliveryDate.Value.ToString("dd/MM/yyyy")</span>
+                    </div>
+                }
+
+                @if (Model.ActualDeliveryDate.HasValue)
+                {
+                    <div class="info-row">
+                        <span class="info-label">Đã giao lúc</span>
+                        <span class="info-value">@Model.ActualDeliveryDate.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                }
+            </div>
+
+            <!-- Payment Info -->
+            <div class="info-section">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-credit-card"></i>
+                    Thông tin thanh toán
+                </h2>
+
+                <div class="info-row">
+                    <span class="info-label">Phương thức</span>
+                    <span class="info-value">@Model.PaymentMethod</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Trạng thái</span>
+                    <span class="info-value">
+                        <span style="color: @GetPaymentStatusColor(Model.PaymentStatus); font-weight: 600;">
+                            @Model.PaymentStatus
+                        </span>
+                    </span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Số tiền</span>
+                    <span class="info-value" style="font-weight: 700; color: var(--primary-dark);">
+                        @Model.TotalAmount.ToString("N0") đ
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="@Url.Action("OrderHistory", "Account")" class="btn-action btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> Quay lại
+            </a>
+
+            <button type="button" class="btn-action btn-primary" onclick="reorderOrder('@Model.OrderId')">
+                <i class="fa-solid fa-rotate"></i> Đặt lại đơn hàng
+            </button>
+
+            @if (Model.StatusId <= 2)
+            {
+                <button type="button" class="btn-action btn-danger" onclick="cancelOrder('@Model.OrderId')">
+                    <i class="fa-solid fa-xmark"></i> Hủy đơn hàng
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusColor(int statusId)
+    {
+        switch (statusId)
+        {
+            case 1: return "#FFA500"; // Pending - Orange
+            case 2: return "#3B82F6"; // Processing - Blue
+            case 3: return "#10B981"; // Confirmed - Green
+            case 4: return "#8B4513"; // Shipping - Brown
+            case 5: return "#22C55E"; // Delivered - Green
+            case 6: return "#EF4444"; // Cancelled - Red
+            default: return "#6B7280"; // Gray
+        }
+    }
+
+    string GetShippingStatusColor(string status)
+    {
+        if (string.IsNullOrEmpty(status)) return "#FFA500";
+
+        if (status.Contains("Delivered") || status.Contains("Đã giao") || status.Contains("Hoàn thành"))
+            return "#10B981";
+        if (status.Contains("Shipping") || status.Contains("Đang giao") || status.Contains("Đang vận chuyển"))
+            return "#3B82F6";
+        if (status.Contains("Cancelled") || status.Contains("Hủy"))
+            return "#EF4444";
+        return "#FFA500";
+    }
+
+    string GetPaymentStatusColor(string status)
+    {
+        if (string.IsNullOrEmpty(status)) return "#FFA500";
+
+        if (status.Contains("Đã thanh toán") || status.Contains("Paid"))
+            return "#10B981";
+        if (status.Contains("Chờ") || status.Contains("Pending"))
+            return "#FFA500";
+        if (status.Contains("Hủy") || status.Contains("Cancelled"))
+            return "#EF4444";
+        return "#6B7280";
+    }
+}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function cancelOrder(orderId) {
+        if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+            return;
+        }
+
+        var reason = prompt('Vui lòng nhập lý do hủy đơn (không bắt buộc):');
+
+        $.ajax({
+            url: '@Url.Action("CancelOrder", "Account")',
+            type: 'POST',
+            data: {
+                orderId: orderId,
+                reason: reason
+            },
+            success: function (response) {
+                if (response.success) {
+                    alert(response.message);
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function () {
+                alert('Đã xảy ra lỗi khi hủy đơn hàng');
+            }
+        });
+    }
+
+    function reorderOrder(orderId) {
+        if (!confirm('Bạn muốn đặt lại đơn hàng này? Sản phẩm sẽ được thêm vào giỏ hàng.')) {
+            return;
+        }
+
+        $.ajax({
+            url: '@Url.Action("ReorderOrder", "Account")',
+            type: 'POST',
+            data: { orderId: orderId },
+            success: function (response) {
+                if (response.success) {
+                    alert(response.message);
+                    window.location.href = '@Url.Action("Index", "Cart")';
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function () {
+                alert('Đã xảy ra lỗi khi đặt lại đơn hàng');
+            }
+        });
+    }
+</script>
