@@ -1,0 +1,509 @@
+﻿@model List<OnlyPhone.Models.Product_Infomation>
+@{
+    ViewBag.Title = "Quản lý sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+
+    var jsonSeries = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.SeriesList);
+    var jsonSuppliers = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.SupplierList);
+}
+
+<style>
+    /* ========================= */
+    /* THEME VARIABLES FOR INPUT */
+    /* ========================= */
+    :root {
+        --card-radius: 12px;
+        --border-color: rgba(0,0,0,0.08);
+        --input-bg: #f8fafc;       /* Màu nền input sáng */
+        --input-text: #0f1724;     /* Màu chữ input sáng */
+        --input-border: #cbd5e1;
+    }
+
+    /* Dark Mode Override */
+    body.dark {
+        --border-color: rgba(255,255,255,0.1);
+        --input-bg: #1e293b;       /* Màu nền input tối */
+        --input-text: #e6eef8;     /* Màu chữ input tối */
+        --input-border: rgba(255,255,255,0.15);
+    }
+
+    /* ========================= */
+    /* CORE STYLES               */
+    /* ========================= */
+
+    /* Top Stats */
+    .top-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .stat-card {
+        background: var(--panel);
+        border-radius: var(--card-radius);
+        padding: 15px;
+        border: 1px solid var(--border-color);
+        display: flex; justify-content: space-between; align-items: center;
+        cursor: pointer; transition: all 0.2s;
+        color: var(--text);
+        box-shadow: var(--shadow);
+    }
+    .stat-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .stat-info .title { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    .stat-info .value { font-size: 22px; font-weight: 700; color: var(--text); }
+    .stat-icon { width: 45px; height: 45px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; }
+
+    .sc-blue .stat-icon { background: rgba(59,130,246,0.1); color: #3b82f6; }
+    .sc-green .stat-icon { background: rgba(16,185,129,0.1); color: #10b981; }
+    .sc-yellow .stat-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .sc-red .stat-icon { background: rgba(239,68,68,0.1); color: #ef4444; }
+
+    /* Control Panel */
+    .control-panel {
+        background: var(--panel);
+        padding: 15px;
+        border-radius: var(--card-radius);
+        border: 1px solid var(--border-color);
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 15px;
+        color: var(--text);
+        box-shadow: var(--shadow);
+        flex-wrap: wrap; gap: 10px;
+    }
+
+    /* Product Container */
+    .product-container {
+        display: flex; flex-direction: column; gap: 12px;
+        max-height: calc(100vh - 280px); overflow-y: auto; padding-bottom: 20px;
+    }
+    .product-container::-webkit-scrollbar { width: 6px; }
+    .product-container::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; opacity: 0.5; }
+
+    /* Product Card */
+    .prod-card {
+        background: var(--panel);
+        border: 1px solid var(--border-color);
+        border-radius: var(--card-radius);
+        padding: 15px;
+        display: flex; flex-direction: column;
+        transition: all 0.2s; position: relative;
+        color: var(--text);
+        box-shadow: var(--shadow);
+    }
+    .prod-card:hover { border-color: var(--accent); }
+    .prod-card.new-item { border: 2px dashed var(--accent); background: rgba(79, 70, 229, 0.03); }
+
+    .prod-main-row { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+
+    .prod-img-box {
+        width: 80px; height: 80px;
+        border-radius: 8px; border: 1px solid var(--border-color);
+        overflow: hidden; position: relative; flex-shrink: 0; background: #fff;
+    }
+    .prod-img-box img { width: 100%; height: 100%; object-fit: contain; }
+    .img-upload-overlay {
+        position: absolute; inset: 0; background: rgba(0,0,0,0.6);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        color: white; font-size: 10px; opacity: 0; cursor: pointer; transition: opacity 0.2s;
+    }
+    .prod-card.editing .img-upload-overlay { opacity: 1; }
+
+    /* Info Section */
+    .prod-info { flex: 2; min-width: 200px; }
+    .prod-name { font-weight: 600; font-size: 16px; color: var(--text); display: block; text-decoration: none; margin-bottom: 5px; }
+    .prod-meta { font-size: 13px; color: var(--muted); display: flex; gap: 15px; flex-wrap: wrap;}
+    .prod-meta span i { margin-right: 5px; color: var(--accent); }
+
+    /* Stats */
+    .prod-stats { flex: 1; display: flex; flex-direction: column; align-items: flex-end; min-width: 120px; gap: 4px; }
+    .prod-price { font-weight: 700; color: var(--accent); font-size: 16px; }
+    .prod-stock { font-size: 13px; color: var(--muted); }
+
+    /* Status Badge */
+    .prod-status { width: 140px; text-align: center; }
+    .badge-stt { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; width: 100%; }
+    .stt-selling { background: rgba(16,185,129,0.15); color: var(--positive); }
+    .stt-low { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .stt-out { background: rgba(120,120,120,0.15); color: var(--muted); }
+    .stt-stop { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+    /* Actions */
+    .prod-actions { display: flex; gap: 8px; padding-left: 15px; margin-left: auto; }
+    .btn-icon {
+        width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border-color);
+        background: var(--bg); color: var(--muted);
+        display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-icon:hover { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-save { background: var(--positive); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; }
+    .btn-cancel { background: var(--bg); border: 1px solid var(--border-color); color: var(--text); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;}
+
+    /* Detail Panel */
+    .detail-panel {
+        margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color);
+        display: none; animation: slideDown 0.3s ease; color: var(--text);
+    }
+    @@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Description List */
+    .desc-list { display: flex; flex-direction: column;  }
+    .desc-item { display: flex; gap: 8px; align-items: center; }
+    /* Input Style using Theme Variables */
+    .form-control-sm, .form-select-sm {
+        background-color: var(--input-bg);
+        color: var(--input-text);
+        border: 1px solid var(--input-border);
+        border-radius: 6px; padding: 8px 10px; font-size: 13px; width: 100%;
+    }
+    .form-control-sm:focus, .form-select-sm:focus {
+        outline: 2px solid var(--accent); border-color: transparent;
+        background-color: var(--panel);
+    }
+    .form-control-sm:disabled {
+        opacity: 0.8;
+        border-color: transparent;
+        background: transparent;
+        padding-left: 0;
+    }
+
+    /* Toggle Logic */
+    .prod-card.editing .view-mode { display: none !important; }
+    .prod-card:not(.editing) .edit-mode { display: none !important; }
+    .prod-card.expanded .detail-panel { display: block; }
+
+    /* Responsive */
+    @@media (max-width: 992px) { .top-cards { grid-template-columns: 1fr 1fr; } }
+    @@media (max-width: 768px) {
+        .prod-main-row { align-items: flex-start; }
+        .prod-img-box { width: 60px; height: 60px; margin-right: 10px; }
+        .prod-info { width: 100%; order: 1; flex: 1; margin-bottom: 0; }
+        .prod-stats { flex-direction: row; justify-content: space-between; width: 100%; order: 2; align-items: center; margin-top: 10px; }
+        .prod-status { width: auto; order: 3; margin-top: 10px; }
+        .prod-actions { width: auto; order: 4; padding-left: 0; margin-top: 10px; }
+        .prod-main-row { flex-wrap: wrap; }
+    }
+</style>
+
+<section class="top-cards">
+    <div class="stat-card sc-blue" onclick="filterProducts('all')">
+        <div class="stat-info"><div class="title">Tổng sản phẩm</div><div class="value">@Model.Count</div></div>
+        <div class="stat-icon"><i class="fa fa-boxes"></i></div>
+    </div>
+    <div class="stat-card sc-green" onclick="filterProducts('selling')">
+        <div class="stat-info"><div class="title">Đang bán</div><div class="value">@ViewBag.TotalSelling</div></div>
+        <div class="stat-icon"><i class="fa fa-store"></i></div>
+    </div>
+    <div class="stat-card sc-yellow" onclick="filterProducts('low')">
+        <div class="stat-info"><div class="title">Sắp hết hàng (<10)</div><div class="value">@ViewBag.TotalLowStock</div></div>
+        <div class="stat-icon"><i class="fa fa-exclamation-triangle"></i></div>
+    </div>
+    <div class="stat-card sc-red" onclick="filterProducts('out')">
+        <div class="stat-info"><div class="title">Hết hàng</div><div class="value">@ViewBag.TotalOutStock</div></div>
+        <div class="stat-icon"><i class="fa fa-ban"></i></div>
+    </div>
+</section>
+
+<section class="control-panel">
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <h5 style="margin:0; font-weight:700; color:var(--text)">Danh sách sản phẩm</h5>
+        <select id="statusFilter" class="form-select form-select-sm" style="width:180px;" onchange="filterProducts(this.value)">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="selling">Đang bán (Còn hàng)</option>
+            <option value="low">Sắp hết hàng </option>
+            <option value="out">Hết hàng </option>
+            <option value="discontinued">Ngừng kinh doanh</option>
+        </select>
+        <input type="text" id="searchBox" class="form-control form-control-sm" placeholder="Tìm tên sản phẩm..." style="width:200px;" onkeyup="searchProducts()">
+    </div>
+    <button class="btn btn-primary btn-sm" id="btnAddProduct" onclick="toggleAddProduct()">
+        <i class="fa fa-plus"></i> Thêm sản phẩm
+    </button>
+</section>
+
+<div class="product-container" id="productList">
+    @foreach (var item in Model)
+    {
+        // LOGIC TRẠNG THÁI
+        string statusClass = "", statusText = "", filterStatus = "";
+        if (item.product_status == "discontinued") { statusClass = "stt-stop"; statusText = "Ngừng kinh doanh"; filterStatus = "discontinued"; }
+        else if (item.current_Quantity == 0) { statusClass = "stt-out"; statusText = "Hết hàng"; filterStatus = "out"; }
+        else if (item.current_Quantity < 10) { statusClass = "stt-low"; statusText = "Sắp hết hàng"; filterStatus = "low"; }
+        else { statusClass = "stt-selling"; statusText = "Đang bán"; filterStatus = "selling"; }
+
+        <div class="prod-card" id="card-@item.product_id" data-id="@item.product_id" data-name="@item.product_name.ToLower()" data-status="@filterStatus">
+            <div class="prod-main-row">
+                <div class="prod-img-box">
+                    <img src="@Url.Content($"~/Content/Pic/images/{item.images}")" id="img-preview-@item.product_id" onerror="this.src='https://via.placeholder.com/80'">
+                    <div class="img-upload-overlay" onclick="triggerUpload(@item.product_id)"><i class="fa fa-camera"></i></div>
+                    <input type="file" id="file-@item.product_id" class="d-none" accept="image/*" onchange="previewImage(this, @item.product_id)">
+                </div>
+
+                <div class="prod-info view-mode">
+                    <span class="prod-name">@item.product_name</span>
+                    <div class="prod-meta"><span title="Dòng"><i class="fa fa-mobile-alt"></i> @item.series_name</span><span title="NCC"><i class="fa fa-building"></i> @item.supplier_name</span></div>
+                </div>
+                <div class="prod-info edit-mode" style="flex:3;">
+                    <input type="text" class="form-control form-control-sm mb-2 input-name" value="@item.product_name" placeholder="Tên sản phẩm">
+                    <div style="display:flex; gap:5px;">
+                        <select class="form-select form-select-sm input-series">
+                            @foreach (var s in ViewBag.SeriesList as List<OnlyPhone.Models.SeriesInfo>)
+                            {
+                                <option value="@s.SeriesId" @(s.SeriesName == item.series_name ? "selected" : "")>@s.SeriesName</option>
+}
+                        </select>
+                        <select class="form-select form-select-sm input-supplier">
+                            @foreach (var sup in ViewBag.SupplierList as List<OnlyPhone.Models.SupplierInfo>)
+                            {
+                                <option value="@sup.SupplierId" @(sup.SupplierName == item.supplier_name ? "selected" : "")>@sup.SupplierName</option>
+}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="prod-stats view-mode">
+                    <div class="prod-price">@string.Format("{0:N0}đ", item.sale_price)</div>
+                    <div class="prod-stock">Kho: <strong>@item.current_Quantity</strong></div>
+                    <div class="prod-stock" style="font-size:11px; color:var(--muted)">Đã bán: <strong>@item.total_sold</strong></div>
+                </div>
+                <div class="prod-stats edit-mode">
+                    <input type="number" class="form-control form-control-sm mb-1 input-price" value="@((int)item.sale_price)" placeholder="Giá bán">
+                    <input type="number" class="form-control form-control-sm input-stock" value="@item.current_Quantity" placeholder="Tồn kho">
+                </div>
+
+                <div class="prod-status view-mode"><span class="badge-stt @statusClass">@statusText</span></div>
+                <div class="prod-status edit-mode">
+                    <select class="form-select form-select-sm input-status">
+                        <option value="selling" @(item.product_status == "selling" ? "selected" : "")>Mở bán</option>
+                        <option value="discontinued" @(item.product_status == "discontinued" ? "selected" : "")>Ngừng KD</option>
+                        <option value="out of stock" @(item.product_status == "out of stock" ? "selected" : "")>Set Hết hàng</option>
+                    </select>
+                </div>
+
+                <div class="prod-actions">
+                    <button class="btn-icon btn-edit view-mode" onclick="toggleEditMode(@item.product_id, true)" title="Sửa"><i class="fa fa-pen"></i></button>
+                    <button class="btn-icon view-mode" onclick="toggleDetail(@item.product_id)" id="btn-expand-@item.product_id" title="Xem chi tiết"><i class="fa fa-chevron-down" id="icon-expand-@item.product_id"></i></button>
+                    <button class="btn-save edit-mode" onclick="saveProduct(@item.product_id)">Lưu</button>
+                    <button class="btn-cancel edit-mode" onclick="toggleEditMode(@item.product_id, false)">Hủy</button>
+                </div>
+            </div>
+
+            <div class="detail-panel" id="detail-@item.product_id">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label style="font-size:12px;color:var(--muted);margin-bottom:5px;">Thông tin cấu hình</label>
+                        <div class="desc-list">
+                            @foreach (var desc in item.product_description)
+                            {
+                                <input type="text" class="form-control form-control-sm input-desc-line" value="@desc" disabled>
+                            }
+                            @if (item.product_description == null || item.product_description.Count == 0)
+                            {
+                                <input type="text" class="form-control form-control-sm input-desc-line" placeholder="Nhập thông tin cấu hình máy..." disabled>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label style="font-size:12px;color:var(--muted);margin-bottom:5px;">Giá gốc (Nhập hàng)</label>
+                        <input type="number" class="form-control form-control-sm input-original mb-2" value="@((int)item.original_price)" disabled>
+                        <div style="font-size:12px;color:var(--muted);margin-top:5px;">Ngày tạo: @item.created_date.ToString("dd/MM/yyyy")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+    const seriesData = @Html.Raw(jsonSeries);
+    const supplierData = @Html.Raw(jsonSuppliers);
+    let tempCardId = null;
+
+    // 1. TOGGLE ADD NEW
+    function toggleAddProduct() {
+        const btnAdd = document.getElementById('btnAddProduct');
+        const container = document.getElementById('productList');
+
+        if (tempCardId !== null) {
+            const card = document.getElementById(`card-${tempCardId}`);
+            if(card) card.remove();
+            tempCardId = null;
+            btnAdd.innerHTML = '<i class="fa fa-plus"></i> Thêm sản phẩm';
+            btnAdd.classList.remove('btn-danger');
+            btnAdd.classList.add('btn-primary');
+            return;
+        }
+
+        tempCardId = -1 * Math.floor(Math.random() * 10000);
+        btnAdd.innerHTML = '<i class="fa fa-times"></i> Hủy thêm mới';
+        btnAdd.classList.remove('btn-primary');
+        btnAdd.classList.add('btn-danger');
+
+        const seriesOptions = seriesData.map(s => `<option value="${s.SeriesId}">${s.SeriesName}</option>`).join('');
+        const supplierOptions = supplierData.map(s => `<option value="${s.SupplierId}">${s.SupplierName}</option>`).join('');
+
+        const html = `
+        <div class="prod-card editing expanded new-item" id="card-${tempCardId}">
+            <div class="prod-main-row">
+                <div class="prod-img-box">
+                    <img src="https://via.placeholder.com/80" id="img-preview-${tempCardId}">
+                    <div class="img-upload-overlay" style="opacity:1" onclick="triggerUpload(${tempCardId})"><i class="fa fa-camera"></i></div>
+                    <input type="file" id="file-${tempCardId}" class="d-none" accept="image/*" onchange="previewImage(this, ${tempCardId})">
+                </div>
+                <div class="prod-info" style="flex:3;">
+                    <input type="text" class="form-control form-control-sm mb-2 input-name" placeholder="Tên sản phẩm mới">
+                    <div style="display:flex; gap:5px;">
+                        <select class="form-select form-select-sm input-series"><option value="">-- Chọn Dòng --</option>${seriesOptions}</select>
+                        <select class="form-select form-select-sm input-supplier"><option value="">-- Chọn NCC --</option>${supplierOptions}</select>
+                    </div>
+                </div>
+                <div class="prod-stats">
+                    <input type="number" class="form-control form-control-sm mb-1 input-price" placeholder="Giá bán">
+                    <input type="number" class="form-control form-control-sm input-stock" placeholder="Tồn kho">
+                </div>
+                <div class="prod-status">
+                    <select class="form-select form-select-sm input-status">
+                        <option value="selling">Mở bán</option>
+                        <option value="out of stock">Set Hết hàng</option>
+                        <option value="discontinued">Ngừng KD</option>
+                    </select>
+                </div>
+                <div class="prod-actions">
+                    <button class="btn-save" onclick="saveProduct(${tempCardId})">Lưu</button>
+                    <button class="btn-cancel" onclick="toggleAddProduct()">Hủy</button>
+                </div>
+            </div>
+            <div class="detail-panel" style="display:block;">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label style="font-size:12px;color:var(--muted);margin-bottom:5px;">Thông tin chi tiết</label>
+                        <div class="desc-list" style="gap:8px;">
+                            <input type="text" class="form-control form-control-sm input-desc-line" placeholder="Thông số màn hình(loại)">
+                            <input type="text" class="form-control form-control-sm input-desc-line" placeholder="Thông số màn hình(kích cỡ)">
+                            <input type="text" class="form-control form-control-sm input-desc-line" placeholder="Thông số chip xử lý">
+                            <input type="text" class="form-control form-control-sm input-desc-line" placeholder="Ram">
+                            <input type="text" class="form-control form-control-sm input-desc-line" placeholder="Bộ nhớ, dung lượng">
+                            <input type="text" class="form-control form-control-sm input-desc-line" placeholder="Camera sau">
+                            <input type="text" class="form-control form-control-sm input-desc-line" placeholder="Camera trước">
+                            <input type="text" class="form-control form-control-sm input-desc-line" placeholder="Dung lượng pin, tốc độ sạc">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label style="font-size:12px;color:var(--muted);margin-bottom:5px;">Giá gốc</label>
+                        <input type="number" class="form-control form-control-sm input-original" placeholder="Giá nhập">
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+        container.insertAdjacentHTML('afterbegin', html);
+        container.scrollTop = 0;
+    }
+
+    // 2. UI LOGIC (Toggle Edit/View)
+    function toggleEditMode(id, isEdit) {
+        const card = document.getElementById(`card-${id}`);
+        const btnExpand = document.getElementById(`btn-expand-${id}`);
+        const inputs = card.querySelectorAll('.input-original, .input-desc-line'); // Select all input fields
+        const descList = card.querySelector('.desc-list');
+
+        if (isEdit) {
+            card.classList.add('editing', 'expanded');
+            btnExpand.style.display = 'none';
+            inputs.forEach(i => i.disabled = false); // Enable inputs
+            if (descList) descList.style.gap = "8px";
+        } else {
+            card.classList.remove('editing', 'expanded');
+            btnExpand.style.display = 'flex';
+            document.getElementById(`icon-expand-${id}`).className = 'fa fa-chevron-down';
+            inputs.forEach(i => i.disabled = true); // Disable inputs
+            if (descList) descList.style.gap = "";
+        }
+    }
+
+    function toggleDetail(id) {
+        const card = document.getElementById(`card-${id}`);
+        if (card.classList.contains('editing')) return;
+
+        card.classList.toggle('expanded');
+        const icon = document.getElementById(`icon-expand-${id}`);
+        icon.className = card.classList.contains('expanded') ? 'fa fa-chevron-up' : 'fa fa-chevron-down';
+    }
+
+    function triggerUpload(id) { document.getElementById(`file-${id}`).click(); }
+    function previewImage(input, id) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) { document.getElementById(`img-preview-${id}`).src = e.target.result; }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // 3. FILTER LOGIC
+    function filterProducts(status) {
+        document.getElementById('statusFilter').value = status;
+        const cards = document.querySelectorAll('.prod-card');
+        cards.forEach(c => {
+            if(c.classList.contains('new-item')) return;
+            const s = c.getAttribute('data-status');
+            const show = (status === 'all') || (s === status);
+            c.style.display = show ? 'flex' : 'none';
+        });
+    }
+
+    function searchProducts() {
+        const term = document.getElementById('searchBox').value.toLowerCase();
+        document.querySelectorAll('.prod-card').forEach(c => {
+            if(c.classList.contains('new-item')) return;
+            c.style.display = c.getAttribute('data-name').includes(term) ? 'flex' : 'none';
+        });
+    }
+
+    // 4. SAVE LOGIC
+    function saveProduct(id) {
+        const card = document.getElementById(`card-${id}`);
+
+        const name = card.querySelector('.input-name').value.trim();
+        const seriesId = card.querySelector('.input-series').value;
+        const supplierId = card.querySelector('.input-supplier').value;
+        const price = card.querySelector('.input-price').value;
+        const stock = card.querySelector('.input-stock').value;
+        const status = card.querySelector('.input-status').value;
+        const originalPrice = card.querySelector('.input-original').value;
+
+        // Collect descriptions from ALL inputs
+        const descInputs = card.querySelectorAll('.input-desc-line');
+        let descArray = [];
+        descInputs.forEach(i => {
+            if(i.value.trim() !== "") descArray.push(i.value.trim());
+        });
+        const descString = descArray.join(';'); // Join with ';' to send to server
+
+        if(!name || !seriesId || !supplierId || !price) {
+            alert("Vui lòng nhập đầy đủ thông tin cơ bản.");
+            return;
+        }
+
+        const fileInput = document.getElementById(`file-${id}`);
+        const file = fileInput.files.length > 0 ? fileInput.files[0] : null;
+
+        const formData = new FormData();
+        formData.append("product_id", id < 0 ? 0 : id);
+        formData.append("product_name", name);
+        formData.append("sale_price", price);
+        formData.append("original_price", originalPrice || 0);
+        formData.append("current_Quantity", stock || 0);
+        formData.append("product_status", status);
+        formData.append("series_id", seriesId);
+        formData.append("supplier_id", supplierId);
+        formData.append("raw_description", descString); // Send joined string
+        if (file) formData.append("imageFile", file);
+
+        const btn = card.querySelector('.btn-save');
+        const oldText = btn.innerText;
+        btn.innerText = '...'; btn.disabled = true;
+
+        fetch('/Admin/Product/SaveProduct', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) { alert(d.message); location.reload(); }
+            else { alert(d.message); btn.innerText = oldText; btn.disabled = false; }
+        }).catch(e => { console.error(e); alert('Lỗi server'); btn.innerText = oldText; btn.disabled = false; });
+    }
+    </script>
+}

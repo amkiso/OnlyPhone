@@ -186,8 +186,18 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
+    <Compile Include="Areas\Admin\Controllers\AccountController.cs" />
+    <Compile Include="Areas\Admin\Controllers\BrandController.cs" />
     <Compile Include="Areas\Admin\Controllers\HomeController.cs" />
+    <Compile Include="Areas\Admin\Controllers\NotificationController.cs" />
+    <Compile Include="Areas\Admin\Controllers\OrderController.cs" />
+    <Compile Include="Areas\Admin\Controllers\ProductController.cs" />
+    <Compile Include="Areas\Admin\Controllers\RevenueController.cs" />
+    <Compile Include="Areas\Admin\Controllers\SeriesController.cs" />
+    <Compile Include="Areas\Admin\Controllers\VoucherController.cs" />
+    <Compile Include="Areas\Admin\Data\AdminDashboardViewModel.cs" />
     <Compile Include="Areas\Admin\Data\AdminSecurityAttribute.cs" />
+    <Compile Include="Areas\Admin\Data\UserListViewModel.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\CheckoutController.cs" />
     <Compile Include="Controllers\EditController.cs" />
@@ -235,6 +245,8 @@
     <Content Include="Content\Bootstrap\bootstrap.min.css" />
     <Content Include="Content\Bootstrap\bootstrap.rtl.css" />
     <Content Include="Content\Bootstrap\bootstrap.rtl.min.css" />
+    <Content Include="Content\Css\adminlayout.css" />
+    <Content Include="Content\Css\Checkout.css" />
     <Content Include="Content\Css\header.css" />
     <Content Include="Content\Css\Index.css" />
     <Content Include="Content\Css\profile.css" />
@@ -5902,7 +5914,7 @@
     <Content Include="Content\Pic\Carousel\Screenshot 2025-11-18 170312.png" />
     <Content Include="Content\Pic\Carousel\Screenshot 2025-11-18 194307.png" />
     <Content Include="Content\Pic\Carousel\Screenshot 2025-11-18 194329.png" />
-    <Content Include="Content\Pic\images\Black%2520%25281%2529-600x600.png" />
+    <Content Include="Content\Pic\images\Black_20_281_29-600x600.png" />
     <Content Include="Content\Pic\images\dien-thoai-oppo-a5x-blue-thumb-600x600.jpg" />
     <Content Include="Content\Pic\images\dien-thoai-oppo-a5x-white-thumb-600x600.jpg" />
     <Content Include="Content\Pic\images\galaxy-a17-5g-blue-thumbai-600x600.jpg" />
@@ -5912,7 +5924,7 @@
     <Content Include="Content\Pic\images\honor-400-pro-xam-thumb-600x600.jpg" />
     <Content Include="Content\Pic\images\honor-400-vang-thumbn-600x600.jpg" />
     <Content Include="Content\Pic\images\honor-magic-v3-thumb-600x600.jpg" />
-    <Content Include="Content\Pic\images\honor-magic-v5-5g-16gb-512gb-080925-025118-961-600x600%2520%25281%2529-600x600.jpg" />
+    <Content Include="Content\Pic\images\honor-magic-v5-5g-16gb-512gb-080925-025118-961-600x600.jpg" />
     <Content Include="Content\Pic\images\honor-x5b-plus-blue-thumb-600x600.jpg" />
     <Content Include="Content\Pic\images\honor-x5b-xanh-thumb-600x600.jpg" />
     <Content Include="Content\Pic\images\honor-x6c-6gb-256gb-080725-103753-343-600x600.jpg" />
@@ -6163,7 +6175,11 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Areas\Admin\Views\web.config" />
-    <Content Include="Areas\Admin\Views\Home\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\Home\Dashbroad.cshtml" />
+    <Content Include="Areas\Admin\Views\Shared\_LayoutAdmin.cshtml" />
+    <Content Include="Areas\Admin\Views\Product\Manager.cshtml" />
+    <Content Include="Areas\Admin\Views\Account\Index.cshtml" />
+    <Content Include="Areas\Admin\Data\SQL\PhoneSeller.bacpac" />
     <None Include="Models\SQLDataClasses.dbml.layout">
       <DependentUpon>SQLDataClasses.dbml</DependentUpon>
     </None>
@@ -6178,9 +6194,11 @@
     <Content Include="Scripts\Bootstrap\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\Bootstrap\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\Bootstrap\modernizr-2.8.3.js" />
+    <Content Include="Scripts\CustomJS\ChangePassword.js" />
     <Content Include="Scripts\CustomJS\checkout.js" />
     <Content Include="Scripts\CustomJS\header.js" />
     <Content Include="Scripts\CustomJS\indexpage.js" />
+    <Content Include="Scripts\CustomJS\Pinglogin.js" />
     <Content Include="Scripts\CustomJS\Profile.js" />
     <Content Include="Scripts\CustomJS\Register.js" />
     <Content Include="Scripts\CustomJS\searchbox.js" />
@@ -6214,7 +6232,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Areas\Admin\Views\Shared\" />
+    <Folder Include="Areas\Admin\Views\Brand\" />
+    <Folder Include="Areas\Admin\Views\Notification\" />
+    <Folder Include="Areas\Admin\Views\Order\" />
+    <Folder Include="Areas\Admin\Views\Revenue\" />
+    <Folder Include="Areas\Admin\Views\Series\" />
+    <Folder Include="Areas\Admin\Views\Voucher\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\Bootstrap\bootstrap.rtl.min.css.map" />

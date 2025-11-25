@@ -21,13 +21,13 @@ body {
 .profile-card {
     background: white;
     border-radius: 20px;
-
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
     overflow: hidden;
     margin-bottom: 30px;
 }
 
 header {
-    background:  rgb(139, 222, 255);
+    background: rgb(139, 222, 255);
     padding: 40px 20px 80px;
     text-align: center;
     position: relative;
@@ -173,6 +173,7 @@ select {
     justify-content: flex-end;
     padding-top: 20px;
     border-top: 2px solid #f0f0f0;
+    flex-wrap: wrap;
 }
 
 .btn {
@@ -187,6 +188,7 @@ select {
     align-items: center;
     gap: 8px;
     text-decoration: none;
+    white-space: nowrap;
 }
 
     .btn:not(.ghost) {
@@ -284,6 +286,8 @@ select {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .order-id {
@@ -306,6 +310,8 @@ select {
     align-items: center;
     color: #666;
     font-size: 14px;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .order-total {
@@ -337,27 +343,116 @@ select {
     color: #999;
 }
 
-@@media (max-width: 768px) {
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+/* Tablet - 768px to 1024px */
+@media (max-width: 1024px) {
+    body {
+        padding: 30px 15px;
+    }
+
+    .card-inner {
+        padding: 30px 25px;
+    }
+
+    .orders-section {
+        padding: 30px 25px;
+    }
+
+    label {
+        flex: 0 0 150px;
+    }
+
+    .section-title {
+        font-size: 22px;
+    }
+}
+
+/* Mobile Large - 480px to 768px */
+@media (max-width: 768px) {
+    body {
+        padding: 20px 15px;
+    }
+
+    .profile-card {
+        border-radius: 15px;
+        margin-bottom: 20px;
+    }
+
+    header {
+        padding: 30px 15px 60px;
+    }
+
+    .avatar-wrap {
+        width: 120px;
+        height: 120px;
+    }
+
+    .card-inner {
+        padding: 25px 20px;
+    }
+
     .row {
         flex-direction: column;
         align-items: stretch;
+        gap: 10px;
+        margin-bottom: 18px;
     }
 
     label {
         flex: none;
+        font-size: 14px;
+    }
+
+    .value,
+    select {
+        font-size: 14px;
+        padding: 10px;
     }
 
     .address-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
     }
 
     .actions {
         flex-direction: column;
+        gap: 12px;
     }
 
     .btn {
         width: 100%;
         justify-content: center;
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+
+    /* Orders Section */
+    .orders-section {
+        padding: 25px 20px;
+        border-radius: 15px;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        justify-content: center;
+    }
+
+    .btn-view-all {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 20px;
+    }
+
+    .order-item {
+        padding: 15px;
     }
 
     .order-header {
@@ -366,10 +461,242 @@ select {
         gap: 10px;
     }
 
+    .order-status {
+        align-self: flex-start;
+    }
+
     .order-body {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
     }
+
+        .order-body > div {
+            width: 100%;
+        }
+
+    .order-total {
+        font-size: 16px;
+        align-self: flex-end;
+    }
+
+    .empty-orders i {
+        font-size: 48px;
+    }
+
+    .empty-orders p {
+        font-size: 14px;
+    }
 }
 
+/* Mobile Small - Below 480px */
+@media (max-width: 480px) {
+    body {
+        padding: 15px 10px;
+    }
+
+    .profile-card {
+        border-radius: 12px;
+    }
+
+    header {
+        padding: 25px 10px 50px;
+    }
+
+    .avatar-wrap {
+        width: 100px;
+        height: 100px;
+    }
+
+    .avatar {
+        border: 3px solid white;
+    }
+
+    .avatar-overlay {
+        font-size: 12px;
+    }
+
+    .card-inner {
+        padding: 20px 15px;
+    }
+
+    .row {
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-size: 13px;
+    }
+
+    .value,
+    select {
+        font-size: 13px;
+        padding: 10px;
+    }
+
+    .meta {
+        font-size: 13px;
+    }
+
+    .small {
+        font-size: 12px;
+    }
+
+    .alert {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .actions {
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 10px 15px;
+        font-size: 13px;
+    }
+
+    /* Orders Section */
+    .orders-section {
+        padding: 20px 15px;
+        border-radius: 12px;
+    }
+
+    .section-header {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        gap: 8px;
+    }
+
+        .section-title i {
+            font-size: 18px;
+        }
+
+    .btn-view-all {
+        padding: 10px 15px;
+        font-size: 13px;
+    }
+
+    .order-item {
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    .order-id {
+        font-size: 14px;
+    }
+
+    .order-status {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+
+    .order-body {
+        font-size: 13px;
+        gap: 8px;
+    }
+
+    .order-total {
+        font-size: 15px;
+    }
+
+    .empty-orders {
+        padding: 40px 15px;
+    }
+
+        .empty-orders i {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .empty-orders p {
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+    .loading {
+        padding: 30px;
+        font-size: 14px;
+    }
+}
+
+/* Mobile Extra Small - Below 360px */
+@media (max-width: 360px) {
+    body {
+        padding: 10px 8px;
+    }
+
+    .avatar-wrap {
+        width: 90px;
+        height: 90px;
+    }
+
+    .card-inner {
+        padding: 15px 12px;
+    }
+
+    .value,
+    select {
+        font-size: 12px;
+    }
+
+    .btn {
+        font-size: 12px;
+        padding: 10px 12px;
+    }
+
+    .section-title {
+        font-size: 16px;
+    }
+
+    .order-id {
+        font-size: 13px;
+    }
+
+    .order-body {
+        font-size: 12px;
+    }
+
+    .order-total {
+        font-size: 14px;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+    body {
+        padding: 15px 10px;
+    }
+
+    header {
+        padding: 20px 15px 40px;
+    }
+
+    .avatar-wrap {
+        width: 80px;
+        height: 80px;
+    }
+
+    .card-inner {
+        padding: 20px;
+    }
+
+    .row {
+        margin-bottom: 12px;
+    }
+
+    .orders-section {
+        padding: 20px;
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .avatar {
+        image-rendering: -webkit-optimize-contrast;
+    }
+}

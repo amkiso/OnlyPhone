@@ -1,0 +1,358 @@
+﻿.checkout-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
+}
+
+.checkout-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+    .form-label .required {
+        color: #ef4444;
+        margin-left: 0.25rem;
+    }
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+/* Product Items */
+.checkout-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-name {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.item-price {
+    color: #3b82f6;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.item-quantity {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+/* Payment & Shipping Methods */
+.method-options {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.method-option {
+    position: relative;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .method-option:hover {
+        border-color: #3b82f6;
+        background-color: #f0f9ff;
+    }
+
+    .method-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
+        .method-option input[type="radio"]:checked + .method-content {
+            border-color: #3b82f6;
+        }
+
+        .method-option input[type="radio"]:checked ~ .method-check {
+            display: block;
+        }
+
+    .method-option.selected {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+
+.method-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.method-icon {
+    font-size: 1.5rem;
+    color: #3b82f6;
+}
+
+.method-details {
+    flex: 1;
+}
+
+.method-name {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.method-description {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.method-fee {
+    font-weight: 600;
+    color: #3b82f6;
+}
+
+.method-check {
+    display: none;
+    color: #10b981;
+    font-size: 1.25rem;
+}
+
+/* Voucher */
+.voucher-input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+    .voucher-input-group input {
+        flex: 1;
+    }
+
+.btn-apply-voucher {
+    padding: 0.75rem 1.5rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .btn-apply-voucher:hover {
+        background: #2563eb;
+    }
+
+.voucher-list {
+    margin-top: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.voucher-item {
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .voucher-item:hover {
+        border-color: #3b82f6;
+        background-color: #f0f9ff;
+    }
+
+    .voucher-item.selected {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+
+.voucher-code {
+    font-weight: 700;
+    color: #3b82f6;
+    font-size: 1.1rem;
+}
+
+.voucher-desc {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.voucher-discount {
+    color: #10b981;
+    font-weight: 600;
+}
+
+/* Order Summary */
+.order-summary {
+    position: sticky;
+    top: 2rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+    .summary-row:last-child {
+        border-bottom: none;
+    }
+
+.summary-label {
+    color: #6b7280;
+}
+
+.summary-value {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.summary-total {
+    background: #f3f4f6;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+    .summary-total .summary-row {
+        border-bottom: none;
+        padding: 0.5rem 0;
+    }
+
+    .summary-total .summary-label {
+        font-size: 1.1rem;
+        color: #1f2937;
+        font-weight: 600;
+    }
+
+    .summary-total .summary-value {
+        font-size: 1.5rem;
+        color: #3b82f6;
+    }
+
+.btn-place-order {
+    width: 100%;
+    padding: 1rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+    .btn-place-order:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-place-order:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+/* Responsive */
+@@media (max-width: 992px) {
+    .checkout-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .order-summary {
+        position: static;
+        order: -1;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.alert-danger {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.alert-success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+

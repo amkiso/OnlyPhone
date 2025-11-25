@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json;
+using OnlyPhone.Areas.Admin.Data;
+using OnlyPhone.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
-using OnlyPhone.Models;
-using System.IO;
 
 namespace OnlyPhone.Models
 {
@@ -2356,6 +2357,283 @@ namespace OnlyPhone.Models
             {
                 System.Diagnostics.Debug.WriteLine($"Error in GetUserOrderHistoryExtended: {ex.Message}");
                 return new List<OrderHistoryItemExtended>();
+            }
+        }
+        public AdminDashboardViewModel GetDashboardData()
+        {
+            var today = DateTime.Today;
+            var startOfMonth = new DateTime(today.Year, today.Month, 1);
+            var yesterday = today.AddDays(-1);
+
+            // 1. Online Users
+            int onlineCount = da.User_details.Count(u => u.user_status == true);
+
+            // 2. Định nghĩa danh sách ID không tính doanh thu (6: Hủy, 7: Hoàn trả)
+            var invalidStatus = new int[] { 6, 7 };
+
+            // 3. Doanh thu hôm nay
+            var todayOrders = da.Orders.Where(o => o.Order_Date >= today && o.Order_Date < today.AddDays(1)
+                                                && !invalidStatus.Contains(o.StatusID)).ToList();
+            decimal todayRev = todayOrders.Sum(o => o.Total_Amount) ?? 0;
+
+            // Doanh thu hôm qua
+            var yesterdayOrders = da.Orders.Where(o => o.Order_Date >= yesterday && o.Order_Date < today
+                                                    && !invalidStatus.Contains(o.StatusID)).ToList();
+            decimal yesterdayRev = yesterdayOrders.Sum(o => o.Total_Amount) ?? 0;
+
+            double changePercent = 0;
+            if (yesterdayRev > 0)
+                changePercent = (double)((todayRev - yesterdayRev) / yesterdayRev) * 100;
+            else if (todayRev > 0)
+                changePercent = 100;
+
+            // 4. Doanh thu tháng
+            decimal monthRev = da.Orders
+                .Where(o => o.Order_Date >= startOfMonth && !invalidStatus.Contains(o.StatusID))
+                .Sum(o => o.Total_Amount) ?? 0;
+
+            // 5. Thống kê theo trạng thái cụ thể
+            // 1: Chờ xác nhận
+            int pending = da.Orders.Count(o => o.StatusID == 1);
+
+            // 4: Đang vận chuyển (Nếu bạn muốn gộp cả 2,3 vào đây thì dùng IN, nhưng dashboard thường hiện "Đang vận chuyển" là chính xác nhất)
+            int shipping = da.Orders.Count(o => o.StatusID == 4);
+
+            // 5: Đã giao thành công
+            int delivered = da.Orders.Count(o => o.StatusID == 5);
+
+            // 6: Đã hủy
+            int cancelled = da.Orders.Count(o => o.StatusID == 6);
+
+            // 6. Tổng quan
+            int totalOrds = da.Orders.Count();
+            // Tổng doanh thu toàn thời gian (trừ hủy/hoàn)
+            decimal totalRev = da.Orders.Where(o => !invalidStatus.Contains(o.StatusID))
+                                        .Sum(o => o.Total_Amount) ?? 0;
+
+            // 7. Biểu đồ (7 ngày gần nhất)
+            var labels = new List<string>();
+            var chartRev = new List<decimal>();
+            var chartOrds = new List<int>();
+
+            for (int i = 6; i >= 0; i--)
+            {
+                var date = today.AddDays(-i);
+                labels.Add(date.ToString("dd/MM"));
+
+                var dayData = da.Orders
+                    .Where(o => o.Order_Date >= date && o.Order_Date < date.AddDays(1)
+                                && !invalidStatus.Contains(o.StatusID))
+                    .Select(o => o.Total_Amount)
+                    .ToList();
+
+                chartOrds.Add(dayData.Count);
+                chartRev.Add(dayData.Sum() ?? 0);
+            }
+
+            return new AdminDashboardViewModel
+            {
+                OnlineUsers = onlineCount,
+                TodayRevenue = todayRev,
+                TodayRevenueChange = Math.Round(changePercent, 1),
+                MonthRevenue = monthRev,
+                PendingOrders = pending,    // ID 1
+                DeliveredOrders = delivered,// ID 5
+                TotalOrders = totalOrds,
+                TotalRevenue = totalRev,
+                ChartLabels = labels,
+                ChartRevenue = chartRev,
+                ChartOrders = chartOrds,
+                StatPending = pending,      // ID 1
+                StatShipping = shipping,    // ID 4
+                StatDelivered = delivered,  // ID 5
+                StatCancelled = cancelled   // ID 6
+            };
+        }
+        public bool AddProduct(Product_Infomation info)
+        {
+            try
+            {
+                var prod = new Product
+                {
+                    Product_name = info.product_name,
+                    Sale_Price = info.sale_price,
+                    Original_Price = info.original_price,
+                    Current_Quantity = info.current_Quantity,
+                    Product_Status = info.product_status,
+                    Series_id = info.series_id,
+                    supplier_ID = info.supplier_id,
+                    Product_Image = string.IsNullOrEmpty(info.images) ? "no-image.jpg" : info.images,
+                    Is_Featured = false,
+                    Is_New = true,
+                    Created_Date = DateTime.Now,
+                    Descriptions = info.product_description != null ? string.Join(";", info.product_description) : ""
+                };
+
+                da.Products.InsertOnSubmit(prod);
+                da.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error AddProduct: " + ex.Message);
+                return false;
+            }
+        }
+
+        // 2. Cập nhật sản phẩm
+        public bool UpdateProduct(Product_Infomation info)
+        {
+            try
+            {
+                var prod = da.Products.FirstOrDefault(p => p.Product_ID == info.product_id);
+                if (prod == null) return false;
+
+                prod.Product_name = info.product_name;
+                prod.Sale_Price = info.sale_price;
+                prod.Original_Price = info.original_price;
+                prod.Current_Quantity = info.current_Quantity;
+                prod.Product_Status = info.product_status;
+                prod.Series_id = info.series_id;
+                prod.supplier_ID = info.supplier_id;
+
+                if (!string.IsNullOrEmpty(info.images))
+                {
+                    prod.Product_Image = info.images;
+                }
+
+                if (info.product_description != null)
+                {
+                    prod.Descriptions = string.Join(";", info.product_description);
+                }
+
+                da.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error UpdateProduct: " + ex.Message);
+                return false;
+            }
+        }
+
+        // 3. Upload ảnh sản phẩm
+        public string UploadProductImage(HttpPostedFileBase file, string serverPath)
+        {
+            try
+            {
+                if (file == null || file.ContentLength == 0) return null;
+
+                string fileName = System.IO.Path.GetFileName(file.FileName);
+                string uniqueName = DateTime.Now.ToString("yyyyMMddHHmmss") + "_" + fileName;
+                string path = System.IO.Path.Combine(serverPath, "Content", "Pic", "images");
+
+                if (!System.IO.Directory.Exists(path))
+                    System.IO.Directory.CreateDirectory(path);
+
+                string fullPath = System.IO.Path.Combine(path, uniqueName);
+                file.SaveAs(fullPath);
+
+                return uniqueName;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        public List<UserListViewModel> GetAllUsers()
+        {
+            try
+            {
+                // Join bảng Users và User_detail
+                var query = from u in da.Users
+                            join ud in da.User_details on u.ID_user equals ud.ID_user
+                            select new UserListViewModel
+                            {
+                                UserId = u.ID_user,
+                                Username = u.users_name,
+                                Email = u.user_email,
+                                Role = u.user_type,
+                                // Giả sử bạn đã thêm cột Locked vào bảng Users (mặc định false/0)
+                                IsLocked = u.Locked ,
+
+                                FullName = ud.full_name ?? "Chưa cập nhật",
+                                PhoneNumber = ud.user_phone_number ?? "",
+                                Address = ud.user_address +", " + ud.Ward + ", " + ud.Province,
+                                Avatar = ud.user_pic ?? "noAvt.jpg",
+
+                                IsOnline = ud.user_status ?? false,
+                                LastActive = ud.last_change,
+                                CreatedDate = ud.date_create ?? DateTime.Now
+                            };
+
+                return query.OrderByDescending(x => x.IsOnline)
+                            .ThenByDescending(x => x.LastActive)
+                            .ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error GetAllUsers: " + ex.Message);
+                return new List<UserListViewModel>();
+            }
+        }
+
+        // 2. Cập nhật User
+        public bool UpdateUser(UserListViewModel model)
+        {
+            try
+            {
+                var user = da.Users.FirstOrDefault(u => u.ID_user == model.UserId);
+                var userDetail = da.User_details.FirstOrDefault(ud => ud.ID_user == model.UserId);
+
+                if (user == null || userDetail == null) return false;
+
+                // Cập nhật bảng Users
+                user.user_type = model.Role;
+                user.user_email = model.Email;
+                user.Locked = model.IsLocked; // Cập nhật trạng thái khóa
+
+                // Cập nhật bảng User_detail
+                userDetail.full_name = model.FullName;
+                userDetail.user_phone_number = model.PhoneNumber;
+                userDetail.user_address = model.Address;
+
+                // LastActive sẽ tự động cập nhật nhờ Trigger trong DB nếu có, 
+                // hoặc update thủ công: userDetail.last_change = DateTime.Now;
+
+                da.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error UpdateUser: " + ex.Message);
+                return false;
+            }
+        }
+
+        // 3. Xóa User (Cần cẩn trọng với khóa ngoại)
+        public bool DeleteUser(int userId)
+        {
+            try
+            {
+                // 1. Xóa chi tiết trước
+                var detail = da.User_details.FirstOrDefault(ud => ud.ID_user == userId);
+                if (detail != null) da.User_details.DeleteOnSubmit(detail);
+
+                // 2. Xóa User
+                var user = da.Users.FirstOrDefault(u => u.ID_user == userId);
+                if (user != null) da.Users.DeleteOnSubmit(user);
+
+                // Lưu ý: Nếu User đã có đơn hàng (Orders), việc xóa sẽ lỗi do khóa ngoại.
+                // Giải pháp: Chỉ cho phép "Khóa" (Locked = true) thay vì xóa hẳn.
+                // Ở đây tôi vẫn để code xóa, nhưng khuyến nghị dùng Locked.
+
+                da.SubmitChanges();
+                return true;
+            }
+            catch
+            {
+                return false; // Thường do dính khóa ngoại đơn hàng
             }
         }
     }

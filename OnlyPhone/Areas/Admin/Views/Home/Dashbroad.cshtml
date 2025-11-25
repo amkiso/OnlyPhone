@@ -1,0 +1,268 @@
+﻿@model OnlyPhone.Areas.Admin.Data.AdminDashboardViewModel
+@{
+    ViewBag.Title = "Dashboard";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<section class="grid" id="dashboardGrid" aria-live="polite">
+    <a href="@Url.Action("Index", "Users", new { status = "online" })" class="card col-span-3">
+        <div class="stat">
+            <div class="stat-left">
+                <div class="stat-title">Tài khoản online</div>
+                <div class="stat-value" style="display:flex; align-items:center;">
+                    <span id="onlineCount">@Model.OnlineUsers</span>
+                    <span class="online-dot" title="Đang hoạt động"></span>
+                </div>
+            </div>
+            <div class="icon-circle" aria-hidden="true"><i class="fa fa-users"></i></div>
+        </div>
+        <div class="muted-sm" style="margin-top:10px">Người dùng hiện đang hoạt động</div>
+    </a>
+
+    <div class="card col-span-3">
+        <div class="stat">
+            <div class="stat-left">
+                <div class="stat-title">Doanh thu hôm nay</div>
+                <div class="stat-value" id="todayRevenue">@Model.TodayRevenue.ToString("N0") ₫</div>
+            </div>
+            <div class="icon-circle" aria-hidden="true"><i class="fa fa-coins"></i></div>
+        </div>
+        <div class="muted-sm" style="margin-top:10px">
+            So với hôm qua:
+            <span id="todayChange" class="stat-change @(Model.TodayRevenueChange >= 0 ? "positive" : "negative")">
+                @(Model.TodayRevenueChange > 0 ? "+" : "")@Model.TodayRevenueChange%
+            </span>
+        </div>
+    </div>
+
+    <div class="card col-span-3">
+        <div class="stat">
+            <div class="stat-left">
+                <div class="stat-title">Doanh thu tháng</div>
+                <div class="stat-value" id="monthRevenue">@Model.MonthRevenue.ToString("N0") ₫</div>
+            </div>
+            <div class="icon-circle" aria-hidden="true"><i class="fa fa-chart-line"></i></div>
+        </div>
+        <div class="muted-sm" style="margin-top:10px">Tổng doanh thu tháng hiện tại</div>
+    </div>
+
+    <a href="@Url.Action("Index", "Orders", new { status = 1 })" class="card col-span-3">
+        <div class="stat">
+            <div class="stat-left">
+                <div class="stat-title">Đơn chờ xác nhận</div>
+                <div class="stat-value" id="pendingOrders">@Model.PendingOrders</div>
+            </div>
+            <div class="icon-circle" aria-hidden="true"><i class="fa fa-hourglass-half"></i></div>
+        </div>
+        <div class="muted-sm" style="margin-top:10px">Đơn cần xử lý</div>
+    </a>
+
+    <a href="@Url.Action("Index", "Orders", new { status = 5 })" class="card col-span-3">
+        <div class="stat">
+            <div class="stat-left">
+                <div class="stat-title">Đơn đã giao</div>
+                <div class="stat-value" id="deliveredOrders">@Model.DeliveredOrders</div>
+            </div>
+            <div class="icon-circle" aria-hidden="true"><i class="fa fa-truck"></i></div>
+        </div>
+        <div class="muted-sm" style="margin-top:10px">Đã giao trong tháng</div>
+    </a>
+
+    <div class="card col-span-9" style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <div style="font-weight:700;color:var(--text)">Biểu đồ doanh thu & số lượng</div>
+                <div class="muted-sm">Phạm vi: 7 ngày gần nhất</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+                <div class="form-check form-switch" style="display:flex; align-items:center; gap:5px;">
+                    <input class="form-check-input" type="checkbox" id="autoRefreshSwitch">
+                    <label class="muted-sm" for="autoRefreshSwitch" style="margin:0;">Tự động (5s)</label>
+                </div>
+                <button id="refreshBtn" style="padding:8px 12px;border-radius:8px;border:0;background:var(--accent);color:white;cursor:pointer;">
+                    <i class="fa fa-sync"></i> Cập nhật
+                </button>
+            </div>
+        </div>
+
+        <div style="flex:1;min-height:260px">
+            <canvas id="revenueChart" style="width:100%;height:100%"></canvas>
+        </div>
+
+        <div class="gap-row" style="justify-content:flex-end">
+            <div class="muted-sm">Tổng đơn: <strong id="totalOrders">@Model.TotalOrders</strong></div>
+            <div class="muted-sm">Tổng doanh thu: <strong id="totalRevenue">@Model.TotalRevenue.ToString("N0") ₫</strong></div>
+        </div>
+    </div>
+
+    <div class="card col-span-12">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+                <div style="font-weight:700;color:var(--text)">Tổng quan đơn hàng</div>
+                <div class="muted-sm">Chi tiết theo trạng thái</div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap">
+            <a href="@Url.Action("Index", "Orders", new { status = 1 })" class="card" style="padding:12px;border-radius:10px;min-width:180px;flex:1 1 180px; text-decoration:none;">
+                <div class="stat-title">Chờ xác nhận</div>
+                <div style="font-weight:700;font-size:18px;color:var(--text)" id="statPending">@Model.StatPending</div>
+            </a>
+            <a href="@Url.Action("Index", "Orders", new { status = 4 })" class="card" style="padding:12px;border-radius:10px;min-width:180px;flex:1 1 180px; text-decoration:none;">
+                <div class="stat-title">Đang vận chuyển</div>
+                <div style="font-weight:700;font-size:18px;color:var(--text)" id="statShipping">@Model.StatShipping</div>
+            </a>
+            <a href="@Url.Action("Index", "Orders", new { status = 5 })" class="card" style="padding:12px;border-radius:10px;min-width:180px;flex:1 1 180px; text-decoration:none;">
+                <div class="stat-title">Đã giao</div>
+                <div style="font-weight:700;font-size:18px;color:var(--positive)" id="statDelivered">@Model.StatDelivered</div>
+            </a>
+            <a href="@Url.Action("Index", "Orders", new { status = 6 })" class="card" style="padding:12px;border-radius:10px;min-width:180px;flex:1 1 180px; text-decoration:none;">
+                <div class="stat-title">Đã hủy</div>
+                <div style="font-weight:700;font-size:18px;color:var(--danger)" id="statCancelled">@Model.StatCancelled</div>
+            </a>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        let chartInstance = null;
+
+        // Dữ liệu ban đầu
+        const initialData = {
+            labels: @Html.Raw(Json.Encode(Model.ChartLabels)),
+            revenue: @Html.Raw(Json.Encode(Model.ChartRevenue)),
+            orders: @Html.Raw(Json.Encode(Model.ChartOrders))
+        };
+
+        function getThemeColors(){
+            const cs = getComputedStyle(document.documentElement);
+            return {
+                text: cs.getPropertyValue('--text').trim(),
+                muted: cs.getPropertyValue('--muted').trim(),
+                accent: cs.getPropertyValue('--accent').trim()
+            };
+        }
+
+        // Hàm helper chuyển Hex sang RGBA
+        function hexToRgba(hex, a){
+            // Giả lập đơn giản để lấy màu từ CSS var nếu cần
+            return `rgba(79,70,229,${a})`;
+        }
+
+        function initChart(data) {
+            const theme = getThemeColors();
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Doanh thu',
+                            data: data.revenue,
+                            borderColor: theme.accent,
+                            backgroundColor: 'rgba(79,70,229,0.1)',
+                            yAxisID: 'y',
+                            tension: 0.35,
+                            pointRadius: 4,
+                            pointBackgroundColor: theme.accent
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Đơn hàng',
+                            data: data.orders,
+                            backgroundColor: 'rgba(79,70,229,0.9)',
+                            borderRadius: 6,
+                            yAxisID: 'y1',
+                            maxBarThickness: 40
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: { position: 'left', grid: { display:true, color:'rgba(0,0,0,0.04)' }, ticks: { color: theme.text } },
+                        y1: { position: 'right', grid: { display: false }, ticks: { color: theme.muted } },
+                        x: { grid: { display: false }, ticks: { color: theme.muted } }
+                    },
+                    plugins: { legend: { labels: { color: theme.text } } }
+                }
+            });
+        }
+
+        // Render lần đầu
+        initChart(initialData);
+
+        // Update chart khi đổi theme
+        window.addEventListener('themeChanged', () => {
+             // Delay nhẹ để CSS biến đổi xong
+             setTimeout(() => {
+                 if(chartInstance) {
+                     const theme = getThemeColors();
+                     chartInstance.options.scales.y.ticks.color = theme.text;
+                     chartInstance.options.scales.x.ticks.color = theme.muted;
+                     chartInstance.options.plugins.legend.labels.color = theme.text;
+                     chartInstance.update();
+                 }
+             }, 100);
+        });
+
+        // Hàm gọi API
+        function fetchData() {
+            fetch('@Url.Action("GetStats", "Dashboard")')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('onlineCount').textContent = data.OnlineUsers;
+                    document.getElementById('todayRevenue').textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.TodayRevenue);
+                    document.getElementById('monthRevenue').textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.MonthRevenue);
+
+                    const changeEl = document.getElementById('todayChange');
+                    changeEl.textContent = (data.TodayRevenueChange > 0 ? "+" : "") + data.TodayRevenueChange + "%";
+                    changeEl.className = "stat-change " + (data.TodayRevenueChange >= 0 ? "positive" : "negative");
+
+                    document.getElementById('pendingOrders').textContent = data.PendingOrders;
+                    document.getElementById('deliveredOrders').textContent = data.DeliveredOrders;
+                    document.getElementById('totalOrders').textContent = data.TotalOrders;
+                    document.getElementById('totalRevenue').textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.TotalRevenue);
+
+                    document.getElementById('statPending').textContent = data.StatPending;
+                    document.getElementById('statShipping').textContent = data.StatShipping;
+                    document.getElementById('statDelivered').textContent = data.StatDelivered;
+                    document.getElementById('statCancelled').textContent = data.StatCancelled;
+
+                    initChart({
+                        labels: data.ChartLabels,
+                        revenue: data.ChartRevenue,
+                        orders: data.ChartOrders
+                    });
+                })
+                .catch(err => console.error("Lỗi cập nhật:", err));
+        }
+
+        // Nút cập nhật thủ công
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            const btn = document.getElementById('refreshBtn');
+            const icon = btn.querySelector('i');
+            icon.classList.add('fa-spin');
+            fetchData();
+            setTimeout(() => icon.classList.remove('fa-spin'), 500);
+        });
+
+        // Tự động cập nhật 5s
+        let autoInterval;
+        document.getElementById('autoRefreshSwitch').addEventListener('change', function() {
+            if(this.checked) {
+                fetchData();
+                autoInterval = setInterval(fetchData, 5000);
+            } else {
+                clearInterval(autoInterval);
+            }
+        });
+    </script>
+}

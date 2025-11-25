@@ -12,6 +12,7 @@ namespace OnlyPhone.Models
         public int product_id { get; set; }
         public List<string> product_description { get; set; }
         public string supplier_name { get; set; }
+        public int supplier_id { get; set; }
         public string product_status { get; set; }
         public decimal sale_price { get; set; }
         public int current_Quantity { get; set; }

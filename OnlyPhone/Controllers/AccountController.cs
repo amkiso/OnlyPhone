@@ -208,7 +208,18 @@ namespace OnlyPhone.Controllers
                 return Json(new { success = false, message = "Đã xảy ra lỗi khi upload ảnh" });
             }
         }
-
+        [HttpPost]
+        public ActionResult KeepAlive()
+        {
+            int userId = (int)Session["UserId"]; // Hoặc lấy từ token JWT nếu API
+            var user = db.Users.SingleOrDefault(u => u.ID_user == userId);
+            if (user != null)
+            {
+                user.LastActive = DateTime.Now;
+                db.SubmitChanges();
+            }
+            return new HttpStatusCodeResult(200);
+        }
         [HttpGet]
         public JsonResult GetRecentOrders()
         {
@@ -549,6 +560,7 @@ namespace OnlyPhone.Controllers
                     .Count(n => n.ID_user == user.ID_user && n.IsRead == false);
                 var userdetails = db.User_details.FirstOrDefault(ud => ud.ID_user == user.ID_user);
                 userdetails.user_status = true;
+                user.LastActive = DateTime.Now;
                 db.SubmitChanges();
                 // Tạo session user
                 var userSession = new UserSessionModel

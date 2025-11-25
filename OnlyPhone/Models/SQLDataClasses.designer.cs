@@ -11,15 +11,15 @@
 
 namespace OnlyPhone.Models
 {
-	using System;
-	using System.Collections.Generic;
-	using System.ComponentModel;
-	using System.Data;
 	using System.Data.Linq;
 	using System.Data.Linq.Mapping;
+	using System.Data;
+	using System.Collections.Generic;
+	using System.Reflection;
 	using System.Linq;
 	using System.Linq.Expressions;
-	using System.Reflection;
+	using System.ComponentModel;
+	using System;
 	using System.Configuration;
 	
 	
@@ -84,10 +84,11 @@ namespace OnlyPhone.Models
 			OnCreated();
 		}
         public SQLDataClassesDataContext() :
-               base(ConfigurationManager.ConnectionStrings["PhoneSellerConnectionString"].ConnectionString, mappingSource)
+				base(ConfigurationManager.ConnectionStrings["PhoneSellerConnectionString"].ConnectionString, mappingSource)
         {
             OnCreated();
         }
+
         public SQLDataClassesDataContext(System.Data.IDbConnection connection) : 
 				base(connection, mappingSource)
 		{
@@ -4297,6 +4298,10 @@ namespace OnlyPhone.Models
 		
 		private string _user_type;
 		
+		private bool _Locked;
+		
+		private System.Nullable<System.DateTime> _LastActive;
+		
 		private EntitySet<Notification> _Notifications;
 		
 		private EntitySet<Order> _Orders;
@@ -4319,6 +4324,10 @@ namespace OnlyPhone.Models
     partial void Onuser_passwordChanged();
     partial void Onuser_typeChanging(string value);
     partial void Onuser_typeChanged();
+    partial void OnLockedChanging(bool value);
+    partial void OnLockedChanged();
+    partial void OnLastActiveChanging(System.Nullable<System.DateTime> value);
+    partial void OnLastActiveChanged();
     #endregion
 		
 		public User()
@@ -4426,6 +4435,46 @@ namespace OnlyPhone.Models
 					this._user_type = value;
 					this.SendPropertyChanged("user_type");
 					this.Onuser_typeChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Locked", DbType="Bit NOT NULL")]
+		public bool Locked
+		{
+			get
+			{
+				return this._Locked;
+			}
+			set
+			{
+				if ((this._Locked != value))
+				{
+					this.OnLockedChanging(value);
+					this.SendPropertyChanging();
+					this._Locked = value;
+					this.SendPropertyChanged("Locked");
+					this.OnLockedChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LastActive", DbType="DateTime")]
+		public System.Nullable<System.DateTime> LastActive
+		{
+			get
+			{
+				return this._LastActive;
+			}
+			set
+			{
+				if ((this._LastActive != value))
+				{
+					this.OnLastActiveChanging(value);
+					this.SendPropertyChanging();
+					this._LastActive = value;
+					this.SendPropertyChanged("LastActive");
+					this.OnLastActiveChanged();
 				}
 			}
 		}
