@@ -190,13 +190,14 @@
     <Compile Include="Areas\Admin\Controllers\BrandController.cs" />
     <Compile Include="Areas\Admin\Controllers\HomeController.cs" />
     <Compile Include="Areas\Admin\Controllers\NotificationController.cs" />
-    <Compile Include="Areas\Admin\Controllers\OrderController.cs" />
+    <Compile Include="Areas\Admin\Controllers\OrdersController.cs" />
     <Compile Include="Areas\Admin\Controllers\ProductController.cs" />
     <Compile Include="Areas\Admin\Controllers\RevenueController.cs" />
     <Compile Include="Areas\Admin\Controllers\SeriesController.cs" />
     <Compile Include="Areas\Admin\Controllers\VoucherController.cs" />
     <Compile Include="Areas\Admin\Data\AdminDashboardViewModel.cs" />
     <Compile Include="Areas\Admin\Data\AdminSecurityAttribute.cs" />
+    <Compile Include="Areas\Admin\Data\OrderViewModels.cs" />
     <Compile Include="Areas\Admin\Data\UserListViewModel.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\CheckoutController.cs" />
@@ -6180,6 +6181,7 @@
     <Content Include="Areas\Admin\Views\Product\Manager.cshtml" />
     <Content Include="Areas\Admin\Views\Account\Index.cshtml" />
     <Content Include="Areas\Admin\Data\SQL\PhoneSeller.bacpac" />
+    <Content Include="Areas\Admin\Views\Orders\Index.cshtml" />
     <None Include="Models\SQLDataClasses.dbml.layout">
       <DependentUpon>SQLDataClasses.dbml</DependentUpon>
     </None>
@@ -6199,7 +6201,6 @@
     <Content Include="Scripts\CustomJS\header.js" />
     <Content Include="Scripts\CustomJS\indexpage.js" />
     <Content Include="Scripts\CustomJS\Pinglogin.js" />
-    <Content Include="Scripts\CustomJS\Profile.js" />
     <Content Include="Scripts\CustomJS\Register.js" />
     <Content Include="Scripts\CustomJS\searchbox.js" />
     <Content Include="Web.config" />
@@ -6234,7 +6235,6 @@
     <Folder Include="App_Data\" />
     <Folder Include="Areas\Admin\Views\Brand\" />
     <Folder Include="Areas\Admin\Views\Notification\" />
-    <Folder Include="Areas\Admin\Views\Order\" />
     <Folder Include="Areas\Admin\Views\Revenue\" />
     <Folder Include="Areas\Admin\Views\Series\" />
     <Folder Include="Areas\Admin\Views\Voucher\" />

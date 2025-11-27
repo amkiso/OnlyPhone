@@ -45,42 +45,99 @@
         color: var(--text);
     }
 
-    .stat-card:hover {
-        transform: translateY(-3px);
-        border-color: var(--accent);
-    }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
 
     .stat-header {
-        display: flex; justify-content: space-between; align-items: flex-start;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
     }
 
-    .stat-title { font-size: 14px; font-weight: 600; color: var(--text-sub); }
+    .stat-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-sub);
+    }
 
     .stat-icon {
-        font-size: 16px; width: 36px; height: 36px; border-radius: 8px;
-        display: flex; align-items: center; justify-content: center;
+        font-size: 16px;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     /* Icon Colors */
-    .card-total .stat-icon { color: #3b82f6; background: rgba(59,130,246,0.1); }
-    .card-online .stat-icon { color: #10b981; background: rgba(16,185,129,0.1); }
-    .card-lock .stat-icon { color: #ef4444; background: rgba(239,68,68,0.1); }
-    .card-user .stat-icon { color: #f59e0b; background: rgba(245,158,11,0.1); }
+    .card-total .stat-icon {
+        color: #3b82f6;
+        background: rgba(59,130,246,0.1);
+    }
 
-    .stat-number-wrapper { display: flex; align-items: center; gap: 8px; margin-top: auto; }
-    .stat-number { font-size: 28px; font-weight: 800; margin: 0; color: var(--text); }
-    .stat-desc { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
+    .card-online .stat-icon {
+        color: #10b981;
+        background: rgba(16,185,129,0.1);
+    }
+
+    .card-lock .stat-icon {
+        color: #ef4444;
+        background: rgba(239,68,68,0.1);
+    }
+
+    .card-user .stat-icon {
+        color: #f59e0b;
+        background: rgba(245,158,11,0.1);
+    }
+
+    .stat-number-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: auto;
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: 800;
+        margin: 0;
+        color: var(--text);
+    }
+
+    .stat-desc {
+        font-size: 12px;
+        color: var(--text-sub);
+        margin-top: 4px;
+    }
 
     /* Pulsating Dot */
     .pulsating-dot {
-        width: 10px; height: 10px; background-color: #10b981; border-radius: 50%;
+        width: 10px;
+        height: 10px;
+        background-color: #10b981;
+        border-radius: 50%;
         box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
         animation: pulse-green 2s infinite;
     }
+
     @@keyframes pulse-green {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+        }
+
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
     }
 
     /* 2. FILTER BAR */
@@ -89,129 +146,436 @@
         border: 1px solid var(--border-color);
         border-radius: var(--card-radius);
         padding: 15px;
-        display: flex; align-items: center; justify-content: space-between;
-        margin-bottom: 24px; gap: 15px; flex-wrap: wrap;
-        box-shadow: var(--shadow); color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        gap: 15px;
+        flex-wrap: wrap;
+        box-shadow: var(--shadow);
+        color: var(--text);
     }
 
-    .filter-left { display: flex; align-items: center; gap: 10px; flex: 1; flex-wrap: wrap; }
-    .filter-title { font-size: 18px; font-weight: 700; margin-right: 10px; white-space: nowrap; }
+    .filter-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        flex-wrap: wrap;
+    }
+
+    .filter-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-right: 10px;
+        white-space: nowrap;
+    }
 
     /* Inputs */
     .form-select-sm, .form-control-sm {
         background: var(--bg-input);
         border: 1px solid var(--border-color);
-        border-radius: 6px; padding: 8px 12px; font-size: 13px;
-        color: var(--text); height: 38px; outline: none;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 13px;
+        color: var(--text);
+        height: 38px;
+        outline: none;
     }
-    .form-control-sm:focus { border-color: var(--accent); background: var(--panel); }
-    .form-control-sm:disabled { opacity: 0.7; border-color: transparent; background: transparent; padding-left: 0; }
+
+        .form-control-sm:focus {
+            border-color: var(--accent);
+            background: var(--panel);
+        }
+
+        .form-control-sm:disabled {
+            opacity: 0.7;
+            border-color: transparent;
+            background: transparent;
+            padding-left: 0;
+            font-weight: 600;
+        }
 
     .btn-add {
-        background-color: var(--accent); color: white; border: none;
-        padding: 0 18px; height: 38px; border-radius: 20px;
-        font-weight: 600; font-size: 13px; cursor: pointer;
-        display: flex; align-items: center; gap: 6px; white-space: nowrap;
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        padding: 0 18px;
+        height: 38px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
         transition: opacity 0.2s;
     }
-    .btn-add:hover { opacity: 0.9; }
+
+        .btn-add:hover {
+            opacity: 0.9;
+        }
 
     /* 3. USER LIST */
     .user-container {
-        display: flex; flex-direction: column; gap: 12px;
-        max-height: calc(100vh - 350px); overflow-y: auto; padding-bottom: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-height: calc(100vh - 350px);
+        overflow-y: auto;
+        padding-bottom: 10px;
     }
-    .user-container::-webkit-scrollbar { width: 6px; }
-    .user-container::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; opacity: 0.5; }
+
+        .user-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .user-container::-webkit-scrollbar-thumb {
+            background: var(--muted);
+            border-radius: 3px;
+            opacity: 0.5;
+        }
 
     .user-card {
         background: var(--panel);
         border: 1px solid var(--border-color);
-        border-radius: 16px; padding: 15px 20px;
-        display: flex; flex-direction: column;
-        transition: all 0.2s; position: relative;
-        box-shadow: var(--shadow); color: var(--text);
+        border-radius: 16px;
+        padding: 15px 20px;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.2s;
+        position: relative;
+        box-shadow: var(--shadow);
+        color: var(--text);
     }
-    .user-card:hover { border-color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .user-card.locked { background-color: rgba(239,68,68,0.05); border-color: rgba(239,68,68,0.2); }
 
-    .user-main-row { display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 15px; }
+        .user-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .user-card.locked {
+            background-color: rgba(239,68,68,0.05);
+            border-color: rgba(239,68,68,0.2);
+        }
+
+    .user-main-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
 
     /* Avatar & Info Left */
-    .user-info-left { display: flex; align-items: center; gap: 15px; flex: 2; min-width: 200px; }
+    .user-info-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex: 2;
+        min-width: 200px;
+    }
+
     .user-avatar {
-        width: 55px; height: 55px; border-radius: 50%;
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
         background: linear-gradient(135deg, #8b5cf6, #3b82f6);
-        display: flex; align-items: center; justify-content: center;
-        color: white; font-weight: 700; font-size: 18px;
-        flex-shrink: 0; overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 18px;
+        flex-shrink: 0;
+        overflow: hidden;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-    .user-details h3 { margin: 0 0 2px 0; font-size: 16px; font-weight: 700; color: var(--text); }
-    .user-details p { margin: 0; font-size: 13px; color: var(--text-sub); }
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .user-details h3 {
+        margin: 0 0 2px 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .user-details p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--text-sub);
+    }
 
     /* Info Right & Actions */
     .user-info-right {
-        text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
-        min-width: 150px; flex: 1;
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        min-width: 150px;
+        flex: 1;
     }
 
     /* Badge Styles */
     .status-badge {
-        padding: 4px 12px; border-radius: 20px;
-        color: white; font-size: 11px; font-weight: 600;
-        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        color: white;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
         margin-bottom: 2px;
     }
-    .status-badge.active { background-color: #10b981; }
-    .status-badge.inactive { background-color: #94a3b8; color: white; }
-    .status-badge.locked { background-color: #ef4444; }
-    .status-dot { width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9; }
 
-    .user-meta-text { font-size: 14px; font-weight: 600; color: var(--text); margin: 0; }
-    .user-email { font-size: 13px; color: var(--text-sub); margin: 0 0 5px 0; }
+        .status-badge.active {
+            background-color: #10b981;
+        }
+
+        .status-badge.inactive {
+            background-color: #94a3b8;
+            color: white;
+        }
+
+        .status-badge.locked {
+            background-color: #ef4444;
+        }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        background: white;
+        border-radius: 50%;
+        opacity: 0.9;
+    }
+
+    .user-meta-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+    }
+
+    .user-email {
+        font-size: 13px;
+        color: var(--text-sub);
+        margin: 0 0 5px 0;
+    }
 
     /* Actions */
-    .action-buttons { display: flex; gap: 8px; margin-top: 5px; }
-    .btn-icon {
-        width: 32px; height: 32px; background: var(--bg-input);
-        border: 1px solid var(--border-color); border-radius: 8px;
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; color: var(--text-sub); transition: all 0.2s;
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 5px;
     }
-    .btn-icon:hover { background: var(--accent); color: white; border-color: var(--accent); }
-    .btn-save { background: var(--accent); color: white; border: none; padding: 5px 15px; border-radius: 6px; font-size: 12px; font-weight:600; }
-    .btn-cancel { background: var(--panel); border: 1px solid var(--border-color); color: var(--text-sub); padding: 5px 15px; border-radius: 6px; font-size: 12px; font-weight:600; cursor:pointer; }
 
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-sub);
+        transition: all 0.2s;
+    }
+
+        .btn-icon:hover {
+            opacity: 0.5;
+        }
+
+    .btn-save {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 5px 15px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+        .btn-save:hover {
+            opacity: 0.5;
+        }
+
+    .btn-cancel {
+        background: var(--panel);
+        border: 1px solid var(--border-color);
+        color: var(--text-sub);
+        padding: 5px 15px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+        .btn-cancel:hover {
+            background-color: var(--accent);
+            color: white;
+        }
     /* DETAIL / EDIT PANEL */
     .detail-panel {
-        width: 100%; margin-top: 15px; padding-top: 15px;
-        border-top: 1px dashed var(--border-color); display: none;
+        width: 100%;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px dashed var(--border-color);
+        display: none;
         animation: slideDown 0.3s ease;
     }
-    @@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .edit-row { display: flex; gap: 15px; margin-bottom: 10px; flex-wrap: wrap; }
-    .edit-group { flex: 1; min-width: 150px; }
-    .edit-group label { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; display: block; text-transform: uppercase; font-weight: 600; }
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Modal Styles */
+    .custom-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(2px);
+    }
+
+    .custom-modal {
+        background: var(--panel);
+        color: var(--text);
+        width: 90%;
+        max-width: 400px;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        animation: zoomIn 0.2s ease-out;
+    }
+
+    @@keyframes zoomIn {
+        from {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .modal-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .edit-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+
+    .edit-group {
+        flex: 1;
+        min-width: 150px;
+    }
+
+        .edit-group label {
+            font-size: 11px;
+            color: var(--text-sub);
+            margin-bottom: 4px;
+            display: block;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
 
     /* Toggle Logic */
-    .user-card.expanded .detail-panel { display: block; }
-    .user-card.editing .view-mode { display: none !important; }
-    .user-card:not(.editing) .edit-mode { display: none !important; }
+    .user-card.expanded .detail-panel {
+        display: block;
+    }
 
+    .user-card.editing .view-mode {
+        display: none !important;
+    }
+
+    .user-card:not(.editing) .edit-mode {
+        display: none !important;
+    }
+
+    #newPassword {
+        width: 100%
+    }
     /* Responsive */
-    @@media (max-width: 992px) { .stats-container { grid-template-columns: 1fr 1fr; } }
+    @@media (max-width: 992px) {
+        .stats-container {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
     @@media (max-width: 768px) {
-        .stats-container { grid-template-columns: 1fr; }
-        .user-main-row { align-items: flex-start; flex-direction: column; }
-        .user-info-left { width: 100%; }
-        .user-info-right { width: 100%; align-items: flex-start; text-align: left; margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 10px; }
-        .action-buttons { width: 100%; justify-content: flex-end; }
-        .filter-left { width: 100%; }
-        .btn-add { width: 100%; justify-content: center; margin-top: 10px; }
+        .stats-container {
+            grid-template-columns: 1fr;
+        }
+
+        .user-main-row {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .user-info-left {
+            width: 100%;
+        }
+
+        .user-info-right {
+            width: 100%;
+            align-items: flex-start;
+            text-align: left;
+            margin-top: 10px;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 10px;
+        }
+
+        .action-buttons {
+            width: 100%;
+            justify-content: flex-end;
+        }
+
+        .filter-left {
+            width: 100%;
+        }
+
+        .btn-add {
+            width: 100%;
+            justify-content: center;
+            margin-top: 10px;
+        }
     }
 </style>
 
@@ -271,25 +635,36 @@
         if (item.LastActive.HasValue)
         {
             var span = DateTime.Now - item.LastActive.Value;
-            if (span.TotalMinutes < 1) { lastActiveText = "Vừa xong"; }
-            else if (span.TotalMinutes < 60) { lastActiveText = $"Hoạt động {Math.Floor(span.TotalMinutes)} phút trước"; }
-            else if (span.TotalHours < 24) { lastActiveText = $"Hoạt động {Math.Floor(span.TotalHours)} giờ trước"; }
-            else {lastActiveText = $"Hoạt động {Math.Floor(span.TotalDays)} ngày trước";
+            if (span.TotalMinutes < 1)
+            {
+                lastActiveText = "Vừa xong";
+            }
+            else if (span.TotalMinutes < 60)
+            {
+                lastActiveText = $"Hoạt động {Math.Floor(span.TotalMinutes)} phút trước";
+            }
+            else if (span.TotalHours < 24)
+            {
+                lastActiveText = $"Hoạt động {Math.Floor(span.TotalHours)} giờ trước";
+            }
+            else
+            {
+                lastActiveText = $"Hoạt động {Math.Floor(span.TotalDays)} ngày trước";
+            }
         }
-    }
 
-    if (item.IsLocked)
-    {
-        statusClass = "locked"; statusText = "Đang khóa"; filterStatus = "locked"; cardClass = "locked";
-    }
-    else if (item.IsOnline)
-    {
-        statusClass = "active"; statusText = "Online"; filterStatus = "online"; lastActiveText = "Đang hoạt động";
-    }
-    else
-    {
-        statusClass = "inactive"; statusText = lastActiveText; filterStatus = "offline";
-    }
+        if (item.IsLocked)
+        {
+            statusClass = "locked"; statusText = "Đang khóa"; filterStatus = "locked"; cardClass = "locked";
+        }
+        else if (item.IsOnline)
+        {
+            statusClass = "active"; statusText = "Online"; filterStatus = "online"; lastActiveText = "Đang hoạt động";
+        }
+        else
+        {
+            statusClass = "inactive"; statusText = lastActiveText; filterStatus = "offline";
+        }
 
         <div class="user-card @cardClass" id="card-@item.UserId" data-username="@item.Username.ToLower()" data-status="@filterStatus" data-role="@item.Role">
             <div class="user-main-row">
@@ -334,7 +709,8 @@
                     <div class="action-buttons">
                         <button class="btn-icon view-mode" onclick="toggleDetail(@item.UserId)" id="btn-expand-@item.UserId" title="Xem chi tiết"><i class="fas fa-chevron-down" id="icon-expand-@item.UserId"></i></button>
                         <button class="btn-icon edit view-mode" onclick="toggleEditMode(@item.UserId, true)" title="Sửa"><i class="fas fa-pen"></i></button>
-                        <button class="btn-icon delete view-mode" onclick="confirmDelete(@item.UserId)" title="Xóa"><i class="fas fa-trash"></i></button>
+
+                        <button class="btn-icon edit-mode" onclick="openChangePassword(@item.UserId)" title="Đổi mật khẩu" style="color:var(--accent); border-color:var(--accent)"><i class="fas fa-key"></i></button>
 
                         <button class="btn-save edit-mode" onclick="saveUser(@item.UserId)">Lưu</button>
                         <button class="btn-cancel edit-mode" onclick="toggleEditMode(@item.UserId, false)">Hủy</button>
@@ -350,21 +726,32 @@
                     </div>
                     <div class="edit-group">
                         <label>Ngày tạo</label>
-                        <input type="text" class="form-control-sm" value="@item.CreatedDate.ToString("dd/MM/yyyy HH:mm")" disabled>
+                        <input type="text" class="form-control-sm" value="@item.CreatedDate.ToString("dd/MM/yyyy")" disabled>
                     </div>
                     <div class="edit-group">
                         <label>Cập nhật gần nhất</label>
                         <input type="text" class="form-control-sm" value="@(item.LastActive?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa có")" disabled>
                     </div>
                 </div>
+
                 <div class="edit-row">
                     <div class="edit-group">
                         <label>Số điện thoại</label>
                         <input type="text" class="form-control-sm input-phone" value="@item.PhoneNumber" disabled>
                     </div>
+
                     <div class="edit-group" style="flex:2">
                         <label>Địa chỉ</label>
-                        <input type="text" class="form-control-sm input-address" value="@item.Address" disabled>
+
+                        <div class="view-mode">
+                            <input type="text" class="form-control-sm" value="@item.FullAddress" style="width:20vh;" disabled>
+                        </div>
+
+                        <div class="edit-mode" style="display:flex; gap:8px;">
+                            <input type="text" class="form-control-sm input-homenumber" value="@item.HomeNumber" placeholder="Số nhà, đường">
+                            <input type="text" class="form-control-sm input-ward" value="@item.Ward" placeholder="Phường/Xã">
+                            <input type="text" class="form-control-sm input-province" value="@item.Province" placeholder="Tỉnh/Thành">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -372,12 +759,30 @@
     }
 </div>
 
+<div class="custom-modal-overlay" id="passwordModal">
+    <div class="custom-modal">
+        <div class="modal-title"><i class="fas fa-key"></i> Đổi mật khẩu người dùng</div>
+        <input type="hidden" id="modalUserId">
+        <div style="margin-bottom:15px;">
+            <label style="font-size:12px; color:var(--text-sub); margin-bottom:5px; display:block;">Mật khẩu mới</label>
+            <input type="password" id="newPassword" class="form-control-sm" placeholder="Nhập mật khẩu mới...">
+        </div>
+        <div style="font-size:12px; color:var(--text-sub);">
+            <i class="fas fa-info-circle"></i> Mật khẩu sẽ được mã hóa trước khi lưu.
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closePasswordModal()">Hủy</button>
+            <button class="btn-save" onclick="confirmChangePassword()">Đồng ý</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-        // 1. TOGGLE UI
+        // 1. UI TOGGLE
         function toggleDetail(id) {
             const card = document.getElementById(`card-${id}`);
-            if (card.classList.contains('editing')) return;
+            if (card.classList.contains('editing')) return; // Prevent toggle while editing
             card.classList.toggle('expanded');
             const icon = document.getElementById(`icon-expand-${id}`);
             icon.className = card.classList.contains('expanded') ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
@@ -386,29 +791,121 @@
         function toggleEditMode(id, isEdit) {
             const card = document.getElementById(`card-${id}`);
             const btnExpand = document.getElementById(`btn-expand-${id}`);
-            // Các input cần enable khi sửa
-            const inputs = card.querySelectorAll('.input-phone, .input-address');
+            // Lấy các input trong phần detail để enable/disable
+            const inputPhone = card.querySelector('.input-phone');
 
             if (isEdit) {
                 card.classList.add('editing', 'expanded');
                 btnExpand.style.display = 'none';
-                inputs.forEach(i => i.disabled = false);
+                inputPhone.disabled = false;
             } else {
                 card.classList.remove('editing', 'expanded');
                 btnExpand.style.display = 'flex';
                 document.getElementById(`icon-expand-${id}`).className = 'fas fa-chevron-down';
-                inputs.forEach(i => i.disabled = true);
+                inputPhone.disabled = true;
             }
         }
 
-        // 2. FILTER LOGIC
-        function filterUsers(filterType) {
-            if (filterType) {
+        // 2. SAVE USER
+        function saveUser(id) {
+            const card = document.getElementById(`card-${id}`);
+
+            // Thu thập dữ liệu
+            const fullName = card.querySelector('.input-fullname').value.trim();
+            const email = card.querySelector('.input-email').value.trim();
+            const role = card.querySelector('.input-role').value;
+            const isLocked = card.querySelector('.input-locked').value === "true";
+            const phone = card.querySelector('.input-phone').value;
+
+            // Thu thập địa chỉ tách biệt
+            const home = card.querySelector('.input-homenumber').value;
+            const ward = card.querySelector('.input-ward').value;
+            const prov = card.querySelector('.input-province').value;
+
+            if (!fullName || !email) {
+                alert("Họ tên và Email không được để trống.");
+                return;
+            }
+
+            const btn = card.querySelector('.btn-save');
+            const oldText = btn.innerText;
+            btn.innerText = '...'; btn.disabled = true;
+
+            const data = {
+                UserId: id,
+                Role: role,
+                IsLocked: isLocked,
+                FullName: fullName,
+                Email: email,
+                PhoneNumber: phone,
+                HomeNumber: home,
+                Ward: ward,
+                Province: prov
+            };
+
+            fetch('/Admin/Users/SaveUser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(d => {
+                if (d.success) {
+                    alert('Cập nhật thành công!');
+                    location.reload();
+                } else {
+                    alert(d.message);
+                    btn.innerText = oldText; btn.disabled = false;
+                }
+            }).catch(e => { console.error(e); alert('Lỗi server'); btn.innerText = oldText; btn.disabled = false; });
+        }
+
+        // 3. PASSWORD CHANGE MODAL LOGIC
+        function openChangePassword(id) {
+            document.getElementById('modalUserId').value = id;
+            document.getElementById('newPassword').value = '';
+            document.getElementById('passwordModal').style.display = 'flex';
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').style.display = 'none';
+        }
+
+        function confirmChangePassword() {
+            const id = document.getElementById('modalUserId').value;
+            const pass = document.getElementById('newPassword').value;
+
+            if (!pass || pass.length < 6) {
+                alert("Mật khẩu phải có ít nhất 6 ký tự.");
+                return;
+            }
+
+            if (confirm('Bạn có chắc chắn muốn đổi mật khẩu cho user này?')) {
+                fetch('/Admin/Users/ChangePassword', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: id, newPassword: pass })
+                }).then(r => r.json()).then(d => {
+                    if (d.success) {
+                        alert(d.message);
+                        closePasswordModal();
+                    } else {
+                        alert(d.message);
+                    }
+                }).catch(e => alert('Lỗi server'));
+            }
+        }
+
+        // 4. FILTER LOGIC
+        function filterUsers(statusParam) {
+            if (statusParam) {
                 const statusEl = document.getElementById('filterStatus');
                 const roleEl = document.getElementById('filterRole');
-
-                if (filterType === 'customer') { roleEl.value = 'Customer'; statusEl.value = 'all'; }
-                else { statusEl.value = filterType; roleEl.value = 'all'; }
+                if (statusEl && roleEl) {
+                    if (statusParam === 'customer') {
+                        roleEl.value = 'Customer'; statusEl.value = 'all';
+                    } else {
+                        statusEl.value = statusParam; roleEl.value = 'all';
+                    }
+                }
             }
 
             const status = document.getElementById('filterStatus').value;
@@ -419,62 +916,13 @@
                 const cStatus = c.getAttribute('data-status');
                 const cRole = c.getAttribute('data-role');
                 const cName = c.getAttribute('data-username');
-
                 let show = true;
                 if (status !== 'all' && status !== cStatus) show = false;
                 if (role !== 'all' && role !== cRole) show = false;
                 if (term && !cName.includes(term)) show = false;
-
                 c.style.display = show ? 'flex' : 'none';
             });
         }
-
         function searchUsers() { filterUsers(); }
-
-        // 3. SAVE USER
-        function saveUser(id) {
-            const card = document.getElementById(`card-${id}`);
-            const fullName = card.querySelector('.input-fullname').value.trim();
-            const email = card.querySelector('.input-email').value.trim();
-
-            if (!fullName || !email) { alert("Họ tên và Email là bắt buộc."); return; }
-
-            const data = {
-                UserId: id,
-                Role: card.querySelector('.input-role').value,
-                IsLocked: card.querySelector('.input-locked').value === "true",
-                FullName: fullName,
-                Email: email,
-                PhoneNumber: card.querySelector('.input-phone').value,
-                Address: card.querySelector('.input-address').value
-            };
-
-            const btn = card.querySelector('.btn-save');
-            const oldText = btn.innerText;
-            btn.innerText = '...'; btn.disabled = true;
-
-            fetch('/Admin/Users/SaveUser', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            }).then(r => r.json()).then(d => {
-                if (d.success) { alert('Lưu thành công!'); location.reload(); }
-                else { alert(d.message); btn.innerText = oldText; btn.disabled = false; }
-            }).catch(e => { console.error(e); alert('Lỗi server'); btn.innerText = oldText; btn.disabled = false; });
-        }
-
-        // 4. DELETE USER
-        function confirmDelete(id) {
-            if (confirm('Bạn có chắc muốn xóa tài khoản này? Hành động không thể hoàn tác.')) {
-                fetch('/Admin/Users/DeleteUser', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id })
-                }).then(r => r.json()).then(d => {
-                    if (d.success) document.getElementById(`card-${id}`).remove();
-                    else alert(d.message);
-                });
-            }
-        }
     </script>
 }

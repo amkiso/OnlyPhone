@@ -1635,8 +1635,8 @@ namespace OnlyPhone.Models
                     FullName = userDetail?.full_name ?? "Chưa cập nhật",
                     Email = user.user_email,
                     PhoneNumber = userDetail?.user_phone_number ?? "Chưa cập nhật",
-                    Province = userDetail?.Province,
-                    Ward = userDetail?.Ward,
+                    Province = userDetail.Province,
+                    Ward = userDetail.Ward,
                     AddressDetail = userDetail?.user_address,
                     AvatarUrl = userDetail?.user_pic ?? "noAvt.jpg",
                     CreatedDate = userDetail?.date_create,
@@ -2556,14 +2556,15 @@ namespace OnlyPhone.Models
                                 Role = u.user_type,
                                 // Giả sử bạn đã thêm cột Locked vào bảng Users (mặc định false/0)
                                 IsLocked = u.Locked ,
-
-                                FullName = ud.full_name ?? "Chưa cập nhật",
-                                PhoneNumber = ud.user_phone_number ?? "",
-                                Address = ud.user_address +", " + ud.Ward + ", " + ud.Province,
+                                Province = ud.Province ?? "chưa cập nhật",
+                                FullName = ud.full_name,
+                                PhoneNumber = ud.user_phone_number ,
+                                FullAddress = ud.user_address +", " + ud.Ward + ", " + ud.Province,
                                 Avatar = ud.user_pic ?? "noAvt.jpg",
-
+                                HomeNumber = ud.user_address ,
+                                Ward = ud.Ward ?? "chưa cập nhật",
                                 IsOnline = ud.user_status ?? false,
-                                LastActive = ud.last_change,
+                                LastActive = u.LastActive,
                                 CreatedDate = ud.date_create ?? DateTime.Now
                             };
 
@@ -2596,7 +2597,7 @@ namespace OnlyPhone.Models
                 // Cập nhật bảng User_detail
                 userDetail.full_name = model.FullName;
                 userDetail.user_phone_number = model.PhoneNumber;
-                userDetail.user_address = model.Address;
+                userDetail.user_address = model.HomeNumber;
 
                 // LastActive sẽ tự động cập nhật nhờ Trigger trong DB nếu có, 
                 // hoặc update thủ công: userDetail.last_change = DateTime.Now;
@@ -2634,6 +2635,181 @@ namespace OnlyPhone.Models
             catch
             {
                 return false; // Thường do dính khóa ngoại đơn hàng
+            }
+        }
+        public List<OrderListViewModel> GetOrders(int? statusId, string keyword, DateTime? fromDate, DateTime? toDate)
+        {
+            try
+            {
+                var query = from o in da.Orders
+                            join u in da.Users on o.ID_user equals u.ID_user
+                            join ud in da.User_details on u.ID_user equals ud.ID_user
+                            join s in da.OrderStatus on o.StatusID equals s.StatusID
+                            join p in da.Payments on o.Order_ID equals p.Order_ID into payGroup
+                            from pay in payGroup.DefaultIfEmpty()
+                            join sh in da.Shippings on o.Order_ID equals sh.Order_ID into shipGroup
+                            from ship in shipGroup.DefaultIfEmpty()
+                            join v in da.Vouchers on o.VoucherID equals v.VoucherID into vGroup
+                            from vou in vGroup.DefaultIfEmpty()
+                            select new
+                            {
+                                Order = o,
+                                User = u,
+                                Detail = ud,
+                                Status = s,
+                                Payment = pay,
+                                Shipping = ship,
+                                Voucher = vou
+                            };
+
+                // Filter Status
+                if (statusId.HasValue && statusId > 0)
+                {
+                    query = query.Where(x => x.Order.StatusID == statusId);
+                }
+
+                // Filter Keyword (OrderId hoặc UserId)
+                if (!string.IsNullOrEmpty(keyword))
+                {
+                    // UserId là int, OrderId là string
+                    int userIdSearch = 0;
+                    bool isInt = int.TryParse(keyword, out userIdSearch);
+
+                    if (isInt)
+                        query = query.Where(x => x.Order.Order_ID.Contains(keyword) || x.User.ID_user == userIdSearch);
+                    else
+                        query = query.Where(x => x.Order.Order_ID.Contains(keyword));
+                }
+
+                // Filter Date Range
+                if (fromDate.HasValue)
+                    query = query.Where(x => x.Order.Order_Date >= fromDate.Value);
+                if (toDate.HasValue)
+                    query = query.Where(x => x.Order.Order_Date <= toDate.Value.AddDays(1)); // Hết ngày
+
+                var resultList = query.OrderByDescending(x => x.Order.Order_Date).ToList();
+
+                // Map sang ViewModel và lấy Items
+                var list = new List<OrderListViewModel>();
+                foreach (var item in resultList)
+                {
+                    var orderItems = (from oi in da.Orders_items
+                                      join p in da.Products on oi.Product_ID equals p.Product_ID
+                                      where oi.Order_ID == item.Order.Order_ID
+                                      select new OrderItemViewModel
+                                      {
+                                          OrderItemId = oi.Order_item_ID,
+                                          ProductId = p.Product_ID,
+                                          ProductName = p.Product_name,
+                                          ProductImage = p.Product_Image,
+                                          Quantity = oi.quantity ?? 0,
+                                          Price = oi.Sale_Price ?? 0
+                                      }).ToList();
+
+                    list.Add(new OrderListViewModel
+                    {
+                        OrderId = item.Order.Order_ID,
+                        UserId = item.User.ID_user,
+                        UserName = item.Detail.full_name,
+                        UserEmail = item.User.user_email,
+                        UserPhone = item.Detail.user_phone_number,
+                        OrderDate = item.Order.Order_Date ?? DateTime.Now,
+                        StatusId = item.Order.StatusID,
+                        StatusName = item.Status.StatusName,
+                        TotalAmount = item.Order.Total_Amount ?? 0,
+                        ShippingFee = item.Shipping?.Shipping_Fee ?? 0,
+                        PaymentMethod = item.Payment?.Payment_Method ?? "N/A",
+                        PaymentStatus = item.Payment?.Payment_Status ?? "N/A",
+                        VoucherCode = item.Voucher?.Code ?? "Không sử dụng",
+                        Items = orderItems
+                    });
+                }
+
+                return list;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error GetOrders: " + ex.Message);
+                return new List<OrderListViewModel>();
+            }
+        }
+
+        // 2. Cập nhật trạng thái đơn hàng & Gửi thông báo
+        public bool UpdateOrderStatus(string orderId, int newStatusId)
+        {
+            try
+            {
+                var order = da.Orders.FirstOrDefault(o => o.Order_ID == orderId);
+                if (order == null) return false;
+
+                order.StatusID = newStatusId;
+
+                // Logic Notification
+                string title = "Cập nhật đơn hàng " + orderId;
+                string msg = "";
+                switch (newStatusId)
+                {
+                    case 2: msg = "Đơn hàng của bạn đã được xác nhận."; break;
+                    case 3: msg = "Đơn hàng đang được đóng gói."; break;
+                    case 4: msg = "Đơn hàng đã được bàn giao cho đơn vị vận chuyển."; break;
+                    case 5: msg = "Giao hàng thành công. Cảm ơn bạn đã mua sắm!"; break;
+                    case 6: msg = "Đơn hàng đã bị hủy."; break;
+                }
+
+                if (!string.IsNullOrEmpty(msg))
+                {
+                    var noti = new Notification
+                    {
+                        ID_user = order.ID_user ?? 0,
+                        Title = title,
+                        Message = msg,
+                        Type = "Order",
+                        Related_ID = orderId,
+                        IsRead = false,
+                        Created_At = DateTime.Now
+                    };
+                    da.Notifications.InsertOnSubmit(noti);
+                }
+
+                da.SubmitChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // 3. Xóa sản phẩm khỏi đơn hàng (Edit Mode)
+        public bool RemoveOrderItem(string orderId, int productId)
+        {
+            try
+            {
+                var item = da.Orders_items.FirstOrDefault(oi => oi.Order_ID == orderId && oi.Product_ID == productId);
+                if (item == null) return false;
+
+                // Tính tiền cần trừ
+                decimal deductAmount = (item.Sale_Price ?? 0) * (item.quantity ?? 0);
+
+                // Xóa item
+                da.Orders_items.DeleteOnSubmit(item);
+
+                // Cập nhật lại tổng tiền Order
+                var order = da.Orders.FirstOrDefault(o => o.Order_ID == orderId);
+                if (order != null)
+                {
+                    order.Total_Amount -= deductAmount;
+                    // Cập nhật Payment nếu cần (tùy logic nghiệp vụ)
+                    var payment = da.Payments.FirstOrDefault(p => p.Order_ID == orderId);
+                    if (payment != null) payment.Amount = order.Total_Amount ?? 0;
+                }
+
+                da.SubmitChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
     }
