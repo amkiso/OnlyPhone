@@ -1,12 +1,14 @@
-﻿using OnlyPhone.Models;
+﻿using On.Areas.Admin;
+using OnlyPhone.Areas.Admin.Data;
+using OnlyPhone.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using OnlyPhone.Areas.Admin.Data;
 namespace OnlyPhone.Areas.Admin.Controllers
 {
+    [AdminSecurity]
     public class AccountController : Controller
     {
         // GET: Admin/Account

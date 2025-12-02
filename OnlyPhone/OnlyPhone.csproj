@@ -193,11 +193,14 @@
     <Compile Include="Areas\Admin\Controllers\OrdersController.cs" />
     <Compile Include="Areas\Admin\Controllers\ProductController.cs" />
     <Compile Include="Areas\Admin\Controllers\RevenueController.cs" />
-    <Compile Include="Areas\Admin\Controllers\SeriesController.cs" />
     <Compile Include="Areas\Admin\Controllers\VoucherController.cs" />
     <Compile Include="Areas\Admin\Data\AdminDashboardViewModel.cs" />
     <Compile Include="Areas\Admin\Data\AdminSecurityAttribute.cs" />
+    <Compile Include="Areas\Admin\Data\BrandViewModel.cs" />
+    <Compile Include="Areas\Admin\Data\GlobalNotiItem.cs" />
     <Compile Include="Areas\Admin\Data\OrderViewModels.cs" />
+    <Compile Include="Areas\Admin\Data\PersonalNotiItem.cs" />
+    <Compile Include="Areas\Admin\Data\RevenueDashboardViewModel.cs" />
     <Compile Include="Areas\Admin\Data\UserListViewModel.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\CheckoutController.cs" />
@@ -246,7 +249,11 @@
     <Content Include="Content\Bootstrap\bootstrap.min.css" />
     <Content Include="Content\Bootstrap\bootstrap.rtl.css" />
     <Content Include="Content\Bootstrap\bootstrap.rtl.min.css" />
-    <Content Include="Content\Css\adminlayout.css" />
+    <Content Include="Content\Css\admin\accountmanager.css" />
+    <Content Include="Content\Css\admin\adminlayout.css" />
+    <Content Include="Content\Css\admin\Ordermanager.css" />
+    <Content Include="Content\Css\admin\GlobalNoti.css" />
+    <Content Include="Content\Css\admin\PersionNoti.css" />
     <Content Include="Content\Css\Checkout.css" />
     <Content Include="Content\Css\header.css" />
     <Content Include="Content\Css\Index.css" />
@@ -6129,6 +6136,14 @@
     <Content Include="Content\Pic\images\xiaomi-redmi-note-14-pro-xanh-thumbnew-600x600.jpg" />
     <Content Include="Content\Pic\images\xiaomi-redmi-note-14-thumb-600x600.jpg" />
     <Content Include="Content\Pic\Avartar\noAvt.jpg" />
+    <Content Include="Content\Pic\logo\HONOR-logo.png" />
+    <Content Include="Content\Pic\logo\Iphone-logo.png" />
+    <Content Include="Content\Pic\logo\OPPO-logo.png" />
+    <Content Include="Content\Pic\logo\realme-logo.png" />
+    <Content Include="Content\Pic\logo\SAMSUNG-logo.png" />
+    <Content Include="Content\Pic\logo\TECHNO-logo.png" />
+    <Content Include="Content\Pic\logo\Vivo-logo.png" />
+    <Content Include="Content\Pic\logo\Xiaomi-logo.png" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Bootstrap\Site.css" />
@@ -6180,8 +6195,12 @@
     <Content Include="Areas\Admin\Views\Shared\_LayoutAdmin.cshtml" />
     <Content Include="Areas\Admin\Views\Product\Manager.cshtml" />
     <Content Include="Areas\Admin\Views\Account\Index.cshtml" />
-    <Content Include="Areas\Admin\Data\SQL\PhoneSeller.bacpac" />
     <Content Include="Areas\Admin\Views\Orders\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\Revenue\Stats.cshtml" />
+    <Content Include="Areas\Admin\Views\Brand\manager.cshtml" />
+    <Content Include="Areas\Admin\Views\Notification\Persion.cshtml" />
+    <Content Include="Areas\Admin\Views\Notification\Global.cshtml" />
+    <Content Include="Areas\Admin\Data\SQL\PhoneSeller.bacpac" />
     <None Include="Models\SQLDataClasses.dbml.layout">
       <DependentUpon>SQLDataClasses.dbml</DependentUpon>
     </None>
@@ -6233,10 +6252,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Areas\Admin\Views\Brand\" />
-    <Folder Include="Areas\Admin\Views\Notification\" />
-    <Folder Include="Areas\Admin\Views\Revenue\" />
-    <Folder Include="Areas\Admin\Views\Series\" />
     <Folder Include="Areas\Admin\Views\Voucher\" />
   </ItemGroup>
   <ItemGroup>

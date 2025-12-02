@@ -211,13 +211,26 @@ namespace OnlyPhone.Controllers
         [HttpPost]
         public ActionResult KeepAlive()
         {
-            int userId = (int)Session["UserId"]; // Hoặc lấy từ token JWT nếu API
-            var user = db.Users.SingleOrDefault(u => u.ID_user == userId);
-            if (user != null)
+            if (Session["UserID"] != null)
             {
-                user.LastActive = DateTime.Now;
-                db.SubmitChanges();
+                try
+                {
+                    int userId = (int)Session["UserID"];
+                    var user = db.Users.SingleOrDefault(u => u.ID_user == userId);
+
+                    if (user != null)
+                    {
+                        user.LastActive = DateTime.Now;
+                        db.SubmitChanges();
+                    }
+                }
+                catch
+                {
+                    
+                }
             }
+
+            // Luôn trả về 200 OK để phía Client (JavaScript) không báo lỗi đỏ trong Console
             return new HttpStatusCodeResult(200);
         }
         [HttpGet]

@@ -1,0 +1,360 @@
+﻿@model OnlyPhone.Areas.Admin.Data.PersonalNotiPageModel
+@{
+    ViewBag.Title = "Thông báo Cá nhân";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+<link href="~/Content/Css/admin/PersionNoti.css" rel="stylesheet" />
+
+<div class="stats-container">
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-title">Tổng thông báo</div><div class="stat-icon" style="background:rgba(59,130,246,0.1); color:#3b82f6"><i class="fas fa-layer-group"></i></div></div>
+        <div class="stat-number">@Model.TotalCount</div>
+        <div class="stat-desc">Tất cả thời gian</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-title">Chưa đọc</div><div class="stat-icon" style="background:rgba(239,68,68,0.1); color:#ef4444"><i class="fas fa-envelope"></i></div></div>
+        <div class="stat-number">@Model.UnreadCount</div>
+        <div class="stat-desc">Người dùng chưa xem</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-title">Đã đọc</div><div class="stat-icon" style="background:rgba(16,185,129,0.1); color:#10b981"><i class="fas fa-check-double"></i></div></div>
+        <div class="stat-number">@Model.ReadCount</div>
+        <div class="stat-desc">Đã tương tác</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-title">Hôm nay</div><div class="stat-icon" style="background:rgba(245,158,11,0.1); color:#f59e0b"><i class="fas fa-calendar-day"></i></div></div>
+        <div class="stat-number">@Model.TodayCount</div>
+        <div class="stat-desc">Mới tạo trong ngày</div>
+    </div>
+</div>
+
+<div class="control-panel">
+    <div class="filter-left">
+        <div class="filter-title">Thông báo cá nhân</div>
+
+        <input type="hidden" id="currentKeyword" value="@ViewBag.Keyword">
+        <input type="hidden" id="currentStart" value="@ViewBag.Start">
+        <input type="hidden" id="currentEnd" value="@ViewBag.End">
+
+        <form action="@Url.Action("Persion")" method="get" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; flex:1;">
+            <input type="date" name="start" value="@ViewBag.Start" class="form-control-sm" title="Từ ngày">
+            <span style="color:var(--text-sub)">-</span>
+            <input type="date" name="end" value="@ViewBag.End" class="form-control-sm" title="Đến ngày">
+
+            <div class="search-wrapper" style="width:250px; position:relative;">
+                <input type="text" name="keyword" value="@ViewBag.Keyword" class="form-control-sm" placeholder="Tìm ID, Email, Tiêu đề..." style="padding-left:30px; width:100%">
+                <i class="fas fa-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#888; font-size:12px;"></i>
+            </div>
+
+            <button type="submit" class="btn-add" style="width:auto; height:36px; padding:0 15px;"><i class="fas fa-filter"></i></button>
+        </form>
+    </div>
+    <button class="btn-add" onclick="openPersonalModal()"><i class="fas fa-paper-plane"></i> Gửi tin mới</button>
+</div>
+
+<div id="personalList">
+    @if (Model.List.Count == 0)
+    {
+        <div style="text-align:center; padding:40px; color:var(--text-sub)">Không tìm thấy thông báo nào.</div>
+    }
+    @foreach (var item in Model.List)
+    {
+        @Html.Raw(RenderPersonalItem(item))
+    }
+</div>
+
+<div class="load-more-container">
+    <button id="btnLoadMore" class="btn-load-more" onclick="loadMore()">
+        <i class="fas fa-chevron-down"></i> Hiển thị thêm
+    </button>
+</div>
+
+<div class="custom-modal-overlay" id="personalModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div class="custom-modal" style="background:var(--panel); width:500px; padding:25px; border-radius:12px; animation:zoomIn 0.2s; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div class="modal-title" style="font-size:18px; font-weight:700; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">Gửi tin nhắn riêng</div>
+
+        <div class="modal-group">
+            <label>ID Người dùng <span style="color:red">*</span></label>
+            <input type="number" id="inpUserId" class="modal-input" placeholder="Nhập ID User nhận tin...">
+        </div>
+
+        <div class="modal-group">
+            <label>Tiêu đề tin nhắn <span style="color:red">*</span></label>
+            <input type="text" id="inpTitle" class="modal-input" placeholder="Tiêu đề...">
+        </div>
+
+        <div class="modal-group" style="display:flex; gap:15px;">
+            <div style="flex:1">
+                <label>Loại tin</label>
+                <select id="inpType" class="modal-input">
+                    <option value="System">Hệ thống</option>
+                    <option value="Order">Đơn hàng</option>
+                    <option value="Voucher">Voucher</option>
+                    <option value="Warning">Cảnh báo</option>
+                </select>
+            </div>
+            <div style="flex:1">
+                <label>Link đích (URL)</label>
+                <input type="text" id="inpUrl" class="modal-input" placeholder="/Home/Profile">
+            </div>
+        </div>
+
+        <div class="modal-group">
+            <label>Nội dung chi tiết <span style="color:red">*</span></label>
+            <textarea id="inpMessage" class="modal-input" placeholder="Nhập nội dung tin nhắn..."></textarea>
+        </div>
+
+        <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px; border-top:1px solid var(--border-color); padding-top:15px;">
+            <button class="btn-cancel" onclick="document.getElementById('personalModal').style.display='none'" style="padding:10px 25px; border:1px solid #ddd; background:#fff; border-radius:8px; cursor:pointer; font-weight:600; color:var(--text-sub)">Hủy</button>
+            <button class="btn-add" onclick="sendPersonal()" style="border-radius:8px; height:auto; padding:10px 25px; font-size:14px;">Gửi tin</button>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string RenderPersonalItem(OnlyPhone.Areas.Admin.Data.PersonalNotiItem item)
+    {
+        string readStatus = item.IsRead
+            ? $"<span style='color:#10b981'><i class='fas fa-check-double'></i> Đã đọc</span>"
+            : $"<span style='color:#ef4444; font-weight:600'><i class='fas fa-circle' style='font-size:8px'></i> Chưa đọc</span>";
+
+        string readDetail = item.IsRead
+            ? $"<span style='color:#10b981'>Đã xem lúc: {item.ReadAt:dd/MM/yyyy HH:mm}</span>"
+            : $"<span style='color:#ef4444'>Người dùng chưa xem tin này</span>";
+
+        // Logic hiển thị URL
+        string urlDisplay = string.IsNullOrEmpty(item.TargetUrl)
+            ? "<span style='color:var(--text-sub); font-style:italic;'>Không có liên kết</span>"
+            : $"<a href='{item.TargetUrl}' target='_blank' style='color:var(--accent); text-decoration:none;'><i class='fas fa-external-link-alt'></i> {item.TargetUrl}</a>";
+
+        return $@"
+    <div class='noti-card' id='card-{item.Id}'>
+        <div class='noti-header' onclick='toggleDetail({item.Id})'>
+            <div class='user-box'>
+                <img src='/Content/Pic/Avartar/{item.UserAvatar}' class='u-avatar' onerror=""this.src='/Content/Pic/Avartar/noAvt.jpg'"">
+                <span class='u-badge'>{item.UserRole}</span>
+            </div>
+            <div class='noti-body'>
+                <div class='noti-top'>
+                    <div class='noti-title'>
+                        {item.Title} <span class='noti-type'>{item.Type}</span>
+                    </div>
+                    <i class='fas fa-chevron-down' id='icon-{item.Id}' style='color:#888; transition:transform 0.2s'></i>
+                </div>
+                <div class='noti-msg'>{item.Message}</div>
+                <div class='noti-meta'>
+                    <span class='meta-item'><i class='fas fa-user'></i> {item.UserName} (#{item.UserId})</span>
+                    <span class='meta-item'><i class='far fa-clock'></i> {item.CreatedAt:dd/MM/yyyy HH:mm}</span>
+                    <span class='meta-item'>{readStatus}</span>
+                </div>
+            </div>
+        </div>
+        <div class='detail-panel' id='detail-{item.Id}'>
+            <div class='detail-grid'>
+                <div class='detail-full'>
+                    <span class='lbl'>Nội dung đầy đủ</span>
+                    <div class='val' style='white-space:pre-wrap; line-height:1.5'>{item.FullMessage}</div>
+                </div>
+
+                <div>
+                    <span class='lbl'>Liên kết đính kèm (URL)</span>
+                    <div class='val'>{urlDisplay}</div>
+                </div>
+
+                <div>
+                    <span class='lbl'>Người nhận (To)</span>
+                    <div class='val'>
+                        <div><strong>{item.UserName}</strong></div>
+                        <div style='color:var(--text-sub)'>{item.UserEmail}</div>
+                    </div>
+                </div>
+                <div>
+                    <span class='lbl'>Trạng thái chi tiết</span>
+                    <div class='val'>{readDetail}</div>
+                </div>
+                <div class='detail-full' style='text-align:right; border-top:1px dashed var(--border-color); padding-top:15px;'>
+                    <button style='background:none; border:none; color:red; cursor:pointer; font-weight:600' onclick='deletePersonal({item.Id})'>
+                        <i class='fas fa-trash'></i> Xóa tin nhắn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>";
+    }
+}
+
+@section Scripts {
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+
+        // Toggle
+        function toggleDetail(id) {
+            const panel = document.getElementById(`detail-${id}`);
+            const icon = document.getElementById(`icon-${id}`);
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                panel.style.display = 'block';
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // Delete
+        function deletePersonal(id) {
+            event.stopPropagation();
+            if (!confirm('Xóa thông báo này?')) return;
+            fetch('/Admin/Notification/Delete', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id })
+            }).then(r => r.json()).then(res => {
+                if (res.success) {
+                    const card = document.getElementById(`card-${id}`);
+                    card.style.opacity = '0';
+                    setTimeout(() => card.remove(), 300);
+                } else alert(res.message);
+            });
+        }
+
+        // Load More
+        function loadMore() {
+            const btn = document.getElementById('btnLoadMore');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải...';
+            btn.disabled = true;
+
+            const nextPage = currentPage + 1;
+            const keyword = document.getElementById('currentKeyword').value;
+            const start = document.getElementById('currentStart').value;
+            const end = document.getElementById('currentEnd').value;
+
+            fetch(`/Admin/Notification/PersionLoadMore?page=${nextPage}&keyword=${keyword}&start=${start}&end=${end}`)
+                .then(r => r.json())
+                .then(res => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+
+                    if (res.success && res.data.length > 0) {
+                        currentPage = nextPage;
+                        const container = document.getElementById('personalList');
+
+                        // Client-side render logic for "Load More" items
+                        res.data.forEach(item => {
+                            const date = new Date(parseInt(item.CreatedAt.replace(/\/Date\((-?\d+)\)\//, '$1'))).toLocaleString('vi-VN');
+
+                            let readStatus = item.IsRead
+                                ? `<span style='color:#10b981'><i class='fas fa-check-double'></i> Đã đọc</span>`
+                                : `<span style='color:#ef4444; font-weight:600'><i class='fas fa-circle' style='font-size:8px'></i> Chưa đọc</span>`;
+
+                            let readDetail = item.IsRead
+                                ? `<span style='color:#10b981'>Đã xem lúc: ${new Date(parseInt(item.ReadAt.replace(/\/Date\((-?\d+)\)\//, '$1'))).toLocaleString('vi-VN')}</span>`
+                                : `<span style='color:#ef4444'>Người dùng chưa xem tin này</span>`;
+
+                            // URL Rendering Logic
+                            let urlHtml = item.TargetUrl
+                                ? `<a href='${item.TargetUrl}' target='_blank' style='color:var(--accent); text-decoration:none;'><i class='fas fa-external-link-alt'></i> ${item.TargetUrl}</a>`
+                                : "<span style='color:var(--text-sub); font-style:italic;'>Không có liên kết</span>";
+
+                            const html = `
+                                <div class='noti-card' id='card-${item.Id}'>
+                                    <div class='noti-header' onclick='toggleDetail(${item.Id})'>
+                                        <div class='user-box'>
+                                            <img src='/Content/Pic/Avartar/${item.UserAvatar}' class='u-avatar' onerror="this.src='/Content/Pic/Avartar/noAvt.jpg'">
+                                            <span class='u-badge'>${item.UserRole}</span>
+                                        </div>
+                                        <div class='noti-body'>
+                                            <div class='noti-top'>
+                                                <div class='noti-title'>
+                                                    ${item.Title} <span class='noti-type'>${item.Type}</span>
+                                                </div>
+                                                <i class='fas fa-chevron-down' id='icon-${item.Id}' style='color:#888; transition:transform 0.2s'></i>
+                                            </div>
+                                            <div class='noti-msg'>${item.Message}</div>
+                                            <div class='noti-meta'>
+                                                <span class='meta-item'><i class='fas fa-user'></i> ${item.UserName} (#${item.UserId})</span>
+                                                <span class='meta-item'><i class='far fa-clock'></i> ${date}</span>
+                                                <span class='meta-item'>${readStatus}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class='detail-panel' id='detail-${item.Id}'>
+                                        <div class='detail-grid'>
+                                            <div class='detail-full'>
+                                                <span class='lbl'>Nội dung đầy đủ</span>
+                                                <div class='val' style='white-space:pre-wrap; line-height:1.5'>${item.FullMessage}</div>
+                                            </div>
+                                            <div>
+                                                <span class='lbl'>Liên kết đính kèm (URL)</span>
+                                                <div class='val'>${urlHtml}</div>
+                                            </div>
+                                            <div>
+                                                <span class='lbl'>Người nhận (To)</span>
+                                                <div class='val'>
+                                                    <div><strong>${item.UserName}</strong></div>
+                                                    <div style='color:var(--text-sub)'>${item.UserEmail}</div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <span class='lbl'>Trạng thái chi tiết</span>
+                                                <div class='val'>${readDetail}</div>
+                                            </div>
+                                            <div class='detail-full' style='text-align:right; border-top:1px dashed var(--border-color); padding-top:15px;'>
+                                                <button style='background:none; border:none; color:red; cursor:pointer; font-weight:600' onclick='deletePersonal(${item.Id})'>
+                                                    <i class='fas fa-trash'></i> Xóa tin nhắn
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                            container.insertAdjacentHTML('beforeend', html);
+                        });
+
+                        if (res.data.length < pageSize) btn.style.display = 'none';
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                })
+                .catch(e => {
+                    alert('Lỗi tải trang');
+                    btn.disabled = false;
+                });
+        }
+
+        // Modal Logic
+        function openPersonalModal() {
+            document.getElementById('personalModal').style.display = 'flex';
+            document.getElementById('inpUserId').value = '';
+            document.getElementById('inpTitle').value = '';
+            document.getElementById('inpMessage').value = '';
+            document.getElementById('inpUrl').value = '';
+        }
+
+        function sendPersonal() {
+            const data = {
+                userId: document.getElementById('inpUserId').value,
+                title: document.getElementById('inpTitle').value,
+                message: document.getElementById('inpMessage').value,
+                type: document.getElementById('inpType').value,
+                url: document.getElementById('inpUrl').value
+            };
+
+            if (!data.userId || !data.title || !data.message) {
+                alert("Vui lòng nhập đủ thông tin (ID User, Tiêu đề, Nội dung)");
+                return;
+            }
+
+            fetch('/Admin/Notification/CreatePersonal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(res => {
+                if (res.success) {
+                    alert(res.message);
+                    location.reload();
+                } else {
+                    alert(res.message);
+                }
+            });
+        }
+    </script>
+}

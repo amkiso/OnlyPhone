@@ -1356,7 +1356,7 @@ namespace OnlyPhone.Models
                     if (product.Current_Quantity < item.quantity)
                         return (false, $"Sản phẩm {product.Product_name} không đủ số lượng trong kho");
 
-                    if (product.Product_Status != "Selling")
+                    if (product.Product_Status.ToLower() != "selling")
                         return (false, $"Sản phẩm {product.Product_name} hiện không khả dụng");
                 }
 
@@ -2812,7 +2812,586 @@ namespace OnlyPhone.Models
                 return false;
             }
         }
+        public List<BrandViewModel> GetAllBrandsWithSeries()
+        {
+            try
+            {
+                var brands = da.suppliers.Select(s => new BrandViewModel
+                {
+                    BrandId = s.supplier_ID,
+                    BrandName = s.supplier_name,
+                    Email = s.email,
+                    Phone = s.Phone_Number,
+                    Address = s.supplier_address,
+                    Logo = s.logo, // Lấy tên file logo
+
+                    TotalProducts = da.Products.Count(p => p.supplier_ID == s.supplier_ID && p.Product_Status == "selling"),
+
+                    SeriesList = da.PhoneSeries
+                        .Where(ps => ps.supplier_ID == s.supplier_ID)
+                        .Select(ps => new SeriesDTO
+                        {
+                            SeriesId = ps.Series_id,
+                            SeriesName = ps.SeriesName,
+                            ProductCount = da.Products.Count(p => p.Series_id == ps.Series_id)
+                        }).ToList()
+                }).ToList();
+
+                // Tính tổng đã bán
+                foreach (var b in brands)
+                {
+                    b.TotalSold = (from oi in da.Orders_items
+                                   join p in da.Products on oi.Product_ID equals p.Product_ID
+                                   where p.supplier_ID == b.BrandId
+                                   select (int?)oi.quantity).Sum() ?? 0;
+                }
+
+                return brands.OrderByDescending(b => b.TotalSold).ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error GetAllBrands: {ex.Message}");
+                return new List<BrandViewModel>();
+            }
+        }
+
+        // Upload Logo
+        public string UploadBrandLogo(HttpPostedFileBase file, string serverPath)
+        {
+            try
+            {
+                if (file == null || file.ContentLength == 0) return null;
+
+                string fileName = System.IO.Path.GetFileName(file.FileName);
+                // Format tên file: logo_{timestamp}.png
+                string uniqueName = $"logo_{DateTime.Now:yyyyMMddHHmmss}{System.IO.Path.GetExtension(fileName)}";
+                string path = System.IO.Path.Combine(serverPath, "Content", "Pic", "logo");
+
+                if (!System.IO.Directory.Exists(path))
+                    System.IO.Directory.CreateDirectory(path);
+
+                string fullPath = System.IO.Path.Combine(path, uniqueName);
+                file.SaveAs(fullPath);
+
+                return uniqueName;
+            }
+            catch { return null; }
+        }
+
+        // 2. Lấy thống kê Top Cards
+        public BrandStatsModel GetBrandStats()
+        {
+            try
+            {
+                var stats = new BrandStatsModel();
+
+                // Tổng thương hiệu
+                stats.TotalBrands = da.suppliers.Count();
+
+                // Tổng dòng sản phẩm
+                stats.TotalSeries = da.PhoneSeries.Count();
+
+                // Thương hiệu bán chạy nhất
+                var bestSeller = (from oi in da.Orders_items
+                                  join p in da.Products on oi.Product_ID equals p.Product_ID
+                                  join s in da.suppliers on p.supplier_ID equals s.supplier_ID
+                                  group oi by s.supplier_name into g
+                                  orderby g.Sum(x => x.quantity) descending
+                                  select new { Name = g.Key, Total = g.Sum(x => x.quantity) })
+                                 .FirstOrDefault();
+
+                if (bestSeller != null)
+                {
+                    stats.BestSellingBrand = bestSeller.Name;
+                    stats.BestSellingQuantity = bestSeller.Total ?? 0;
+                }
+                else
+                {
+                    stats.BestSellingBrand = "Chưa có dữ liệu";
+                    stats.BestSellingQuantity = 0;
+                }
+
+                return stats;
+            }
+            catch
+            {
+                return new BrandStatsModel();
+            }
+        }
+
+        // 3. Thêm/Sửa Thương hiệu (Demo logic cơ bản)
+        public bool SaveBrand(BrandViewModel model)
+        {
+            try
+            {
+                supplier sup;
+                if (model.BrandId > 0)
+                {
+                    sup = da.suppliers.FirstOrDefault(s => s.supplier_ID == model.BrandId);
+                    if (sup == null) return false;
+                }
+                else
+                {
+                    sup = new supplier();
+                    da.suppliers.InsertOnSubmit(sup);
+                }
+
+                sup.supplier_name = model.BrandName;
+                sup.Phone_Number = model.Phone;
+                sup.email = model.Email;
+                sup.supplier_address = model.Address;
+
+                // Nếu có logo mới thì cập nhật
+                if (!string.IsNullOrEmpty(model.Logo))
+                {
+                    sup.logo = model.Logo;
+                }
+
+                da.SubmitChanges();
+                return true;
+            }
+            catch { return false; }
+        }
+
+        // Thêm dòng sản phẩm mới
+        public bool AddSeries(int brandId, string seriesName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(seriesName)) return false;
+
+                // Kiểm tra trùng tên trong cùng hãng
+                var exist = da.PhoneSeries.Any(s => s.supplier_ID == brandId && s.SeriesName.ToLower() == seriesName.ToLower());
+                if (exist) return false;
+
+                var series = new PhoneSery
+                {
+                    supplier_ID = brandId,
+                    SeriesName = seriesName
+                };
+
+                da.PhoneSeries.InsertOnSubmit(series);
+                da.SubmitChanges();
+                return true;
+            }
+            catch { return false; }
+        }
+
+        // 4. Xóa Thương hiệu
+        public bool DeleteBrand(int id)
+        {
+            try
+            {
+                // Kiểm tra ràng buộc sản phẩm trước khi xóa
+                if (da.Products.Any(p => p.supplier_ID == id)) return false;
+
+                var sup = da.suppliers.FirstOrDefault(s => s.supplier_ID == id);
+                if (sup != null)
+                {
+                    // Xóa series con trước (nếu không có ràng buộc sản phẩm)
+                    var series = da.PhoneSeries.Where(ps => ps.supplier_ID == id).ToList();
+                    da.PhoneSeries.DeleteAllOnSubmit(series);
+
+                    da.suppliers.DeleteOnSubmit(sup);
+                    da.SubmitChanges();
+                    return true;
+                }
+                return false;
+            }
+            catch { return false; }
+        }
+        public RevenueDashboardViewModel GetRevenueStats(DateTime? fromDate, DateTime? toDate)
+        {
+            try
+            {
+                var model = new RevenueDashboardViewModel();
+
+                // Default date range: 30 ngày gần nhất nếu null
+                var end = toDate?.AddDays(1) ?? DateTime.Now.AddDays(1); // Hết ngày
+                var start = fromDate ?? DateTime.Now.AddDays(-30);
+
+                // Chỉ tính đơn thành công (Status = 5: Đã giao) hoặc Đã xác nhận (2,3,4) tùy chính sách
+                // Ở đây tôi tính các đơn KHÔNG BỊ HỦY và KHÔNG HOÀN TRẢ để dự báo doanh thu
+                var invalidStatus = new int[] { 6, 7 };
+
+                var orders = da.Orders.Where(o => o.Order_Date >= start && o.Order_Date < end && !invalidStatus.Contains(o.StatusID)).ToList();
+
+                // 1. Tính KPI
+                model.TotalRevenue = orders.Sum(o => o.Total_Amount ?? 0);
+                model.TotalOrders = orders.Count;
+                model.AOV = model.TotalOrders > 0 ? model.TotalRevenue / model.TotalOrders : 0;
+
+                // Giả định lợi nhuận là 20% doanh thu (Vì DB chưa có giá nhập)
+                model.NetProfit = model.TotalRevenue * 0.2m;
+
+                // Demo Growth (Random nhẹ để hiển thị UI)
+                model.RevenueGrowth = 12.5;
+                model.OrderGrowth = -2.1;
+
+                // 2. Dữ liệu biểu đồ (Group by Date)
+                var chartData = orders
+                    .GroupBy(o => o.Order_Date.Value.Date)
+                    .Select(g => new { Date = g.Key, Revenue = g.Sum(x => x.Total_Amount ?? 0) })
+                    .OrderBy(x => x.Date)
+                    .ToList();
+
+                model.ChartLabels = chartData.Select(x => x.Date.ToString("dd/MM")).ToList();
+                model.ChartRevenueData = chartData.Select(x => x.Revenue).ToList();
+                // Giả định lợi nhuận biểu đồ
+                model.ChartProfitData = chartData.Select(x => x.Revenue * 0.2m).ToList();
+
+                // Dữ liệu Pie Chart (Demo tỷ lệ)
+                model.PieData = new List<decimal> { 70, 20, 10 };
+
+                // 3. Lấy danh sách giao dịch gần đây
+                // Lấy 20 đơn mới nhất trong khoảng thời gian
+                var recentOrders = (from o in da.Orders
+                                    join u in da.User_details on o.ID_user equals u.ID_user
+                                    join s in da.OrderStatus on o.StatusID equals s.StatusID
+                                    join p in da.Payments on o.Order_ID equals p.Order_ID into pg
+                                    from pay in pg.DefaultIfEmpty()
+                                    where o.Order_Date >= start && o.Order_Date < end
+                                    orderby o.Order_Date descending
+                                    select new
+                                    {
+                                        Order = o,
+                                        Customer = u.full_name,
+                                        StatusName = s.StatusName,
+                                        PayMethod = pay != null ? pay.Payment_Method : "COD"
+                                    }).Take(20).ToList();
+
+                model.RecentOrders = new List<RevenueOrderItem>();
+                foreach (var item in recentOrders)
+                {
+                    // Lấy chi tiết sản phẩm
+                    var products = (from oi in da.Orders_items
+                                    join p in da.Products on oi.Product_ID equals p.Product_ID
+                                    where oi.Order_ID == item.Order.Order_ID
+                                    select new RevenueProductDetail
+                                    {
+                                        ProductName = p.Product_name,
+                                        ProductImage = p.Product_Image,
+                                        Quantity = oi.quantity ?? 0,
+                                        Price = oi.Sale_Price ?? 0
+                                    }).ToList();
+
+                    model.RecentOrders.Add(new RevenueOrderItem
+                    {
+                        OrderId = item.Order.Order_ID,
+                        OrderDate = item.Order.Order_Date ?? DateTime.Now,
+                        CustomerName = item.Customer,
+                        TotalAmount = item.Order.Total_Amount ?? 0,
+                        StatusId = item.Order.StatusID,
+                        StatusName = item.StatusName,
+                        PaymentMethod = item.PayMethod,
+                        TotalQuantity = products.Sum(x => x.Quantity),
+                        Products = products
+                    });
+                }
+
+                return model;
+            }
+            catch (Exception ex)
+            {
+                return new RevenueDashboardViewModel();
+            }
+        }
+        public PersonalNotiPageModel GetPersonalNotifications(string keyword, DateTime? fromDate, DateTime? toDate, int pageIndex = 1, int pageSize = 10)
+        {
+            var model = new PersonalNotiPageModel();
+
+            // 1. Query cơ bản (Join bảng)
+            var query = from n in da.Notifications
+                        join u in da.Users on n.ID_user equals u.ID_user
+                        join ud in da.User_details on u.ID_user equals ud.ID_user
+                        select new { n, u, ud };
+
+            // 2. Tính toán thống kê (Trên toàn bộ dữ liệu chưa phân trang)
+            // Lưu ý: Nếu dữ liệu quá lớn, có thể tách thống kê ra hàm riêng hoặc cache lại
+            model.TotalCount = da.Notifications.Count();
+            model.UnreadCount = da.Notifications.Count(x => x.IsRead == false);
+            model.ReadCount = da.Notifications.Count(x => x.IsRead == true);
+            model.TodayCount = da.Notifications.Count(x => x.Created_At >= DateTime.Today);
+
+            // 3. Áp dụng bộ lọc
+            if (fromDate.HasValue)
+                query = query.Where(x => x.n.Created_At >= fromDate.Value);
+            if (toDate.HasValue)
+                query = query.Where(x => x.n.Created_At <= toDate.Value.AddDays(1));
+
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                string k = keyword.ToLower();
+                int searchId = 0;
+                bool isId = int.TryParse(k, out searchId);
+
+                query = query.Where(x => x.n.Title.ToLower().Contains(k) ||
+                                         x.u.user_email.ToLower().Contains(k) ||
+                                         x.ud.full_name.ToLower().Contains(k) ||
+                                         (isId && x.n.ID_user == searchId));
+            }
+
+            // 4. PHÂN TRANG (Skip/Take)
+            var data = query.OrderByDescending(x => x.n.Created_At)
+                            .Skip((pageIndex - 1) * pageSize)
+                            .Take(pageSize)
+                            .ToList();
+
+            // 5. Map dữ liệu sang ViewModel
+            model.List = data.Select(item => new PersonalNotiItem
+            {
+                Id = item.n.Notification_ID,
+                Title = item.n.Title,
+                Message = item.n.Message.Length > 80 ? item.n.Message.Substring(0, 80) + "..." : item.n.Message,
+                FullMessage = item.n.Message,
+                Type = item.n.Type,
+                TargetUrl = item.n.Target_URL,
+                IsRead = item.n.IsRead ?? false,
+                CreatedAt = item.n.Created_At ?? DateTime.Now,
+                ReadAt = item.n.Read_At,
+
+                UserId = item.u.ID_user,
+                UserEmail = item.u.user_email,
+                UserName = item.ud.full_name,
+                UserAvatar = item.ud.user_pic ?? "noAvt.jpg",
+                UserRole = item.u.user_type
+            }).ToList();
+
+            return model;
+        }
+        public bool AddGlobalNotification(string title, string message, string type, string role, string url, DateTime? expiry)
+        {
+            try
+            {
+                var item = new Global_Notification
+                {
+                    Title = title,
+                    Message = message,
+                    Type = type,
+                    Target_Role = role,
+                    Taget_Url = url,
+                    Expiry_Date = expiry,
+                    Created_At = DateTime.Now,
+                    Created_By_AdminID = 1 // Giả định ID Admin hiện tại
+                };
+                da.Global_Notifications.InsertOnSubmit(item);
+                da.SubmitChanges();
+                return true;
+            }
+            catch { return false; }
+        }
+
+        // 2. Lấy thông tin 1 Global (để fill vào form Edit)
+        public Global_Notification GetGlobalById(int id)
+        {
+            return da.Global_Notifications.FirstOrDefault(g => g.Global_Noti_ID == id);
+        }
+
+        // 3. Cập nhật Global
+        public bool UpdateGlobalNotification(int id, string title, string message, string type, string role, string url, DateTime? expiry)
+        {
+            try
+            {
+                var item = da.Global_Notifications.FirstOrDefault(g => g.Global_Noti_ID == id);
+                if (item == null) return false;
+
+                item.Title = title;
+                item.Message = message;
+                item.Type = type;
+                item.Target_Role = role;
+                item.Taget_Url = url;
+                item.Expiry_Date = expiry;
+
+                da.SubmitChanges();
+                return true;
+            }
+            catch { return false; }
+        }
+
+        // --- PERSONAL NOTIFICATION LOGIC ---
+
+        // 4. Thêm mới Personal
+        public bool AddPersonalNotification(int userId, string title, string message, string type, string url)
+        {
+            try
+            {
+                // Kiểm tra User có tồn tại không
+                var user = da.Users.FirstOrDefault(u => u.ID_user == userId);
+                if (user == null) return false;
+
+                var noti = new Notification
+                {
+                    ID_user = userId,
+                    Title = title,
+                    Message = message,
+                    Type = type,
+                    Target_URL = url,
+                    IsRead = false,
+                    Created_At = DateTime.Now
+                };
+                da.Notifications.InsertOnSubmit(noti);
+                da.SubmitChanges();
+                return true;
+            }
+            catch { return false; }
+        }
+        // 2. Xóa thông báo cá nhân
+        public bool DeletePersonalNotification(int id)
+        {
+            try
+            {
+                var noti = da.Notifications.FirstOrDefault(n => n.Notification_ID == id);
+                if (noti != null)
+                {
+                    da.Notifications.DeleteOnSubmit(noti);
+                    da.SubmitChanges();
+                    return true;
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        public GlobalNotiPageModel GetGlobalNotifications(string keyword, string roleFilter, DateTime? fromDate, DateTime? toDate, int pageIndex = 1, int pageSize = 10)
+        {
+            var model = new GlobalNotiPageModel();
+            var now = DateTime.Now;
+
+            // 1. Query cơ bản
+            var query = da.Global_Notifications.AsQueryable();
+
+            // 2. Thống kê (Giữ nguyên logic đếm tổng toàn bộ DB)
+            model.TotalActive = da.Global_Notifications.Count(g => g.Expiry_Date == null || g.Expiry_Date >= now);
+            model.TotalExpired = da.Global_Notifications.Count(g => g.Expiry_Date < now);
+            model.TotalReads = da.Global_Notification_Reads.Count();
+
+            // 3. Bộ lọc
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                string k = keyword.ToLower();
+                query = query.Where(g => g.Title.ToLower().Contains(k) || g.Message.ToLower().Contains(k));
+            }
+            if (!string.IsNullOrEmpty(roleFilter) && roleFilter != "All")
+            {
+                query = query.Where(g => g.Target_Role == roleFilter);
+            }
+            if (fromDate.HasValue) query = query.Where(g => g.Created_At >= fromDate.Value);
+            if (toDate.HasValue) query = query.Where(g => g.Created_At <= toDate.Value.AddDays(1));
+
+            // 4. PHÂN TRANG (Skip & Take)
+            var listRaw = query.OrderByDescending(g => g.Created_At)
+                               .Skip((pageIndex - 1) * pageSize)
+                               .Take(pageSize)
+                               .ToList();
+
+            // 5. Map dữ liệu (Giữ nguyên logic tính toán Unread)
+            model.List = new List<GlobalNotiItem>();
+
+            // Cache đếm user để tối ưu loop
+            var roleCounts = da.Users.GroupBy(u => u.user_type).ToDictionary(g => g.Key, g => g.Count());
+            int totalUsers = da.Users.Count(u => u.Locked != true);
+
+            foreach (var item in listRaw)
+            {
+                int readCount = da.Global_Notification_Reads.Count(r => r.Global_Noti_ID == item.Global_Noti_ID);
+                int targetCount = (string.IsNullOrEmpty(item.Target_Role) || item.Target_Role == "All") ? totalUsers : (roleCounts.ContainsKey(item.Target_Role) ? roleCounts[item.Target_Role] : 0);
+                int unreadCount = targetCount - readCount; if (unreadCount < 0) unreadCount = 0;
+
+                model.List.Add(new GlobalNotiItem
+                {
+                    Id = item.Global_Noti_ID,
+                    Title = item.Title,
+                    Message = item.Message.Length > 80 ? item.Message.Substring(0, 80) + "..." : item.Message,
+                    FullMessage = item.Message,
+                    Type = item.Type,
+                    TargetRole = item.Target_Role ?? "All",
+                    TargetUrl = item.Taget_Url,
+                    CreatedAt = item.Created_At ?? DateTime.Now,
+                    ExpiryDate = item.Expiry_Date,
+                    CreatorName = "Admin",
+                    ReadCount = readCount,
+                    UnreadCount = unreadCount
+                });
+            }
+
+            return model;
+        }
+        // 2. Lấy chi tiết người đọc cho Popup
+        public List<GlobalReaderModel> GetGlobalReadersDetails(int globalId, string viewType) // viewType: "read" | "unread"
+        {
+            var noti = da.Global_Notifications.FirstOrDefault(g => g.Global_Noti_ID == globalId);
+            if (noti == null) return new List<GlobalReaderModel>();
+
+            // Lấy danh sách user mục tiêu (Target Audience)
+            var userQuery = from u in da.Users
+                            join ud in da.User_details on u.ID_user equals ud.ID_user
+                            where u.Locked != true // Chỉ lấy user còn hoạt động
+                            select new { u.ID_user, u.user_type, ud.full_name, ud.user_pic };
+
+            if (!string.IsNullOrEmpty(noti.Target_Role) && noti.Target_Role != "All")
+            {
+                userQuery = userQuery.Where(u => u.user_type == noti.Target_Role);
+            }
+
+            var targetUsers = userQuery.ToList();
+
+            // Lấy danh sách đã đọc
+            var readers = da.Global_Notification_Reads
+                            .Where(r => r.Global_Noti_ID == globalId)
+                            .ToDictionary(r => r.ID_user, r => r.Read_At);
+
+            var result = new List<GlobalReaderModel>();
+
+            foreach (var user in targetUsers)
+            {
+                bool hasRead = readers.ContainsKey(user.ID_user);
+
+                // Lọc theo yêu cầu
+                if (viewType == "read" && !hasRead) continue;
+                if (viewType == "unread" && hasRead) continue;
+
+                result.Add(new GlobalReaderModel
+                {
+                    UserId = user.ID_user,
+                    FullName = user.full_name,
+                    Role = user.user_type,
+                    Avatar = user.user_pic ?? "noAvt.jpg",
+                    HasRead = hasRead,
+                    ReadAt = hasRead ? readers[user.ID_user] : (DateTime?)null
+                });
+            }
+
+            return result;
+        }
+
+        // 3. Xóa Global Notification
+        public bool DeleteGlobalNotification(int id)
+        {
+            try
+            {
+                var item = da.Global_Notifications.FirstOrDefault(g => g.Global_Noti_ID == id);
+                if (item != null)
+                {
+                    // DB đã set ON DELETE CASCADE cho bảng Reads chưa?
+                    // Nếu chưa thì phải xóa tay bảng Reads trước:
+                    // var reads = da.Global_Notification_Reads.Where(r => r.Global_Noti_ID == id);
+                    // da.Global_Notification_Reads.DeleteAllOnSubmit(reads);
+
+                    da.Global_Notifications.DeleteOnSubmit(item);
+                    da.SubmitChanges();
+                    return true;
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
+
     public class OrderHistoryItemExtended : OrderHistoryItem
     {
         public int StatusId { get; set; }

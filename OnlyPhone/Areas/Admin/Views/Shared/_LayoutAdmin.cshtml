@@ -1,4 +1,27 @@
-﻿<!doctype html>
+﻿@{
+    // LOGIC HEADER ĐỘNG
+    string currentName = "Admin";
+    string currentRole = "Quản trị viên";
+    string currentAvatar = "noAvt.jpg";
+
+    if (Session["UserID"] != null)
+    {
+        try
+        {
+            int userId = (int)Session["UserID"];
+            OnlyPhone.Models.Xuly xuly = new OnlyPhone.Models.Xuly();
+            var userProfile = xuly.GetUserProfile(userId);
+            if (userProfile != null)
+            {
+                currentName = userProfile.FullName ?? "User";
+                currentRole = userProfile.RoleType ?? "Member";
+                currentAvatar = userProfile.AvatarUrl ?? "noAvt.jpg";
+            }
+        }
+        catch { }
+    }
+}
+<!doctype html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -7,13 +30,80 @@
     <link href="~/Content/Bootstrap/bootstrap.min.css" rel="stylesheet" />
     <link href="~/Content/FontAwesome/css/all.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link href="~/Content/Css/adminlayout.css" rel="stylesheet" />
+    <link href="~/Content/Css/admin/adminlayout.css" rel="stylesheet" />
+    <style>
+        /* Submenu Styles */
+        .nav-item-parent {
+            position: relative;
+        }
 
+        .nav-submenu {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            margin-left: 24px;
+            margin-top: 4px;
+            padding-left: 12px;
+            border-left: 2px solid var(--glass);
+        }
+
+            .nav-submenu.open {
+                display: flex;
+            }
+
+        .nav-subitem {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 6px;
+            color: var(--muted);
+            font-size: 13px;
+            cursor: pointer;
+            user-select: none;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+            .nav-subitem:hover {
+                background: var(--glass);
+                color: var(--text);
+                padding-left: 20px;
+            }
+
+            .nav-subitem.active {
+                background: linear-gradient(90deg,rgba(79,70,229,0.08),rgba(46,166,255,0.04));
+                color: var(--accent);
+                font-weight: 600;
+            }
+
+        /* Mobile adjustments for submenu */
+        @@media (max-width: 1000px) and (min-width: 761px) {
+            .nav-submenu {
+                position: absolute;
+                left: 72px;
+                top: 0;
+                background: var(--panel);
+                border: 1px solid rgba(0,0,0,0.08);
+                border-radius: 8px;
+                padding: 8px;
+                margin: 0;
+                box-shadow: var(--shadow);
+                min-width: 160px;
+                z-index: 100;
+            }
+        }
+
+        @@media (max-width: 760px) {
+            .nav-submenu {
+                margin-left: 24px;
+            }
+        }
+    </style>
 </head>
 <body>
     <aside class="sidebar" aria-label="Sidebar">
         <div class="brand">
-            
             <span>Bảng điều khiển</span>
             <button id="sidebarCollapseBtn" class="sidebar-collapse-btn" aria-label="Thu gọn thanh điều hướng" title="Thu gọn/Hiện" style="display:none">
                 <i class="fa fa-chevron-left"></i>
@@ -29,7 +119,7 @@
                 <div class="nav-icon"><i class="fa fa-user" aria-hidden="true"></i></div>
                 <div>Tài khoản</div>
             </a>
-            <a href="@Url.Action("Revenue", "Stats")" class="nav-item">
+            <a href="@Url.Action("Stats", "Revenue")" class="nav-item">
                 <div class="nav-icon"><i class="fa fa-chart-line" aria-hidden="true"></i></div>
                 <div>Doanh thu</div>
             </a>
@@ -41,18 +131,27 @@
                 <div class="nav-icon"><i class="fa fa-box-open" aria-hidden="true"></i></div>
                 <div>Sản phẩm</div>
             </a>
-            <a href="@Url.Action("Index", "Products")" class="nav-item">
+            <a href="@Url.Action("manager", "Brand")" class="nav-item">
                 <div class="nav-icon"><i class="fa fa-tags" aria-hidden="true"></i></div>
                 <div>Nhãn hàng</div>
             </a>
-            <a href="@Url.Action("Index", "Products")" class="nav-item">
-                <div class="nav-icon"><i class="fa fa-mobile-phone" aria-hidden="true"></i></div>
-                <div>Dòng điện thoại</div>
-            </a>
-            <a href="@Url.Action("Index", "Products")" class="nav-item">
+
+            <!-- Menu Notification với submenu -->
+            <div class="nav-item nav-item-parent" id="notificationMenu">
                 <div class="nav-icon"><i class="fa fa-bell" aria-hidden="true"></i></div>
                 <div>Thông báo</div>
-            </a>
+            </div>
+            <div class="nav-submenu" id="notificationSubmenu">
+                <a href="@Url.Action("Persion", "Notification")" class="nav-subitem">
+                    <i class="fa fa-user-circle" aria-hidden="true"></i>
+                    <span>Cá nhân</span>
+                </a>
+                <a href="@Url.Action("Global", "Notification")" class="nav-subitem">
+                    <i class="fa fa-globe" aria-hidden="true"></i>
+                    <span>Toàn cục</span>
+                </a>
+            </div>
+
             <a href="@Url.Action("Index", "Products")" class="nav-item">
                 <div class="nav-icon"><i class="fa fa-ticket" aria-hidden="true"></i></div>
                 <div>Voucher</div>
@@ -75,8 +174,8 @@
     <main class="main">
         <header class="header">
             <div>
-                <div class="welcome">Xin chào ! Admin</div>
-                <div class="sub-muted">Quản trị hệ thống • @ViewBag.Title</div>
+                <div class="welcome">Xin chào ! @currentName</div>
+                <div class="sub-muted">@currentRole • @ViewBag.Title</div>
             </div>
 
             <div class="header-right">
@@ -89,10 +188,12 @@
 
                 <div style="display:flex;flex-direction:column;align-items:flex-end;">
                     <div style="font-size:13px;color:var(--muted)">Xin chào !</div>
-                    <div style="font-weight:700;color:var(--text)">Admin</div>
+                    <div style="font-weight:700;color:var(--text)">@currentName</div>
                 </div>
 
-                <div class="avatar" title="Admin">A</div>
+                <div class="avatar" title="@currentName">
+                        <img src="@Url.Content("~/Content/Pic/Avartar/" + currentAvatar)" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />
+                </div>
             </div>
         </header>
 
@@ -125,6 +226,7 @@
                     }
                 });
             }
+
             function handleInitialCollapse() {
                 if (window.innerWidth < parseInt(getComputedStyle(document.documentElement).getPropertyValue('--mobile-break'))) {
                     document.body.classList.add('sidebar-collapsed');
@@ -133,15 +235,17 @@
                 }
                 updateOverlay();
             }
+
             function ensureOverlay() {
                 let o = document.getElementById('sidebarOverlay');
                 if (!o) {
-                    o = document.createElement('div'); o.id = 'sidebarOverlay';
+                    o = document.createElement('div');
+                    o.id = 'sidebarOverlay';
                     document.body.appendChild(o);
-                    o.addEventListener('click', () => { document.body.classList.add('sidebar-collapsed'); updateOverlay(); });
                 }
                 return o;
             }
+
             function updateOverlay() {
                 const overlay = ensureOverlay();
                 const isMobile = window.innerWidth < parseInt(getComputedStyle(document.documentElement).getPropertyValue('--mobile-break'));
@@ -151,28 +255,82 @@
                     overlay.classList.remove('visible');
                 }
             }
+
             document.addEventListener('DOMContentLoaded', () => {
-                createToggle(); handleInitialCollapse(); window.addEventListener('resize', handleInitialCollapse);
-                document.querySelectorAll('.nav-item').forEach(el => {
-                    el.addEventListener('click', () => {
+                createToggle();
+                handleInitialCollapse();
+                window.addEventListener('resize', handleInitialCollapse);
+
+                // Setup overlay click handler - FIX: Đóng menu khi click overlay
+                const overlay = ensureOverlay();
+                overlay.addEventListener('click', () => {
+                    document.body.classList.add('sidebar-collapsed');
+                    updateOverlay();
+                });
+
+                // Close sidebar when clicking nav items on mobile
+                document.querySelectorAll('.nav-item, .nav-subitem').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        // Don't close if it's the notification parent menu
+                        if (el.id === 'notificationMenu') return;
+
                         if (window.innerWidth < parseInt(getComputedStyle(document.documentElement).getPropertyValue('--mobile-break'))) {
-                            document.body.classList.add('sidebar-collapsed'); updateOverlay();
+                            document.body.classList.add('sidebar-collapsed');
+                            updateOverlay();
                         }
                     });
                 });
+
+                // Sidebar collapse button
                 const sidebar = document.querySelector('.sidebar');
                 if (sidebar && !document.getElementById('sidebarCollapseBtn')) {
                     const brand = sidebar.querySelector('.brand');
                     const btn = document.createElement('button');
-                    btn.id = 'sidebarCollapseBtn'; btn.className = 'sidebar-collapse-btn';
+                    btn.id = 'sidebarCollapseBtn';
+                    btn.className = 'sidebar-collapse-btn';
                     btn.innerHTML = '<i class="fa fa-chevron-left" aria-hidden="true"></i>';
                     brand.appendChild(btn);
                     btn.addEventListener('click', () => {
-                        document.body.classList.toggle('sidebar-collapsed'); updateOverlay();
+                        document.body.classList.toggle('sidebar-collapsed');
+                        updateOverlay();
                         const ic = btn.querySelector('i');
                         ic.className = document.body.classList.contains('sidebar-collapsed') ? 'fa fa-chevron-right' : 'fa fa-chevron-left';
                     });
                 }
+
+                // Notification submenu toggle
+                const notificationMenu = document.getElementById('notificationMenu');
+                const notificationSubmenu = document.getElementById('notificationSubmenu');
+
+                if (notificationMenu && notificationSubmenu) {
+                    notificationMenu.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // Toggle submenu
+                        notificationSubmenu.classList.toggle('open');
+                        notificationMenu.classList.toggle('open');
+                    });
+
+                    // Close submenu when clicking outside
+                    document.addEventListener('click', (e) => {
+                        if (!notificationMenu.contains(e.target) && !notificationSubmenu.contains(e.target)) {
+                            notificationSubmenu.classList.remove('open');
+                            notificationMenu.classList.remove('open');
+                        }
+                    });
+                }
+
+                // Set active state for submenu items based on current page
+                const currentPath = window.location.pathname.toLowerCase();
+                document.querySelectorAll('.nav-subitem').forEach(item => {
+                    if (item.href && currentPath.includes(item.getAttribute('href').toLowerCase())) {
+                        item.classList.add('active');
+                        // Also open the parent menu
+                        notificationSubmenu.classList.add('open');
+                        notificationMenu.classList.add('open');
+                    }
+                });
             });
         })();
 

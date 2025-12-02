@@ -3,7 +3,7 @@
 // ========================
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🔍 Combined Header Script Loaded');
+    console.log('ombined Header Script Loaded');
 
     // Detect device type
     const isMobile = window.innerWidth <= 768;

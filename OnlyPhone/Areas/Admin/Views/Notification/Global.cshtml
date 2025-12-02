@@ -1,0 +1,414 @@
+﻿@model OnlyPhone.Areas.Admin.Data.GlobalNotiPageModel
+@{
+    ViewBag.Title = "Thông báo Toàn cầu";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+<link href="~/Content/Css/admin/GlobalNoti.css" rel="stylesheet" />
+
+
+<div class="stats-container">
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-title">Đang hoạt động</div><div class="stat-icon" style="background:rgba(16,185,129,0.1); color:#10b981"><i class="fas fa-broadcast-tower"></i></div></div>
+        <div class="stat-number">@Model.TotalActive</div>
+        <div class="stat-desc">Thông báo còn hiệu lực</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-title">Đã hết hạn</div><div class="stat-icon" style="background:rgba(239,68,68,0.1); color:#ef4444"><i class="fas fa-clock"></i></div></div>
+        <div class="stat-number">@Model.TotalExpired</div>
+        <div class="stat-desc">Thông báo cũ</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-title">Tổng lượt đọc</div><div class="stat-icon" style="background:rgba(59,130,246,0.1); color:#3b82f6"><i class="fas fa-eye"></i></div></div>
+        <div class="stat-number">@Model.TotalReads</div>
+        <div class="stat-desc">Tương tác toàn hệ thống</div>
+    </div>
+    <div class="stat-card" style="border:1px dashed var(--accent)" onclick="openModal(0)">
+        <div class="stat-header"><div class="stat-title">Tạo mới</div><div class="stat-icon theme-icon-box"><i class="fas fa-plus"></i></div></div>
+        <div class="stat-number" style="font-size:20px">Gửi Broadcast</div>
+        <div class="stat-desc">Gửi tin toàn hệ thống</div>
+    </div>
+</div>
+
+<div class="control-panel">
+    <div class="filter-left">
+        <div class="filter-title">Danh sách thông báo</div>
+
+        <input type="hidden" id="currentRole" value="@ViewBag.Role">
+        <input type="hidden" id="currentKeyword" value="@ViewBag.Keyword">
+        <input type="hidden" id="currentStart" value="@ViewBag.Start">
+        <input type="hidden" id="currentEnd" value="@ViewBag.End">
+
+        <form action="@Url.Action("Global")" method="get" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; flex:1;">
+            <select name="role" class="form-select-sm">
+                <option value="All">Tất cả đối tượng</option>
+                <option value="Customer" @(ViewBag.Role == "Customer" ? "selected" : "")>Khách hàng</option>
+                <option value="Staff" @(ViewBag.Role == "Staff" ? "selected" : "")>Nhân viên</option>
+                <option value="Admin" @(ViewBag.Role == "Admin" ? "selected" : "")>Quản trị viên</option>
+            </select>
+
+            <input type="date" name="start" value="@ViewBag.Start" class="form-control-sm">
+            <span style="color:var(--text-sub)">-</span>
+            <input type="date" name="end" value="@ViewBag.End" class="form-control-sm">
+
+            <div class="search-wrapper" style="width:250px; position:relative;">
+                <input type="text" name="keyword" value="@ViewBag.Keyword" class="form-control-sm" placeholder="Tìm tiêu đề..." style="padding-left:30px; width:100%">
+                <i class="fas fa-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#888; font-size:12px;"></i>
+            </div>
+
+            <button type="submit" class="btn-add" style="width:auto; height:36px; padding:0 15px;"><i class="fas fa-filter"></i></button>
+        </form>
+    </div>
+</div>
+
+<div id="notificationList">
+    @if (Model.List.Count == 0)
+    {
+        <div style="text-align:center; padding:40px; color:var(--text-sub)">Không tìm thấy thông báo nào.</div>
+    }
+    @foreach (var item in Model.List)
+    {
+        @Html.Raw(RenderNotiItem(item))
+    }
+</div>
+
+<div class="load-more-container">
+    <button id="btnLoadMore" class="btn-load-more" onclick="loadMore()">
+        <i class="fas fa-chevron-down"></i> Hiển thị thêm
+    </button>
+</div>
+
+<div class="custom-modal-overlay" id="globalModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div class="custom-modal" style="background:var(--panel); width:500px; padding:25px; border-radius:12px; animation:zoomIn 0.2s; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div class="modal-title" style="font-size:20px; font-weight:700; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:10px;" id="modalTitle">Tạo thông báo mới</div>
+
+        <input type="hidden" id="notiId" value="0">
+
+        <div class="modal-group">
+            <label>Tiêu đề thông báo <span style="color:red">*</span></label>
+            <input type="text" id="inpTitle" class="modal-input" placeholder="VD: Bảo trì hệ thống...">
+        </div>
+
+        <div class="modal-group" style="display:flex; gap:15px;">
+            <div style="flex:1">
+                <label>Loại tin</label>
+                <select id="inpType" class="modal-input">
+                    <option value="System">Hệ thống</option>
+                    <option value="Event">Sự kiện</option>
+                    <option value="Promotion">Khuyến mãi</option>
+                    <option value="Maintenance">Bảo trì</option>
+                </select>
+            </div>
+            <div style="flex:1">
+                <label>Đối tượng nhận</label>
+                <select id="inpRole" class="modal-input">
+                    <option value="All">Tất cả (All)</option>
+                    <option value="Customer">Khách hàng</option>
+                    <option value="Staff">Nhân viên</option>
+                    <option value="Admin">Quản trị viên</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="modal-group">
+            <label>Nội dung chi tiết <span style="color:red">*</span></label>
+            <textarea id="inpMessage" class="modal-input" placeholder="Nhập nội dung thông báo..."></textarea>
+        </div>
+
+        <div class="modal-group" style="display:flex; gap:15px;">
+            <div style="flex:1">
+                <label>Ngày hết hạn</label>
+                <input type="date" id="inpExpiry" class="modal-input" title="Để trống = Vĩnh viễn">
+            </div>
+            <div style="flex:1">
+                <label>Liên kết đích (URL)</label>
+                <input type="text" id="inpUrl" class="modal-input" placeholder="/Home/Index">
+            </div>
+        </div>
+
+        <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px; border-top:1px solid var(--border-color); padding-top:15px;">
+            <button class="btn-cancel" onclick="closeModal()" style="padding:10px 25px; border:1px solid #ddd; background:#fff; border-radius:8px; cursor:pointer; font-weight:600; color:var(--text-sub)">Hủy bỏ</button>
+            <button class="btn-add" onclick="saveGlobal()" style="border-radius:8px; height:auto; padding:10px 25px; font-size:14px;">Lưu thông báo</button>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string RenderNotiItem(OnlyPhone.Areas.Admin.Data.GlobalNotiItem item)
+    {
+        bool isExpired = item.ExpiryDate.HasValue && item.ExpiryDate.Value < DateTime.Now;
+        string expiryText = isExpired ? $"<span style='color:#ef4444'>Đã hết hạn: {item.ExpiryDate:dd/MM/yyyy}</span>"
+                                      : (item.ExpiryDate.HasValue ? $"Hết hạn: {item.ExpiryDate:dd/MM/yyyy}" : "Hiệu lực vĩnh viễn");
+
+        // Link xem chi tiết người đọc (mở tab mới hoặc popup)
+        string linkRead = $"/Admin/Notification/Readers?id={item.Id}&type=read";
+        string linkUnread = $"/Admin/Notification/Readers?id={item.Id}&type=unread";
+
+        // Hiển thị URL Target (Đã thêm phần này)
+        string urlDisplay = string.IsNullOrEmpty(item.TargetUrl)
+            ? "<span style='color:var(--text-sub); font-style:italic;'>Không có liên kết</span>"
+            : $"<a href='{item.TargetUrl}' target='_blank' style='color:var(--accent); text-decoration:none;'><i class='fas fa-external-link-alt'></i> {item.TargetUrl}</a>";
+
+        return $@"
+    <div class='noti-card' id='card-{item.Id}'>
+        <div class='noti-header' onclick='toggleDetail({item.Id})'>
+            <div class='theme-icon-box'><i class='fas fa-globe'></i></div>
+            <div class='noti-body'>
+                <div class='noti-title'>
+                    <span>{item.Title} <span class='badge-target'>{item.TargetRole}</span></span>
+                    <i class='fas fa-chevron-down' id='icon-{item.Id}' style='color:#888; transition:transform 0.2s'></i>
+                </div>
+                <div class='noti-msg'>{item.Message}</div>
+                <div class='noti-meta'>
+                    <span><i class='far fa-clock'></i> {item.CreatedAt:dd/MM/yyyy}</span>
+                    <span>{expiryText}</span>
+                </div>
+            </div>
+        </div>
+        <div class='detail-panel' id='detail-{item.Id}'>
+            <div class='detail-grid'>
+                <div class='detail-full'>
+                    <span class='lbl'>Nội dung đầy đủ</span>
+                    <div class='val' style='white-space: pre-wrap; line-height:1.5'>{item.FullMessage}</div>
+                </div>
+
+                <div>
+                    <span class='lbl'>Liên kết đích (URL)</span>
+                    <div class='val'>{urlDisplay}</div>
+                </div>
+
+                <div>
+                    <span class='lbl'>Thống kê tương tác</span>
+                    <div style='display:flex; gap:15px; margin-top:5px;'>
+                        <a href='{linkRead}' target='_blank' class='stat-link' style='color:#10b981'>
+                            <i class='fas fa-check-circle'></i> {item.ReadCount} Đã xem
+                        </a>
+                        <a href='{linkUnread}' target='_blank' class='stat-link' style='color:#ef4444'>
+                            <i class='fas fa-eye-slash'></i> {item.UnreadCount} Chưa xem
+                        </a>
+                    </div>
+                </div>
+
+                <div class='detail-full' style='text-align:right; border-top:1px dashed var(--border-color); padding-top:15px; margin-top:10px;'>
+                    <button onclick='openModal({item.Id})' style='border:none; background:none; color:var(--accent); cursor:pointer; margin-right:20px; font-weight:600; font-size:13px;'>
+                        <i class='fas fa-edit'></i> Chỉnh sửa
+                    </button>
+                    <button onclick='deleteGlobal({item.Id})' style='border:none; background:none; color:red; cursor:pointer; font-weight:600; font-size:13px;'>
+                        <i class='fas fa-trash'></i> Xóa vĩnh viễn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>";
+    }
+}
+
+@section Scripts {
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+
+        // 1. Toggle Detail
+        function toggleDetail(id) {
+            const panel = document.getElementById(`detail-${id}`);
+            const icon = document.getElementById(`icon-${id}`);
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                panel.style.display = 'block';
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // 2. Load More
+        function loadMore() {
+            const btn = document.getElementById('btnLoadMore');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải...';
+            btn.disabled = true;
+
+            const nextPage = currentPage + 1;
+            const keyword = document.getElementById('currentKeyword').value;
+            const role = document.getElementById('currentRole').value;
+            const start = document.getElementById('currentStart').value;
+            const end = document.getElementById('currentEnd').value;
+
+            fetch(`/Admin/Notification/LoadMore?page=${nextPage}&keyword=${keyword}&role=${role}&start=${start}&end=${end}`)
+                .then(r => r.json())
+                .then(res => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+
+                    if (res.success && res.data.length > 0) {
+                        currentPage = nextPage;
+                        const container = document.getElementById('notificationList');
+
+                        // Render Client-side (Logic HTML chuỗi giống server side)
+                        res.data.forEach(item => {
+                            const date = new Date(parseInt(item.CreatedAt.replace(/\/Date\((-?\d+)\)\//, '$1'))).toLocaleDateString('vi-VN');
+                            const isExpired = item.ExpiryDate ? new Date(parseInt(item.ExpiryDate.replace(/\/Date\((-?\d+)\)\//, '$1'))) < new Date() : false;
+
+                            let expiryHtml = "Hiệu lực vĩnh viễn";
+                            if (item.ExpiryDate) {
+                                const expDate = new Date(parseInt(item.ExpiryDate.replace(/\/Date\((-?\d+)\)\//, '$1'))).toLocaleDateString('vi-VN');
+                                expiryHtml = isExpired ? `<span style='color:#ef4444'>Đã hết hạn: ${expDate}</span>` : `Hết hạn: ${expDate}`;
+                            }
+
+                            // URL Logic for Client side
+                            let urlHtml = item.TargetUrl
+                                ? `<a href='${item.TargetUrl}' target='_blank' style='color:var(--accent); text-decoration:none;'><i class='fas fa-external-link-alt'></i> ${item.TargetUrl}</a>`
+                                : "<span style='color:var(--text-sub); font-style:italic;'>Không có liên kết</span>";
+
+                            const html = `
+                                <div class='noti-card' id='card-${item.Id}'>
+                                    <div class='noti-header' onclick='toggleDetail(${item.Id})'>
+                                        <div class='theme-icon-box'><i class='fas fa-globe'></i></div>
+                                        <div class='noti-body'>
+                                            <div class='noti-title'>
+                                                <span>${item.Title} <span class='badge-target'>${item.TargetRole}</span></span>
+                                                <i class='fas fa-chevron-down' id='icon-${item.Id}' style='color:#888; transition:transform 0.2s'></i>
+                                            </div>
+                                            <div class='noti-msg'>${item.Message}</div>
+                                            <div class='noti-meta'>
+                                                <span><i class='far fa-clock'></i> ${date}</span>
+                                                <span>${expiryHtml}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class='detail-panel' id='detail-${item.Id}'>
+                                        <div class='detail-grid'>
+                                            <div class='detail-full'>
+                                                <span class='lbl'>Nội dung đầy đủ</span>
+                                                <div class='val' style='white-space: pre-wrap; line-height:1.5'>${item.FullMessage}</div>
+                                            </div>
+                                            <div>
+                                                <span class='lbl'>Liên kết đích (URL)</span>
+                                                <div class='val'>${urlHtml}</div>
+                                            </div>
+                                            <div>
+                                                <span class='lbl'>Thống kê tương tác</span>
+                                                <div style='display:flex; gap:15px; margin-top:5px;'>
+                                                    <a href='/Admin/Notification/Readers?id=${item.Id}&type=read' target='_blank' class='stat-link' style='color:#10b981'>
+                                                        <i class='fas fa-check-circle'></i> ${item.ReadCount} Đã xem
+                                                    </a>
+                                                    <a href='/Admin/Notification/Readers?id=${item.Id}&type=unread' target='_blank' class='stat-link' style='color:#ef4444'>
+                                                        <i class='fas fa-eye-slash'></i> ${item.UnreadCount} Chưa xem
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class='detail-full' style='text-align:right; border-top:1px dashed var(--border-color); padding-top:15px; margin-top:10px;'>
+                                                <button onclick='openModal(${item.Id})' style='border:none; background:none; color:var(--accent); cursor:pointer; margin-right:20px; font-weight:600; font-size:13px;'>
+                                                    <i class='fas fa-edit'></i> Chỉnh sửa
+                                                </button>
+                                                <button onclick='deleteGlobal(${item.Id})' style='border:none; background:none; color:red; cursor:pointer; font-weight:600; font-size:13px;'>
+                                                    <i class='fas fa-trash'></i> Xóa vĩnh viễn
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                            container.insertAdjacentHTML('beforeend', html);
+                        });
+
+                        if (res.data.length < pageSize) btn.style.display = 'none';
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                })
+                .catch(e => {
+                    alert('Lỗi tải trang');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+        }
+
+        // 3. Delete
+        function deleteGlobal(id) {
+            if (!confirm('Hành động này sẽ xóa thông báo khỏi tất cả người dùng. Bạn có chắc chắn không?')) return;
+            fetch('/Admin/Notification/DeleteGlobal', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id })
+            }).then(r => r.json()).then(res => {
+                if (res.success) {
+                    const card = document.getElementById(`card-${id}`);
+                    card.style.opacity = '0';
+                    setTimeout(() => card.remove(), 300);
+                } else alert(res.message);
+            });
+        }
+
+        // 4. MODAL LOGIC (Create / Edit)
+        function openModal(id) {
+            document.getElementById('globalModal').style.display = 'flex';
+            document.getElementById('notiId').value = id;
+
+            if (id === 0) {
+                // Mode: Create
+                document.getElementById('modalTitle').innerText = "Tạo thông báo mới";
+                clearForm();
+            } else {
+                // Mode: Edit - Load Data
+                document.getElementById('modalTitle').innerText = "Cập nhật thông báo";
+                fetch('/Admin/Notification/GetGlobalDetail?id=' + id)
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            const d = res.data;
+                            document.getElementById('inpTitle').value = d.Title;
+                            document.getElementById('inpMessage').value = d.Message;
+                            document.getElementById('inpType').value = d.Type;
+                            document.getElementById('inpRole').value = d.TargetRole;
+                            document.getElementById('inpUrl').value = d.TargetUrl;
+                            document.getElementById('inpExpiry').value = d.ExpiryDate;
+                        } else {
+                            alert("Không tìm thấy thông báo");
+                            closeModal();
+                        }
+                    });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('globalModal').style.display = 'none';
+        }
+
+        function clearForm() {
+            document.getElementById('inpTitle').value = '';
+            document.getElementById('inpMessage').value = '';
+            document.getElementById('inpUrl').value = '';
+            document.getElementById('inpExpiry').value = '';
+            document.getElementById('inpRole').value = 'All';
+            document.getElementById('inpType').value = 'System';
+        }
+
+        function saveGlobal() {
+            const id = document.getElementById('notiId').value;
+            const data = {
+                id: id,
+                title: document.getElementById('inpTitle').value,
+                message: document.getElementById('inpMessage').value,
+                type: document.getElementById('inpType').value,
+                role: document.getElementById('inpRole').value,
+                url: document.getElementById('inpUrl').value,
+                expiry: document.getElementById('inpExpiry').value
+            };
+
+            if (!data.title || !data.message) {
+                alert("Vui lòng nhập tiêu đề và nội dung!");
+                return;
+            }
+
+            fetch('/Admin/Notification/SaveGlobal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(res => {
+                if (res.success) {
+                    alert(res.message);
+                    location.reload();
+                } else {
+                    alert(res.message);
+                }
+            });
+        }
+    </script>
+}

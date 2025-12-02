@@ -48,11 +48,11 @@ body {
 /* Sidebar Styles */
 .sidebar {
     width: var(--sidebar-w);
-    background: linear-gradient(180deg,var(--panel),rgba(0,0,0,0.02));
+    background: var(--panel);
     height: 100vh;
     padding: 20px;
     padding-top: 28px;
-    border-right: 1px solid rgba(0,0,0,0.04);
+    border-right: 1px solid rgba(0,0,0,0.08);
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -67,16 +67,13 @@ body {
 #sidebarOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.45);
+    background: transparent;
     z-index: 1040;
     display: none;
-    opacity: 0;
-    transition: opacity .18s;
 }
 
     #sidebarOverlay.visible {
         display: block;
-        opacity: 1;
     }
 
 body.sidebar-collapsed .sidebar {
@@ -285,11 +282,20 @@ body.dark .toggle-knob {
     width: 40px;
     height: 40px;
     border-radius: 8px;
+
     border: 0;
     background: var(--panel);
     box-shadow: var(--shadow);
     cursor: pointer;
     margin-right: 8px;
+    color: var(--text);
+}
+
+    .sidebar-toggle:hover {
+        background: var(--glass);
+    }
+button#sidebarToggle {
+    color: var(--text);
 }
 
 /* Dashboard content */
@@ -711,10 +717,10 @@ body.dark .toggle-knob {
     }
 
     .theme-toggle {
-        display: none;
+        padding: 4px;
     }
 
-    .header-right > div {
+    .header-right > div:not(.theme-toggle) {
         display: none;
     }
 

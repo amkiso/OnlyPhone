@@ -27,19 +27,6 @@
       <Association Name="Voucher_Order" Member="Orders" ThisKey="VoucherID" OtherKey="VoucherID" Type="Order" />
     </Type>
   </Table>
-  <Table Name="dbo.Notifications" Member="Notifications">
-    <Type Name="Notification">
-      <Column Name="Notification_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="ID_user" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="Title" Type="System.String" DbType="NVarChar(255) NOT NULL" CanBeNull="false" />
-      <Column Name="Message" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
-      <Column Name="Type" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
-      <Column Name="Related_ID" Type="System.String" DbType="VarChar(20)" CanBeNull="true" />
-      <Column Name="IsRead" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
-      <Column Name="Created_At" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
-      <Association Name="User_Notification" Member="User" ThisKey="ID_user" OtherKey="ID_user" Type="User" IsForeignKey="true" />
-    </Type>
-  </Table>
   <Table Name="dbo.Orders" Member="Orders">
     <Type Name="Order">
       <Column Name="Order_ID" Type="System.String" DbType="VarChar(10) NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
@@ -86,13 +73,6 @@
       <Column Name="Amount" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
       <Association Name="Order_Payment" Member="Order" ThisKey="Order_ID" OtherKey="Order_ID" Type="Order" IsForeignKey="true" />
       <Association Name="shopping_cart_Payment" Member="shopping_cart" ThisKey="cart_ID" OtherKey="cart_ID" Type="shopping_cart" IsForeignKey="true" />
-    </Type>
-  </Table>
-  <Table Name="dbo.PhoneSeries" Member="PhoneSeries">
-    <Type Name="PhoneSery">
-      <Column Name="Series_id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="SeriesName" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
-      <Association Name="PhoneSery_Product" Member="Products" ThisKey="Series_id" OtherKey="Series_id" Type="Product" />
     </Type>
   </Table>
   <Table Name="dbo.Products" Member="Products">
@@ -161,16 +141,6 @@
       <Association Name="Product_slide" Member="Product" ThisKey="Product_ID" OtherKey="Product_ID" Type="Product" IsForeignKey="true" />
     </Type>
   </Table>
-  <Table Name="dbo.supplier" Member="suppliers">
-    <Type Name="supplier">
-      <Column Name="supplier_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="supplier_name" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
-      <Column Name="email" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
-      <Column Name="Phone_Number" Type="System.String" DbType="VarChar(11)" CanBeNull="true" />
-      <Column Name="supplier_address" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
-      <Association Name="supplier_Product" Member="Products" ThisKey="supplier_ID" OtherKey="supplier_ID" Type="Product" />
-    </Type>
-  </Table>
   <Table Name="dbo.User_detail" Member="User_details">
     <Type Name="User_detail">
       <Column Name="ID_user" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
@@ -195,10 +165,72 @@
       <Column Name="user_type" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
       <Column Name="Locked" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
       <Column Name="LastActive" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
-      <Association Name="User_Notification" Member="Notifications" ThisKey="ID_user" OtherKey="ID_user" Type="Notification" />
       <Association Name="User_Order" Member="Orders" ThisKey="ID_user" OtherKey="ID_user" Type="Order" />
       <Association Name="User_shopping_cart" Member="shopping_carts" ThisKey="ID_user" OtherKey="ID_user" Type="shopping_cart" />
       <Association Name="User_User_detail" Member="User_detail" ThisKey="ID_user" OtherKey="ID_user" Type="User_detail" Cardinality="One" />
+      <Association Name="User_Notification" Member="Notifications" ThisKey="ID_user" OtherKey="ID_user" Type="Notification" />
+      <Association Name="User_Global_Notification_Read" Member="Global_Notification_Reads" ThisKey="ID_user" OtherKey="ID_user" Type="Global_Notification_Read" />
+    </Type>
+  </Table>
+  <Table Name="dbo.PhoneSeries" Member="PhoneSeries">
+    <Type Name="PhoneSery">
+      <Column Name="Series_id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="SeriesName" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
+      <Column Name="supplier_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Association Name="PhoneSery_Product" Member="Products" ThisKey="Series_id" OtherKey="Series_id" Type="Product" />
+      <Association Name="supplier_PhoneSery" Member="supplier" ThisKey="supplier_ID" OtherKey="supplier_ID" Type="supplier" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.supplier" Member="suppliers">
+    <Type Name="supplier">
+      <Column Name="supplier_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="supplier_name" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="email" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Phone_Number" Type="System.String" DbType="VarChar(11)" CanBeNull="true" />
+      <Column Name="supplier_address" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="logo" Type="System.String" DbType="VarChar(100)" CanBeNull="true" />
+      <Association Name="supplier_Product" Member="Products" ThisKey="supplier_ID" OtherKey="supplier_ID" Type="Product" />
+      <Association Name="supplier_PhoneSery" Member="PhoneSeries" ThisKey="supplier_ID" OtherKey="supplier_ID" Type="PhoneSery" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Notifications" Member="Notifications">
+    <Type Name="Notification">
+      <Column Name="Notification_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="ID_user" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Title" Type="System.String" DbType="NVarChar(255) NOT NULL" CanBeNull="false" />
+      <Column Name="Message" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
+      <Column Name="Type" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Related_ID" Type="System.String" DbType="VarChar(20)" CanBeNull="true" />
+      <Column Name="IsRead" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Created_At" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="Read_At" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="Target_URL" Type="System.String" DbType="NVarChar(500)" CanBeNull="true" />
+      <Association Name="User_Notification" Member="User" ThisKey="ID_user" OtherKey="ID_user" Type="User" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Global_Notification_Reads" Member="Global_Notification_Reads">
+    <Type Name="Global_Notification_Read">
+      <Column Name="Read_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Global_Noti_ID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="ID_user" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="IsRead" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Read_At" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Association Name="User_Global_Notification_Read" Member="User" ThisKey="ID_user" OtherKey="ID_user" Type="User" IsForeignKey="true" DeleteRule="CASCADE" DeleteOnNull="true" />
+      <Association Name="Global_Notification_Global_Notification_Read" Member="Global_Notification" ThisKey="Global_Noti_ID" OtherKey="Global_Noti_ID" Type="Global_Notification" IsForeignKey="true" DeleteRule="CASCADE" DeleteOnNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Global_Notifications" Member="Global_Notifications">
+    <Type Name="Global_Notification">
+      <Column Name="Global_Noti_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Title" Type="System.String" DbType="NVarChar(255) NOT NULL" CanBeNull="false" />
+      <Column Name="Message" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
+      <Column Name="Type" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Target_Role" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="Created_At" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="Expiry_Date" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="Created_By_AdminID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="Taget_Url" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
+      <Association Name="Global_Notification_Global_Notification_Read" Member="Global_Notification_Reads" ThisKey="Global_Noti_ID" OtherKey="Global_Noti_ID" Type="Global_Notification_Read" />
     </Type>
   </Table>
   <Function Name="dbo.fn_LevenshteinDistance" Method="fn_LevenshteinDistance" IsComposable="true">

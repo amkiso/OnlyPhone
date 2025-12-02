@@ -1,12 +1,14 @@
-﻿using System;
+﻿using On.Areas.Admin;
+using OnlyPhone.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using OnlyPhone.Models;
 
 namespace OnlyPhone.Areas.Admin.Controllers
 {
+    [AdminSecurity]
     public class ProductController : Controller
     {
         Xuly xl = new Xuly();

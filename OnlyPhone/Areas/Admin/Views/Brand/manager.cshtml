@@ -1,0 +1,831 @@
+﻿@model List<OnlyPhone.Areas.Admin.Data.BrandViewModel>
+@{
+    ViewBag.Title = "Quản lý Thương hiệu";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    var stats = ViewBag.Stats as OnlyPhone.Areas.Admin.Data.BrandStatsModel;
+}
+
+<style>
+    /* ========================= */
+    /* THEME VARIABLES           */
+    /* ========================= */
+    :root {
+        --card-radius: 12px;
+        --border-color: rgba(0,0,0,0.08);
+        --bg-input: #f8fafc;
+        --text-sub: #64748b;
+    }
+
+    body.dark {
+        --border-color: rgba(255,255,255,0.1);
+        --bg-input: #1e293b;
+        --text-sub: #94a3b8;
+    }
+
+    /* 1. TOP STATS */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: var(--panel);
+        border: 1px solid var(--border-color);
+        border-radius: var(--card-radius);
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 100px;
+        transition: transform 0.2s;
+        box-shadow: var(--shadow);
+        color: var(--text);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+
+    .stat-title {
+        font-size: 13px;
+        color: var(--text-sub);
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .stat-value {
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1;
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .card-brand .stat-icon {
+        background: rgba(59,130,246,0.1);
+        color: #3b82f6;
+    }
+
+    .card-series .stat-icon {
+        background: rgba(139,92,246,0.1);
+        color: #8b5cf6;
+    }
+
+    .card-best .stat-icon {
+        background: rgba(245,158,11,0.1);
+        color: #f59e0b;
+    }
+
+    /* 2. CONTROL PANEL */
+    .control-panel {
+        background: var(--panel);
+        padding: 15px;
+        border-radius: var(--card-radius);
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow);
+        color: var(--text);
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .cp-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+    }
+
+    .cp-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-right: 10px;
+        white-space: nowrap;
+    }
+
+    .form-select-sm, .form-control-sm {
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        color: var(--text);
+        border-radius: 8px;
+        height: 38px;
+        padding: 0 12px;
+        outline: none;
+        font-size: 13px;
+    }
+
+    .search-box {
+        position: relative;
+        width: 100%;
+        max-width: 300px;
+    }
+
+        .search-box input {
+            padding-right: 35px;
+            width: 100%;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-sub);
+        }
+
+    .btn-add {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 0 18px;
+        height: 38px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .btn-add:hover {
+            opacity: 0.9;
+        }
+
+    /* 3. BRAND LIST CONTAINER */
+    .brand-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-height: calc(100vh - 300px);
+        overflow-y: auto;
+        padding-bottom: 20px;
+    }
+
+        .brand-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .brand-container::-webkit-scrollbar-thumb {
+            background: var(--muted);
+            border-radius: 3px;
+            opacity: 0.5;
+        }
+
+    /* BRAND CARD ROW */
+    .brand-card {
+        background: var(--panel);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 15px 20px;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.2s;
+        position: relative;
+        box-shadow: var(--shadow);
+        color: var(--text);
+    }
+
+        .brand-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .brand-card.new-item {
+            border: 2px dashed var(--accent);
+            background: rgba(59, 130, 246, 0.03);
+        }
+
+    /* Main Row */
+    .brand-main-row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    /* Logo Box (Fix PNG no background) */
+    .brand-logo-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        background: #fff; /* Luôn trắng để logo PNG nổi */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        overflow: hidden;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+        .brand-logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+    .brand-logo-placeholder {
+        font-weight: 800;
+        font-size: 20px;
+        color: #cbd5e1;
+    }
+
+    /* Upload Overlay */
+    .logo-upload-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        opacity: 0;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+    .brand-card.editing .logo-upload-overlay {
+        opacity: 1;
+    }
+
+    /* Info */
+    .brand-info {
+        flex: 2;
+        min-width: 200px;
+    }
+
+    .brand-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .brand-meta {
+        font-size: 13px;
+        color: var(--text-sub);
+        display: flex;
+        gap: 15px;
+    }
+
+        .brand-meta i {
+            width: 16px;
+            text-align: center;
+            color: var(--accent);
+        }
+
+    /* Stats */
+    .brand-stats {
+        flex: 1;
+        display: flex;
+        gap: 30px;
+        justify-content: center;
+        border-left: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        padding: 0 20px;
+        min-width: 200px;
+    }
+
+    .bs-item {
+        text-align: center;
+    }
+
+    .bs-val {
+        font-weight: 800;
+        font-size: 18px;
+        color: var(--text);
+        display: block;
+    }
+
+    .bs-label {
+        font-size: 11px;
+        color: var(--text-sub);
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    /* Actions */
+    .brand-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+    }
+
+    .btn-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-input);
+        color: var(--text-sub);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .btn-icon:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+    .btn-save {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .btn-cancel {
+        background: var(--panel);
+        border: 1px solid var(--border-color);
+        color: var(--text-sub);
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    /* DETAIL PANEL (Dropdown) */
+    .detail-panel {
+        width: 100%;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px dashed var(--border-color);
+        display: none;
+        animation: slideDown 0.3s ease;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .detail-group label {
+        font-size: 11px;
+        color: var(--text-sub);
+        display: block;
+        margin-bottom: 4px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .detail-input {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-input);
+        color: var(--text);
+        font-size: 13px;
+        outline: none;
+    }
+
+        .detail-input:disabled {
+            border-color: transparent;
+            background: transparent;
+            padding-left: 0;
+            font-weight: 500;
+            opacity: 1;
+        }
+
+    /* Series Management Area */
+    .series-area {
+        background: var(--bg-input);
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+    }
+
+    .series-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+        .series-header h6 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+
+    .series-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .series-tag {
+        background: var(--panel);
+        border: 1px solid var(--border-color);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .series-count {
+        background: var(--bg-input);
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-sub);
+    }
+
+    .add-series-form {
+        display: flex;
+        gap: 5px;
+        margin-top: 10px;
+        display: none;
+    }
+
+    .editing .add-series-form {
+        display: flex;
+    }
+    /* Chỉ hiện khi sửa thương hiệu */
+
+    /* Toggle Logic */
+    .brand-card.editing .view-mode {
+        display: none !important;
+    }
+
+    .brand-card:not(.editing) .edit-mode {
+        display: none !important;
+    }
+
+    .brand-card.expanded .detail-panel {
+        display: block;
+    }
+
+    .brand-card.editing .input-name {
+        display: block !important;
+        width: 100%;
+        margin-bottom: 5px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-input);
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .brand-card:not(.editing) .input-name {
+        display: none;
+    }
+
+    @@media (max-width: 768px) {
+        .brand-main-row {
+            align-items: flex-start;
+        }
+
+        .brand-stats {
+            width: 100%;
+            border: 1px dashed var(--border-color);
+            padding: 10px;
+            border-radius: 8px;
+            justify-content: space-around;
+            margin: 10px 0;
+        }
+
+        .brand-actions {
+            width: 100%;
+            justify-content: flex-end;
+            padding-left: 0;
+        }
+
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="stats-container">
+    <div class="stat-card card-brand">
+        <div class="stat-content"><div class="stat-title">Thương hiệu</div><div class="stat-value">@stats.TotalBrands</div></div>
+        <div class="stat-icon"><i class="fa fa-copyright"></i></div>
+    </div>
+    <div class="stat-card card-series">
+        <div class="stat-content"><div class="stat-title">Dòng sản phẩm</div><div class="stat-value">@stats.TotalSeries</div></div>
+        <div class="stat-icon"><i class="fa fa-layer-group"></i></div>
+    </div>
+    <div class="stat-card card-best">
+        <div class="stat-content"><div class="stat-title">THương hiệu bán chạy nhất</div><div class="stat-value" style="font-size:22px">@stats.BestSellingBrand</div></div>
+        <div class="stat-icon"><i class="fa fa-trophy"></i></div>
+    </div>
+</div>
+
+<div class="control-panel">
+    <div class="cp-left">
+        <div class="cp-title">Quản lý Thương hiệu</div>
+        <div class="search-box">
+            <input type="text" id="searchBox" class="form-control-sm" placeholder="Tìm thương hiệu, dòng máy..." onkeyup="filterBrands()">
+            <i class="fa fa-search"></i>
+        </div>
+        <select id="brandFilter" class="form-select-sm" style="width:180px;" onchange="filterBrands()">
+            <option value="all">Tất cả thương hiệu</option>
+            @foreach (var b in Model)
+            {
+                <option value="@b.BrandId">@b.BrandName</option>
+            }
+        </select>
+    </div>
+    <button class="btn-add" onclick="toggleAddBrand()"><i class="fa fa-plus"></i> Thêm mới</button>
+</div>
+
+<div class="brand-container" id="brandList">
+    @foreach (var item in Model)
+    {
+        <div class="brand-card" id="brand-@item.BrandId" data-id="@item.BrandId" data-name="@item.BrandName.ToLower()">
+            <div class="brand-main-row">
+                <div class="brand-logo-box">
+                    @if (!string.IsNullOrEmpty(item.Logo))
+                    {
+                        <img src="@Url.Content($"~/Content/Pic/logo/{item.Logo}")" id="logo-preview-@item.BrandId" alt="@item.BrandName" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                        <div class="brand-logo-placeholder" style="display:none">@item.BrandName.Substring(0, 1).ToUpper()</div>
+                    }
+                    else
+                    {
+                        <img id="logo-preview-@item.BrandId" style="display:none">
+                        <div class="brand-logo-placeholder">@item.BrandName.Substring(0, 1).ToUpper()</div>
+                    }
+
+                    <div class="logo-upload-overlay" onclick="document.getElementById('file-@item.BrandId').click()">
+                        <i class="fa fa-camera"></i>
+                    </div>
+                    <input type="file" id="file-@item.BrandId" class="d-none" accept="image/*" onchange="previewLogo(this, @item.BrandId)">
+                </div>
+
+                <div class="brand-info">
+                    <span class="brand-name view-mode">@item.BrandName</span>
+                    <input type="text" class="input-name" value="@item.BrandName">
+
+                    <div class="brand-meta">
+                        <span><i class="fa fa-phone"></i> @(string.IsNullOrEmpty(item.Phone) ? "..." : item.Phone)</span>
+                        <span><i class="fa fa-envelope"></i> @(string.IsNullOrEmpty(item.Email) ? "..." : item.Email)</span>
+                    </div>
+                </div>
+
+                <div class="brand-stats">
+                    <div class="bs-item"><span class="bs-val">@item.TotalProducts</span><span class="bs-label">Sản phẩm</span></div>
+                    <div class="bs-item"><span class="bs-val" style="color:#10b981">@item.TotalSold</span><span class="bs-label">Đã bán</span></div>
+                    <div class="bs-item"><span class="bs-val" style="color:#8b5cf6">@item.SeriesList.Count</span><span class="bs-label">Dòng máy</span></div>
+                </div>
+
+                <div class="brand-actions">
+                    <button class="btn-icon view-mode" onclick="toggleDetail(@item.BrandId)" id="btn-expand-@item.BrandId" title="Chi tiết"><i class="fas fa-chevron-down" id="icon-expand-@item.BrandId"></i></button>
+                    <button class="btn-icon edit view-mode" onclick="toggleEditMode(@item.BrandId, true)" title="Sửa"><i class="fas fa-pen"></i></button>
+                    <button class="btn-icon delete view-mode" onclick="deleteBrand(@item.BrandId)" title="Xóa"><i class="fas fa-trash"></i></button>
+
+                    <button class="btn-save edit-mode" onclick="saveBrand(@item.BrandId)">Lưu</button>
+                    <button class="btn-cancel edit-mode" onclick="toggleEditMode(@item.BrandId, false)">Hủy</button>
+                </div>
+            </div>
+
+            <div class="detail-panel" id="detail-@item.BrandId">
+                <div class="detail-grid">
+                    <div class="detail-group"><label>Số điện thoại</label><input type="text" class="detail-input input-phone" value="@item.Phone" disabled placeholder="Chưa cập nhật"></div>
+                    <div class="detail-group"><label>Email liên hệ</label><input type="text" class="detail-input input-email" value="@item.Email" disabled placeholder="Chưa cập nhật"></div>
+                    <div class="detail-group" style="grid-column: 1 / -1;"><label>Địa chỉ văn phòng</label><input type="text" class="detail-input input-address" value="@item.Address" disabled placeholder="Chưa cập nhật"></div>
+                </div>
+
+                <div class="series-area">
+                    <div class="series-header">
+                        <h6>Danh sách dòng sản phẩm</h6>
+                        <div class="add-series-form" id="add-series-form-@item.BrandId">
+                            <input type="text" id="new-series-@item.BrandId" class="form-control-sm" style="height:30px; width:150px;" placeholder="Tên dòng mới...">
+                            <button class="btn-save" style="padding: 4px 10px;" onclick="addSeries(@item.BrandId)">Thêm</button>
+                        </div>
+                    </div>
+                    <div class="series-list" id="series-list-@item.BrandId">
+                        @if (item.SeriesList.Any())
+                        {
+                            foreach (var s in item.SeriesList)
+                            {
+                                <div class="series-tag" data-series="@s.SeriesName.ToLower()">@s.SeriesName <span class="series-count">@s.ProductCount</span></div>
+                            }
+                        }
+                        else
+                        { <div class="no-series">Chưa có dòng sản phẩm nào.</div>}
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // 1. UI TOGGLE
+        function toggleDetail(id) {
+            const card = document.getElementById(`brand-${id}`);
+            if (card.classList.contains('editing')) return;
+            card.classList.toggle('expanded');
+            const icon = document.getElementById(`icon-expand-${id}`);
+            icon.className = card.classList.contains('expanded') ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+        }
+
+        function toggleEditMode(id, isEdit) {
+            const card = document.getElementById(`brand-${id}`);
+            const btnExpand = document.getElementById(`btn-expand-${id}`);
+            const inputs = card.querySelectorAll('.detail-input:not(.input-name)');
+
+            if (isEdit) {
+                card.classList.add('editing', 'expanded');
+                btnExpand.style.display = 'none';
+                inputs.forEach(i => i.disabled = false);
+            } else {
+                if (id < 0) { card.remove(); tempBrandId = null; return; } // Cancel Add New
+                card.classList.remove('editing', 'expanded');
+                btnExpand.style.display = 'flex';
+                document.getElementById(`icon-expand-${id}`).className = 'fas fa-chevron-down';
+                inputs.forEach(i => i.disabled = true);
+            }
+        }
+
+        // 2. ADD NEW BRAND
+        let tempBrandId = null;
+        function toggleAddBrand() {
+            if (tempBrandId !== null) { document.getElementById(`brand-${tempBrandId}`).remove(); tempBrandId = null; return; }
+            tempBrandId = -1 * Math.floor(Math.random() * 1000);
+
+            const html = `
+            <div class="brand-card editing expanded new-item" id="brand-${tempBrandId}">
+                <div class="brand-main-row">
+                    <div class="brand-logo-box">
+                        <img id="logo-preview-${tempBrandId}" style="display:none">
+                        <div class="brand-logo-placeholder"><i class="fa fa-image"></i></div>
+                        <div class="logo-upload-overlay" style="opacity:1" onclick="document.getElementById('file-${tempBrandId}').click()"><i class="fa fa-camera"></i></div>
+                        <input type="file" id="file-${tempBrandId}" class="d-none" accept="image/*" onchange="previewLogo(this, ${tempBrandId})">
+                    </div>
+                    <div class="brand-info">
+                        <input type="text" class="input-name" placeholder="Nhập tên thương hiệu..." style="display:block !important; width:100%; padding:8px; border:1px solid var(--border-color); border-radius:6px;">
+                    </div>
+                    <div class="brand-stats"><div class="bs-item"><span class="bs-val">0</span><span class="bs-label">SP</span></div></div>
+                    <div class="brand-actions">
+                        <button class="btn-save" onclick="saveBrand(${tempBrandId})">Lưu</button>
+                        <button class="btn-cancel" onclick="toggleAddBrand()">Hủy</button>
+                    </div>
+                </div>
+                <div class="detail-panel" style="display:block">
+                    <div class="detail-grid">
+                        <div class="detail-group"><label>Số điện thoại</label><input type="text" class="detail-input input-phone" placeholder="Nhập SĐT"></div>
+                        <div class="detail-group"><label>Email liên hệ</label><input type="text" class="detail-input input-email" placeholder="Nhập Email"></div>
+                        <div class="detail-group" style="grid-column:1/-1"><label>Địa chỉ văn phòng</label><input type="text" class="detail-input input-address" placeholder="Nhập địa chỉ"></div>
+                    </div>
+                </div>
+            </div>`;
+            document.getElementById('brandList').insertAdjacentHTML('afterbegin', html);
+        }
+
+        // 3. PREVIEW LOGO
+        function previewLogo(input, id) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.getElementById(`logo-preview-${id}`);
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    img.nextElementSibling.style.display = 'none'; // Hide placeholder
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 4. SAVE BRAND
+        function saveBrand(id) {
+            const card = document.getElementById(`brand-${id}`);
+            const name = card.querySelector('.input-name').value;
+            if (!name) { alert("Vui lòng nhập tên thương hiệu"); return; }
+
+            const formData = new FormData();
+            formData.append("BrandId", id < 0 ? 0 : id);
+            formData.append("BrandName", name);
+            formData.append("Phone", card.querySelector('.input-phone').value);
+            formData.append("Email", card.querySelector('.input-email').value);
+            formData.append("Address", card.querySelector('.input-address').value);
+
+            const fileInput = document.getElementById(`file-${id}`);
+            if (fileInput && fileInput.files[0]) formData.append("logoFile", fileInput.files[0]);
+
+            const btn = card.querySelector('.btn-save');
+            const oldText = btn.innerText;
+            btn.innerText = '...'; btn.disabled = true;
+
+            fetch('/Admin/Brand/SaveBrand', { method: 'POST', body: formData })
+                .then(r => r.json()).then(d => {
+                    if (d.success) { alert('Lưu thành công!'); location.reload(); }
+                    else { alert(d.message); btn.innerText = oldText; btn.disabled = false; }
+                }).catch(e => { alert('Lỗi server'); btn.innerText = oldText; btn.disabled = false; });
+        }
+
+        // 5. ADD SERIES
+        function addSeries(brandId) {
+            const input = document.getElementById(`new-series-${brandId}`);
+            const name = input.value.trim();
+            if (!name) return;
+
+            fetch('/Admin/Brand/AddSeries', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ brandId: brandId, seriesName: name })
+            }).then(r => r.json()).then(d => {
+                if (d.success) {
+                    // Add visual tag
+                    const list = document.getElementById(`series-list-${brandId}`);
+                    // Remove "No series" text if exists
+                    if (list.querySelector('.no-series')) list.innerHTML = '';
+
+                    const tag = `<div class="series-tag">${name} <span class="series-count">0</span></div>`;
+                    list.insertAdjacentHTML('beforeend', tag);
+                    input.value = '';
+                } else { alert(d.message); }
+            });
+        }
+
+        // 6. DELETE BRAND
+        function deleteBrand(id) {
+            if (!confirm("Xóa thương hiệu này? Dòng sản phẩm liên quan sẽ bị xóa.")) return;
+            fetch('/Admin/Brand/DeleteBrand', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+            }).then(r => r.json()).then(d => {
+                if (d.success) document.getElementById(`brand-${id}`).remove();
+                else alert(d.message);
+            });
+        }
+
+        // 7. SEARCH LOGIC
+        function filterBrands() {
+            const term = document.getElementById('searchBox').value.toLowerCase();
+            const selectedId = document.getElementById('brandFilter').value;
+
+            document.querySelectorAll('.brand-card').forEach(c => {
+                if (c.classList.contains('new-item')) return;
+                const id = c.getAttribute('data-id');
+                const name = c.getAttribute('data-name');
+                let hasSeries = false;
+                c.querySelectorAll('.series-tag').forEach(t => { if (t.innerText.toLowerCase().includes(term)) hasSeries = true; });
+
+                let show = true;
+                if (selectedId !== 'all' && id !== selectedId) show = false;
+                if (term && !name.includes(term) && !hasSeries) show = false;
+
+                c.style.display = show ? 'flex' : 'none';
+            });
+        }
+    </script>
+}
