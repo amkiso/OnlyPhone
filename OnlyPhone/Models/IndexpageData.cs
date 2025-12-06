@@ -25,7 +25,8 @@ namespace OnlyPhone.Models
 
         // Danh sách tất cả series (cho menu brand)
         public List<SeriesInfo> AllSeries { get; set; }
-
+        public List<NotificationInfo> Notifications { get; set; }
+        public int UnreadNotificationCount { get; set; }
         // Constructor khởi tạo giá trị mặc định
         public IndexpageData()
         {

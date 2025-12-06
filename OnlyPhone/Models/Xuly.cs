@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Web;
+using System.Web.Services.Description;
 
 namespace OnlyPhone.Models
 {
@@ -127,7 +128,105 @@ namespace OnlyPhone.Models
                 return new List<SeriesInfo>();
             }
         }
+        public List<Product_Infomation> GetProductsBySupplier(string supplierName, string sort, int page = 1, int pageSize = 15)
+        {
+            sort = "featured";
+            return GetProductsBySupplierAndSeries(supplierName, null, sort, page, pageSize);
+        }
 
+        // Overload 2: Lọc theo cả Supplier và Series (Hàm xử lý chính)
+        public List<Product_Infomation> GetProductsBySupplierAndSeries(string supplierName, string seriesName, string sort = "featured", int page = 1, int pageSize = 15)
+        {
+            try
+            {
+                // 1. Query cơ bản + Tính TotalSold
+                var query = from p in da.Products
+                            join s in da.suppliers on p.supplier_ID equals s.supplier_ID
+                            join ps in da.PhoneSeries on p.Series_id equals ps.Series_id
+                            where p.Product_Status == "selling"
+                            select new
+                            {
+                                Product = p,
+                                SupplierName = s.supplier_name,
+                                SeriesName = ps.SeriesName,
+                                // Tính tổng bán cho từng sản phẩm ngay trong query
+                                TotalSold = da.Orders_items
+                                            .Where(oi => oi.Product_ID == p.Product_ID)
+                                            .Sum(oi => (int?)oi.quantity) ?? 0,
+                                // Tính giảm giá để sắp xếp
+                                DiscountPercent = (p.Original_Price > p.Sale_Price && p.Original_Price > 0)
+                                                ? ((p.Original_Price - p.Sale_Price) / p.Original_Price * 100)
+                                                : 0
+                            };
+
+                // 2. Lọc theo Supplier
+                if (!string.IsNullOrEmpty(supplierName))
+                {
+                    query = query.Where(x => x.SupplierName == supplierName);
+                }
+
+                // 3. Lọc theo Series
+                if (!string.IsNullOrEmpty(seriesName))
+                {
+                    query = query.Where(x => x.SeriesName == seriesName);
+                }
+
+                // 4. SẮP XẾP (Quan trọng: Xử lý trước khi phân trang)
+                switch (sort?.ToLower())
+                {
+                    case "price-asc":
+                        query = query.OrderBy(x => x.Product.Sale_Price);
+                        break;
+                    case "price-desc":
+                        query = query.OrderByDescending(x => x.Product.Sale_Price);
+                        break;
+                    case "new":
+                        query = query.OrderByDescending(x => x.Product.Created_Date);
+                        break;
+                    case "bestseller": // Logic bán chạy
+                        query = query.OrderByDescending(x => x.TotalSold);
+                        break;
+                    case "discount":
+                        query = query.OrderByDescending(x => x.DiscountPercent);
+                        break;
+                    case "featured":
+                    default:
+                        query = query.OrderByDescending(x => x.Product.Is_Featured)
+                                     .ThenByDescending(x => x.Product.Created_Date);
+                        break;
+                }
+
+                // 5. Phân trang & Lấy dữ liệu
+                var resultList = query.Skip((page - 1) * pageSize)
+                                      .Take(pageSize)
+                                      .ToList(); // Execute query tại đây
+
+                // 6. Map sang Model
+                return resultList.Select(x => new Product_Infomation
+                {
+                    product_id = x.Product.Product_ID,
+                    product_name = x.Product.Product_name,
+                    sale_price = x.Product.Sale_Price ?? 0,
+                    original_price = x.Product.Original_Price ?? 0,
+                    current_Quantity = x.Product.Current_Quantity,
+                    product_status = x.Product.Product_Status,
+                    images = x.Product.Product_Image,
+                    series_name = x.SeriesName,
+                    series_id = x.Product.Series_id,
+                    supplier_name = x.SupplierName,
+                    is_featured = x.Product.Is_Featured ?? false,
+                    is_new = x.Product.Is_New ?? false,
+                    total_sold = x.TotalSold,
+                    created_date = x.Product.Created_Date ?? DateTime.Now,
+                    product_description = ParseProductDescription(x.Product.Descriptions)
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetProductsBySupplierAndSeries: {ex.Message}");
+                return new List<Product_Infomation>();
+            }
+        }
         // Method parse description từ chuỗi hoặc JSON
         private List<string> ParseProductDescription(string description)
         {
@@ -364,9 +463,28 @@ namespace OnlyPhone.Models
         {
             try
             {
-                return da.Notifications
-                    .Where(n => n.ID_user == userId && n.IsRead == false)
-                    .Count();
+                // A. Đếm thông báo cá nhân chưa đọc
+                int personalUnread = da.Notifications
+                    .Count(n => n.ID_user == userId && (n.IsRead == null || n.IsRead == false));
+
+                // B. Đếm thông báo toàn cục chưa đọc
+                // Logic: Lấy các thông báo Global còn hạn, khớp Role, và User CHƯA có record trong bảng Read
+
+                // Lấy role của user
+                var user = da.Users.FirstOrDefault(u => u.ID_user == userId);
+                string userRole = user?.user_type ?? "Customer";
+
+                // Lấy danh sách ID các thông báo toàn cục user đã đọc
+                var readGlobalIds = da.Global_Notification_Reads
+                    .Where(r => r.ID_user == userId)
+                    .Select(r => r.Global_Noti_ID);
+
+                int globalUnread = da.Global_Notifications
+                    .Count(g => (g.Expiry_Date == null || g.Expiry_Date > DateTime.Now) // Còn hạn
+                             && (g.Target_Role == null || g.Target_Role == userRole || g.Target_Role == "All")    // Khớp role
+                             && !readGlobalIds.Contains(g.Global_Noti_ID));             // Chưa đọc
+
+                return personalUnread + globalUnread;
             }
             catch (Exception ex)
             {
@@ -376,30 +494,123 @@ namespace OnlyPhone.Models
         }
 
         // Lấy danh sách thông báo
-        public List<NotificationItem> GetUserNotifications(int userId, int count)
+        public List<NotificationInfo> GetUserNotifications(int userId, int count)
         {
             try
             {
-                return da.Notifications
+                var user = da.Users.FirstOrDefault(u => u.ID_user == userId);
+                string userRole = user?.user_type ?? "Customer";
+
+                // A. Lấy thông báo cá nhân (Map sang NotificationInfo)
+                var personalNotis = da.Notifications
                     .Where(n => n.ID_user == userId)
-                    .OrderByDescending(n => n.Created_At)
-                    .Take(count)
-                    .Select(n => new NotificationItem
+                    .Select(n => new NotificationInfo
                     {
-                        Id = n.Notification_ID,
+                        NotificationId = n.Notification_ID, // ID Dương
                         Title = n.Title,
-                        Content = n.Message,
+                        Message = n.Message,
                         IsRead = n.IsRead ?? false,
-                        CreatedDate = n.Created_At ?? DateTime.Now,
+                        CreatedAt = n.Created_At ?? DateTime.Now,
+                        ReadAt = n.Read_At,
                         Type = n.Type,
-                        RelatedId = n.Related_ID
-                    })
+                        RelatedId = n.Related_ID,
+                        TargetURL = n.Target_URL,
+                        IsGlobal = false
+                    }).ToList();
+
+                // B. Lấy thông báo toàn cục
+                // Cần Left Join với bảng Read để biết đã đọc hay chưa
+                var globalNotisQuery = from g in da.Global_Notifications
+                                       where (g.Expiry_Date == null || g.Expiry_Date > DateTime.Now)
+                                          && (g.Target_Role == null || g.Target_Role == userRole || g.Target_Role =="All")
+                                       select g;
+
+                var globalNotisList = new List<NotificationInfo>();
+
+                // Lấy tất cả ID đã đọc của user này
+                var readRecords = da.Global_Notification_Reads
+                    .Where(r => r.ID_user == userId)
+                    .ToList(); // Load về memory để check
+
+                foreach (var g in globalNotisQuery.ToList())
+                {
+                    var readRecord = readRecords.FirstOrDefault(r => r.Global_Noti_ID == g.Global_Noti_ID);
+
+                    globalNotisList.Add(new NotificationInfo
+                    {
+                        // QUAN TRỌNG: Dùng số ÂM để phân biệt Global ID ở Front-end
+                        NotificationId = -g.Global_Noti_ID,
+                        Title = g.Title,
+                        Message = g.Message,
+                        IsRead = (readRecord != null), // Có record tức là đã đọc
+                        CreatedAt = g.Created_At ?? DateTime.Now,
+                        ReadAt = readRecord?.Read_At,
+                        Type = g.Type,
+                        RelatedId = null,
+                        TargetURL = null, // Global thường ít link cụ thể, hoặc thêm cột nếu cần
+                        IsGlobal = true
+                    });
+                }
+
+                // C. Gộp và Sắp xếp
+                var combined = personalNotis.Concat(globalNotisList)
+                    .OrderByDescending(n => n.CreatedAt)
+                    .Take(count)
                     .ToList();
+
+                return combined;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("Error in GetUserNotifications: " + ex.Message);
-                return new List<NotificationItem>();
+                return new List<NotificationInfo>();
+            }
+        }
+        public bool MarkNotificationRead(int userId, int notificationId)
+        {
+            try
+            {
+                if (notificationId > 0)
+                {
+                    // === THÔNG BÁO CÁ NHÂN ===
+                    var noti = da.Notifications.FirstOrDefault(n => n.Notification_ID == notificationId && n.ID_user == userId);
+                    if (noti != null && (noti.IsRead == false || noti.IsRead == null))
+                    {
+                        noti.IsRead = true;
+                        noti.Read_At = DateTime.Now;
+                        da.SubmitChanges();
+                        return true;
+                    }
+                }
+                else
+                {
+                    // === THÔNG BÁO TOÀN CỤC (ID ÂM) ===
+                    int globalId = Math.Abs(notificationId); // Chuyển về dương để tìm trong DB
+
+                    // Kiểm tra xem đã có record đọc chưa
+                    var existRead = da.Global_Notification_Reads
+                        .Any(r => r.Global_Noti_ID == globalId && r.ID_user == userId);
+
+                    if (!existRead)
+                    {
+                        var readRecord = new Global_Notification_Read
+                        {
+                            Global_Noti_ID = globalId,
+                            ID_user = userId,
+                            IsRead = true,
+                            Read_At = DateTime.Now
+                        };
+                        da.Global_Notification_Reads.InsertOnSubmit(readRecord);
+                        da.SubmitChanges();
+                        return true;
+                    }
+                }
+                return true; // Đã đọc rồi thì vẫn trả về success
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error MarkNotificationRead: " + ex.Message);
+                return false;
             }
         }
         public List<slide> GetSlideList()
@@ -418,6 +629,65 @@ namespace OnlyPhone.Models
                 var bytes = System.Text.Encoding.UTF8.GetBytes(password);
                 var hash = sha256.ComputeHash(bytes);
                 return Convert.ToBase64String(hash);
+            }
+        }
+        /// <summary>
+        /// Lấy chi tiết thông báo (Xử lý cả ID âm cho Global và ID dương cho Personal)
+        /// </summary>
+        public NotificationInfo GetNotificationDetail(int userId, int notificationId)
+        {
+            try
+            {
+                if (notificationId > 0)
+                {
+                    // === THÔNG BÁO CÁ NHÂN (ID DƯƠNG) ===
+                    var noti = da.Notifications
+                        .FirstOrDefault(n => n.Notification_ID == notificationId && n.ID_user == userId);
+
+                    if (noti == null) return null;
+
+                    return new NotificationInfo
+                    {
+                        NotificationId = noti.Notification_ID,
+                        Title = noti.Title,
+                        Message = noti.Message,
+                        CreatedAt = noti.Created_At ?? DateTime.Now,
+                        IsRead = noti.IsRead ?? false,
+                        Type = noti.Type,
+                        TargetURL = noti.Target_URL,
+                        RelatedId = noti.Related_ID
+                    };
+                }
+                else
+                {
+                    // === THÔNG BÁO TOÀN CỤC (ID ÂM) ===
+                    int globalId = Math.Abs(notificationId); // Chuyển về dương để query DB
+                    var noti = da.Global_Notifications
+                        .FirstOrDefault(n => n.Global_Noti_ID == globalId);
+
+                    if (noti == null) return null;
+
+                    // Check xem user đã đọc chưa
+                    bool isRead = da.Global_Notification_Reads
+                        .Any(r => r.Global_Noti_ID == globalId && r.ID_user == userId);
+
+                    return new NotificationInfo
+                    {
+                        NotificationId = -noti.Global_Noti_ID, // Trả về ID âm
+                        Title = noti.Title,
+                        Message = noti.Message,
+                        CreatedAt = noti.Created_At ?? DateTime.Now,
+                        IsRead = isRead,
+                        Type = noti.Type,
+                        TargetURL = noti.Taget_Url, // Lưu ý: Trong DB bạn đặt tên là Taget_Url hay Target_Url? Hãy kiểm tra lại chính tả cột này trong DB Global_Notifications
+                        IsGlobal = true
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error GetNotificationDetail: " + ex.Message);
+                return null;
             }
         }
 
@@ -571,7 +841,18 @@ namespace OnlyPhone.Models
                 return new IndexpageData(); // Trả về model rỗng nếu có lỗi
             }
         }
+        public IndexpageData GetHomePageDataWithNoti(int? userId)
+        {
+            var data = GetHomePageData(); // Gọi hàm cũ lấy sản phẩm
 
+            if (userId.HasValue)
+            {
+                data.Notifications = GetUserNotifications(userId.Value, 10);
+                data.UnreadNotificationCount = GetUnreadNotificationCount(userId.Value);
+            }
+
+            return data;
+        }
         /// <summary>
         /// Lấy danh sách sản phẩm nổi bật (Is_Featured = true)
         /// </summary>
@@ -677,63 +958,54 @@ namespace OnlyPhone.Models
         }
 
         /// <summary>
-        /// Lấy danh sách sản phẩm bán chạy nhất (theo tổng số lượng đã bán)
+        /// Lấy danh sách sản phẩm bán chạy nhất (Bao gồm cả hết hàng/ngừng kinh doanh)
         /// </summary>
         public List<Product_Infomation> GetBestSellerProducts(int count)
         {
             try
             {
-                var productSales = (from oi in da.Orders_items
-                                    group oi by oi.Product_ID into g
-                                    select new
-                                    {
-                                        ProductId = g.Key,
-                                        TotalSold = g.Sum(x => x.quantity ?? 0)
-                                    })
-                                   .OrderByDescending(x => x.TotalSold)
-                                   .Take(count)
-                                   .ToList();
+                var query = (from p in da.Products
+                             join s in da.suppliers on p.supplier_ID equals s.supplier_ID
+                             // Join để tính tổng bán
+                             join oi in da.Orders_items on p.Product_ID equals oi.Product_ID into oiGroup
+                             // --- THAY ĐỔI Ở ĐÂY ---
+                             // Bỏ điều kiện p.Product_Status == "selling" để lấy cả sản phẩm hết hàng/ngừng bán.
+                             // Tuy nhiên, nếu bạn có trạng thái "Deleted" (đã xóa hẳn) thì nên lọc nó ra.
+                             // Ví dụ: where p.Product_Status != "deleted"
+                             select new
+                             {
+                                 Product = p,
+                                 SupplierName = s.supplier_name,
+                                 SeriesName = da.PhoneSeries
+                                             .Where(ps => ps.Series_id == p.Series_id)
+                                             .Select(ps => ps.SeriesName)
+                                             .FirstOrDefault(),
+                                 TotalSold = oiGroup.Sum(x => (int?)x.quantity) ?? 0
+                             })
+                             // Chỉ lấy những sản phẩm CÓ bán được (TotalSold > 0)
+                             .Where(x => x.TotalSold > 0)
+                             .OrderByDescending(x => x.TotalSold)
+                             .Take(count)
+                             .ToList();
 
-                var productIds = productSales.Select(ps => ps.ProductId).ToList();
-
-                var products = (from p in da.Products
-                                join s in da.suppliers on p.supplier_ID equals s.supplier_ID
-                                where productIds.Contains(p.Product_ID) && p.Product_Status == "selling"
-                                select new
-                                {
-                                    Product = p,
-                                    SupplierName = s.supplier_name,
-                                    SeriesName = da.PhoneSeries
-                                        .Where(ps => ps.Series_id == p.Series_id)
-                                        .Select(ps => ps.SeriesName)
-                                        .FirstOrDefault(),
-                                    TotalSold = productSales
-                                        .Where(ps => ps.ProductId == p.Product_ID)
-                                        .Select(ps => ps.TotalSold)
-                                        .FirstOrDefault()
-                                })
-                               .ToList();
-
-                return products
-                    .OrderByDescending(x => x.TotalSold)
-                    .Select(x => new Product_Infomation
-                    {
-                        product_id = x.Product.Product_ID,
-                        product_name = x.Product.Product_name,
-                        sale_price = x.Product.Sale_Price ?? 0,
-                        original_price = x.Product.Original_Price ?? 0,
-                        current_Quantity = x.Product.Current_Quantity,
-                        product_status = x.Product.Product_Status,
-                        images = x.Product.Product_Image,
-                        series_name = x.SeriesName,
-                        series_id = x.Product.Series_id,
-                        supplier_name = x.SupplierName,
-                        is_featured = x.Product.Is_Featured ?? false,
-                        is_new = x.Product.Is_New ?? false,
-                        total_sold = x.TotalSold,
-                        created_date = x.Product.Created_Date ?? DateTime.Now,
-                        product_description = ParseProductDescription(x.Product.Descriptions)
-                    }).ToList();
+                return query.Select(x => new Product_Infomation
+                {
+                    product_id = x.Product.Product_ID,
+                    product_name = x.Product.Product_name,
+                    sale_price = x.Product.Sale_Price ?? 0,
+                    original_price = x.Product.Original_Price ?? 0,
+                    current_Quantity = x.Product.Current_Quantity,
+                    product_status = x.Product.Product_Status, // View sẽ dùng cái này để hiện badge Hết hàng
+                    images = x.Product.Product_Image,
+                    series_name = x.SeriesName,
+                    series_id = x.Product.Series_id,
+                    supplier_name = x.SupplierName,
+                    is_featured = x.Product.Is_Featured ?? false,
+                    is_new = x.Product.Is_New ?? false,
+                    total_sold = x.TotalSold,
+                    created_date = x.Product.Created_Date ?? DateTime.Now,
+                    product_description = ParseProductDescription(x.Product.Descriptions)
+                }).ToList();
             }
             catch (Exception ex)
             {
@@ -930,123 +1202,8 @@ namespace OnlyPhone.Models
         /// <summary>
         /// Lấy sản phẩm theo supplier (nhà cung cấp)
         /// </summary>
-        public List<Product_Infomation> GetProductsBySupplier(string supplierName, int page = 1, int pageSize = 15)
-        {
-            try
-            {
-                var products = (from p in da.Products
-                                join s in da.suppliers on p.supplier_ID equals s.supplier_ID
-                                where s.supplier_name == supplierName && p.Product_Status == "selling"
-                                orderby p.Is_Featured descending, p.Created_Date descending
-                                select new
-                                {
-                                    Product = p,
-                                    SupplierName = s.supplier_name,
-                                    SeriesName = da.PhoneSeries
-                                        .Where(ps => ps.Series_id == p.Series_id)
-                                        .Select(ps => ps.SeriesName)
-                                        .FirstOrDefault(),
-                                    TotalSold = da.Orders_items
-                                        .Where(oi => oi.Product_ID == p.Product_ID)
-                                        .Sum(oi => (int?)oi.quantity) ?? 0
-                                })
-                               .Skip((page - 1) * pageSize)
-                               .Take(pageSize)
-                               .ToList();
-
-                return products.Select(x => new Product_Infomation
-                {
-                    product_id = x.Product.Product_ID,
-                    product_name = x.Product.Product_name,
-                    sale_price = x.Product.Sale_Price ?? 0,
-                    original_price = x.Product.Original_Price ?? 0,
-                    current_Quantity = x.Product.Current_Quantity,
-                    product_status = x.Product.Product_Status,
-                    images = x.Product.Product_Image,
-                    series_name = x.SeriesName,
-                    series_id = x.Product.Series_id,
-                    supplier_name = x.SupplierName,
-                    is_featured = x.Product.Is_Featured ?? false,
-                    is_new = x.Product.Is_New ?? false,
-                    total_sold = x.TotalSold,
-                    created_date = x.Product.Created_Date ?? DateTime.Now,
-                    product_description = ParseProductDescription(x.Product.Descriptions)
-                }).ToList();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in GetProductsBySupplier: {ex.Message}");
-                return new List<Product_Infomation>();
-            }
-        }
-        // Overload mới hỗ trợ lọc theo cả Supplier và Series
-        public List<Product_Infomation> GetProductsBySupplier(string supplierName, string seriesName, int page = 1, int pageSize = 15)
-        {
-            try
-            {
-                // Sử dụng Query Syntax để dễ dàng join các bảng
-                var query = from p in da.Products
-                            join s in da.suppliers on p.supplier_ID equals s.supplier_ID
-                            join ps in da.PhoneSeries on p.Series_id equals ps.Series_id // Join thêm bảng Series để lọc
-                            where p.Product_Status == "selling"
-                            select new { p, s, ps };
-
-                // 1. Lọc theo Supplier (Nếu có)
-                if (!string.IsNullOrEmpty(supplierName))
-                {
-                    query = query.Where(x => x.s.supplier_name == supplierName);
-                }
-
-                // 2. Lọc theo Series (Tham số mới thêm vào)
-                if (!string.IsNullOrEmpty(seriesName))
-                {
-                    query = query.Where(x => x.ps.SeriesName == seriesName);
-                }
-
-                // 3. Sắp xếp
-                query = query.OrderByDescending(x => x.p.Is_Featured)
-                             .ThenByDescending(x => x.p.Created_Date);
-
-                // 4. Phân trang & Lấy dữ liệu
-                var resultList = query.Skip((page - 1) * pageSize)
-                                      .Take(pageSize)
-                                      .Select(x => new
-                                      {
-                                          Product = x.p,
-                                          SupplierName = x.s.supplier_name,
-                                          SeriesName = x.ps.SeriesName,
-                                          // Tính tổng đã bán
-                                          TotalSold = da.Orders_items
-                                                        .Where(oi => oi.Product_ID == x.p.Product_ID)
-                                                        .Sum(oi => (int?)oi.quantity) ?? 0
-                                      }).ToList();
-
-                // 5. Map sang Model Product_Infomation
-                return resultList.Select(x => new Product_Infomation
-                {
-                    product_id = x.Product.Product_ID,
-                    product_name = x.Product.Product_name,
-                    sale_price = x.Product.Sale_Price ?? 0,
-                    original_price = x.Product.Original_Price ?? 0,
-                    current_Quantity = x.Product.Current_Quantity,
-                    product_status = x.Product.Product_Status,
-                    images = x.Product.Product_Image,
-                    series_name = x.SeriesName,
-                    series_id = x.Product.Series_id,
-                    supplier_name = x.SupplierName,
-                    is_featured = x.Product.Is_Featured ?? false,
-                    is_new = x.Product.Is_New ?? false,
-                    total_sold = x.TotalSold,
-                    created_date = x.Product.Created_Date ?? DateTime.Now,
-                    product_description = ParseProductDescription(x.Product.Descriptions)
-                }).ToList();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in GetProductsBySupplier (Overload): {ex.Message}");
-                return new List<Product_Infomation>();
-            }
-        }
+       
+        
         /// <summary>
         /// Đếm tổng số sản phẩm theo supplier
         /// </summary>
@@ -2010,71 +2167,7 @@ namespace OnlyPhone.Models
         /// <summary>
         /// Lấy sản phẩm theo supplier và series
         /// </summary>
-        public List<Product_Infomation> GetProductsBySupplierAndSeries(string supplierName, string seriesName, int page = 1, int pageSize = 15)
-        {
-            try
-            {
-                var query = from p in da.Products
-                            join s in da.suppliers on p.supplier_ID equals s.supplier_ID
-                            join ps in da.PhoneSeries on p.Series_id equals ps.Series_id
-                            where p.Product_Status == "selling"
-                            select new { p, s, ps };
 
-                // Lọc theo Supplier
-                if (!string.IsNullOrEmpty(supplierName))
-                {
-                    query = query.Where(x => x.s.supplier_name == supplierName);
-                }
-
-                // Lọc theo Series
-                if (!string.IsNullOrEmpty(seriesName))
-                {
-                    query = query.Where(x => x.ps.SeriesName == seriesName);
-                }
-
-                // Sắp xếp
-                query = query.OrderByDescending(x => x.p.Is_Featured)
-                             .ThenByDescending(x => x.p.Created_Date);
-
-                // Phân trang
-                var resultList = query.Skip((page - 1) * pageSize)
-                                      .Take(pageSize)
-                                      .Select(x => new
-                                      {
-                                          Product = x.p,
-                                          SupplierName = x.s.supplier_name,
-                                          SeriesName = x.ps.SeriesName,
-                                          TotalSold = da.Orders_items
-                                                        .Where(oi => oi.Product_ID == x.p.Product_ID)
-                                                        .Sum(oi => (int?)oi.quantity) ?? 0
-                                      }).ToList();
-
-                // Map sang Product_Infomation
-                return resultList.Select(x => new Product_Infomation
-                {
-                    product_id = x.Product.Product_ID,
-                    product_name = x.Product.Product_name,
-                    sale_price = x.Product.Sale_Price ?? 0,
-                    original_price = x.Product.Original_Price ?? 0,
-                    current_Quantity = x.Product.Current_Quantity,
-                    product_status = x.Product.Product_Status,
-                    images = x.Product.Product_Image,
-                    series_name = x.SeriesName,
-                    series_id = x.Product.Series_id,
-                    supplier_name = x.SupplierName,
-                    is_featured = x.Product.Is_Featured ?? false,
-                    is_new = x.Product.Is_New ?? false,
-                    total_sold = x.TotalSold,
-                    created_date = x.Product.Created_Date ?? DateTime.Now,
-                    product_description = ParseProductDescription(x.Product.Descriptions)
-                }).ToList();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in GetProductsBySupplierAndSeries: {ex.Message}");
-                return new List<Product_Infomation>();
-            }
-        }
 
         /// <summary>
         /// Lấy chi tiết đơn hàng theo OrderId
@@ -3388,6 +3481,17 @@ namespace OnlyPhone.Models
             catch
             {
                 return false;
+            }
+        }
+        public List<Voucher> GetVouchers()
+        {
+            try
+            {
+                return da.Vouchers.ToList();
+            }
+            catch
+            {
+                return new List<Voucher>();
             }
         }
     }

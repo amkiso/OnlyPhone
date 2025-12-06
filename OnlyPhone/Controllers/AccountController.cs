@@ -797,14 +797,24 @@ namespace OnlyPhone.Controllers
         [HttpPost]
         public JsonResult MarkNotificationAsRead(int notificationId)
         {
-            var notification = db.Notifications.FirstOrDefault(n => n.Notification_ID == notificationId);
-            if (notification != null)
+            try
             {
-                notification.IsRead = true;
-                db.SubmitChanges();
-                return Json(new { success = true });
+                if (Session["UserID"] == null)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+                }
+
+                int userId = (int)Session["UserID"];
+
+                // Gọi hàm xử lý chung trong Xuly (đã handle số âm/dương)
+                bool result = xl.MarkNotificationRead(userId, notificationId);
+
+                return Json(new { success = result });
             }
-            return Json(new { success = false });
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
         // Helper: Generate OTP 6 số
         private string GenerateOTP()
@@ -812,7 +822,40 @@ namespace OnlyPhone.Controllers
             Random random = new Random();
             return random.Next(100000, 999999).ToString();
         }
+        [HttpGet]
+        public JsonResult GetNotificationDetail(int id)
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return Json(new { error = "Vui lòng đăng nhập" }, JsonRequestBehavior.AllowGet);
+                }
 
+                int userId = (int)Session["UserID"];
+
+                // Gọi hàm xử lý vừa thêm ở trên
+                var noti = xl.GetNotificationDetail(userId, id);
+
+                if (noti == null)
+                {
+                    return Json(new { error = "Không tìm thấy thông báo" }, JsonRequestBehavior.AllowGet);
+                }
+
+                // Trả về JSON đúng định dạng mà header.js đang chờ (Title, CreatedDate, Content)
+                return Json(new
+                {
+                    Title = noti.Title,
+                    CreatedDate = noti.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss"), // Format ISO
+                    Content = noti.Message,
+                    Url = noti.TargetURL // Trả thêm URL nếu muốn redirect
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
         // Helper: Hash password (sử dụng SHA256)
         private string HashPassword(string password)
         {

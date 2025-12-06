@@ -17,7 +17,18 @@ namespace OnlyPhone.Controllers
 
         public ActionResult Index()
         {
+            int? userId = null;
+            if (Session["UserID"] != null)
+            {
+                userId = Convert.ToInt32(Session["UserID"]);
+            }
             var model = xl.GetHomePageData();
+
+            if (userId.HasValue)
+            {
+                model.Notifications = xl.GetUserNotifications(userId.Value, 10);
+                model.UnreadNotificationCount = xl.GetUnreadNotificationCount(userId.Value);
+            }
 
             return View(model);
         }
@@ -51,7 +62,17 @@ namespace OnlyPhone.Controllers
                 model.NotificationCount = xl.GetUnreadNotificationCount(userId);
 
                 // Lấy danh sách thông báo (10 thông báo gần nhất)
-                model.Notifications = xl.GetUserNotifications(userId, 10);
+               var notis =xl.GetUserNotifications(userId, 10);
+                model.Notifications = notis.Select(n => new NotificationItem
+                {
+                    Id = n.NotificationId, // ID này có thể là số âm (Global)
+                    Title = n.Title,
+                    Content = n.Message,
+                    IsRead = n.IsRead,
+                    CreatedDate = n.CreatedAt,
+                    Type = n.Type,
+                    RelatedId = n.RelatedId
+                }).ToList();
 
                 // Lấy số lượng sản phẩm trong giỏ hàng
                 model.CartCount = xl.GetCartItemCount(userId);

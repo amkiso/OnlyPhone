@@ -6201,6 +6201,7 @@
     <Content Include="Areas\Admin\Views\Notification\Persion.cshtml" />
     <Content Include="Areas\Admin\Views\Notification\Global.cshtml" />
     <Content Include="Areas\Admin\Data\SQL\PhoneSeller.bacpac" />
+    <Content Include="Areas\Admin\Views\Voucher\Manager.cshtml" />
     <None Include="Models\SQLDataClasses.dbml.layout">
       <DependentUpon>SQLDataClasses.dbml</DependentUpon>
     </None>
@@ -6239,7 +6240,7 @@
     <Content Include="Views\Shared\HeaderParaticalView.cshtml" />
     <Content Include="Views\Account\Login.cshtml" />
     <Content Include="Views\Account\Register.cshtml" />
-    <Content Include="Views\Product\Index.cshtml" />
+    <Content Include="Views\Product\Phone.cshtml" />
     <Content Include="Views\Product\Detail.cshtml" />
     <Content Include="Views\Account\Profile.cshtml" />
     <Content Include="Views\Checkout\Index.cshtml" />
@@ -6252,7 +6253,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Areas\Admin\Views\Voucher\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\Bootstrap\bootstrap.rtl.min.css.map" />

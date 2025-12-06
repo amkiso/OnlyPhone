@@ -12,7 +12,7 @@ namespace OnlyPhone.Controllers
         Xuly xl = new Xuly();
 
         // GET: Product/Index - Danh sách sản phẩm với filter theo supplier và series
-        public ActionResult Index(string supplier = null, string series = null, string sort = "featured", int page = 1)
+        public ActionResult Phone(string supplier = null, string series = null, string sort = "featured", int page = 1)
         {
             int pageSize = 15;
             List<Product_Infomation> products;
@@ -23,14 +23,14 @@ namespace OnlyPhone.Controllers
             if (!string.IsNullOrEmpty(supplier) && !string.IsNullOrEmpty(series))
             {
                 // Lọc theo cả supplier và series
-                products = xl.GetProductsBySupplierAndSeries(supplier, series, page, pageSize);
+                products = xl.GetProductsBySupplierAndSeries(supplier, series, sort, page, pageSize);
                 totalProducts = xl.GetTotalProductsBySupplierAndSeries(supplier, series);
                 displayTitle = $"{supplier} - {series}";
             }
             else if (!string.IsNullOrEmpty(supplier))
             {
                 // Chỉ lọc theo supplier
-                products = xl.GetProductsBySupplier(supplier, page, pageSize);
+                products = xl.GetProductsBySupplier(supplier, sort, page, pageSize);
                 totalProducts = xl.GetTotalProductsBySupplier(supplier);
                 displayTitle = supplier;
             }
@@ -100,7 +100,7 @@ namespace OnlyPhone.Controllers
         {
             if (string.IsNullOrWhiteSpace(q))
             {
-                return RedirectToAction("Index");
+                return RedirectToAction("Phone");
             }
 
             int pageSize = 20;
@@ -139,7 +139,7 @@ namespace OnlyPhone.Controllers
             };
 
             ViewBag.AllSeries = xl.GetAllSeries();
-            return View("Index", model);
+            return View("Phone", model);
         }
 
         // GET: Product/NewProducts - Sản phẩm mới
@@ -168,7 +168,7 @@ namespace OnlyPhone.Controllers
             };
 
             ViewBag.AllSeries = xl.GetAllSeries();
-            return View("Index", model);
+            return View("Phone", model);
         }
 
         // GET: Product/Deals - Sản phẩm giảm giá
@@ -197,7 +197,7 @@ namespace OnlyPhone.Controllers
             };
 
             ViewBag.AllSeries = xl.GetAllSeries();
-            return View("Index", model);
+            return View("Phone", model);
         }
 
         // POST: Product/AddToCart - Thêm vào giỏ hàng (AJAX)

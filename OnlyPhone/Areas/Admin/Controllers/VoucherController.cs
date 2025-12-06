@@ -1,4 +1,5 @@
 ﻿using On.Areas.Admin;
+using OnlyPhone.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +10,13 @@ namespace OnlyPhone.Areas.Admin.Controllers
 {
     public class VoucherController : Controller
     {
+        Xuly xl = new Xuly();
         // GET: Admin/Voucher
-        public ActionResult Index()
+        public ActionResult Manager()
+
         {
-            return View();
+
+            return View(xl.GetVouchers().Take(5));
         }
     }
 }

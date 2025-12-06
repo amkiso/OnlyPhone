@@ -1,0 +1,94 @@
+﻿@model IEnumerable<OnlyPhone.Models.Voucher>
+
+@{
+    ViewBag.Title = "Manager";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Manager</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Code)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Descriptions)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.DiscountType)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.DiscountValue)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MaxDiscountAmount)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MinOrderValue)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.StartDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.EndDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Quantity)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.QuantityUsed)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.IsActive)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Code)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Descriptions)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.DiscountType)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.DiscountValue)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MaxDiscountAmount)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MinOrderValue)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.StartDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.EndDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Quantity)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.QuantityUsed)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.IsActive)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.VoucherID }) |
+            @Html.ActionLink("Details", "Details", new { id=item.VoucherID }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.VoucherID })
+        </td>
+    </tr>
+}
+
+</table>

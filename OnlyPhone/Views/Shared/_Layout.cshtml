@@ -64,7 +64,7 @@
             <ul class="main-menu">
                 <!-- Danh mục sản phẩm -->
                 <li class="menu-item has-submenu">
-                    <a href="@Url.Action("Index", "Product")" class="submenu-toggle">
+                    <a href="@Url.Action("Phone", "Product")" class="submenu-toggle">
                         <span>
                             <i class="fa-solid fa-bars menu-icon"></i>
                             Danh mục sản phẩm
@@ -74,72 +74,72 @@
                     <ul class="submenu">
                         <!-- iPhone -->
                         <li class="menu-item has-submenu">
-                            <a href="@Url.Action("Index", "Product", new { supplier = "Apple" })" class="submenu-toggle" style="text-transform: none;">
+                            <a href="@Url.Action("Phone", "Product", new { supplier = "Apple" })" class="submenu-toggle" style="text-transform: none;">
                                 iPhone
                             </a>
                             <ul class="submenu">
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone 17 series" })">17 series</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone 16 series" })">16 series</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone 15 series" })">15 series</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone 14 series" })">14 series</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone 13 series" })">13 series</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone SE series" })">SE series</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Apple", series = "iPhone Air series" })">iPhone Air</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Apple", series = "iPhone 17 series" })">17 series</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Apple", series = "iPhone 16 series" })">16 series</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Apple", series = "iPhone 15 series" })">15 series</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Apple", series = "iPhone 14 series" })">14 series</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Apple", series = "iPhone 13 series" })">13 series</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Apple", series = "iPhone SE series" })">SE series</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Apple", series = "iPhone Air series" })">iPhone Air</a></li>
                             </ul>
                         </li>
 
                         <!-- Samsung -->
                         <li class="menu-item has-submenu">
-                            <a href="@Url.Action("Index", "Product", new { supplier = "Samsung" })" class="submenu-toggle" style="text-transform: none;">
+                            <a href="@Url.Action("Phone", "Product", new { supplier = "Samsung" })" class="submenu-toggle" style="text-transform: none;">
                                 Samsung
                             </a>
                             <ul class="submenu">
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy AI" })">Galaxy AI</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy S25 series" })">Galaxy S25 series</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy Z" })">Galaxy Z (Màn hình gập)</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy S" })">Galaxy S</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy A" })">Galaxy A</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Samsung", series = "Galaxy M" })">Galaxy M</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Samsung", series = "Galaxy AI" })">Galaxy AI</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Samsung", series = "Galaxy S25 series" })">Galaxy S25 series</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Samsung", series = "Galaxy Z" })">Galaxy Z (Màn hình gập)</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Samsung", series = "Galaxy S" })">Galaxy S</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Samsung", series = "Galaxy A" })">Galaxy A</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Samsung", series = "Galaxy M" })">Galaxy M</a></li>
                             </ul>
                         </li>
 
                         <!-- Xiaomi -->
                         <li class="menu-item has-submenu">
-                            <a href="@Url.Action("Index", "Product", new { supplier = "Xiaomi" })" class="submenu-toggle" style="text-transform: none;">
+                            <a href="@Url.Action("Phone", "Product", new { supplier = "Xiaomi" })" class="submenu-toggle" style="text-transform: none;">
                                 Xiaomi
                             </a>
                             <ul class="submenu">
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Xiaomi", series = "Xiaomi Mi" })">Xiaomi Mi</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Xiaomi", series = "Xiaomi Redmi" })">Xiaomi Redmi</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Xiaomi", series = "Xiaomi Note 14" })">Xiaomi Note 14</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Xiaomi", series = "Xiaomi Mi" })">Xiaomi Mi</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Xiaomi", series = "Xiaomi Redmi" })">Xiaomi Redmi</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Xiaomi", series = "Xiaomi Note 14" })">Xiaomi Note 14</a></li>
                             </ul>
                         </li>
 
                         <!-- Vivo -->
                         <li class="menu-item has-submenu">
-                            <a href="@Url.Action("Index", "Product", new { supplier = "Vivo" })" class="submenu-toggle" style="text-transform: none;">
+                            <a href="@Url.Action("Phone", "Product", new { supplier = "Vivo" })" class="submenu-toggle" style="text-transform: none;">
                                 Vivo
                             </a>
                             <ul class="submenu">
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Vivo", series = "Vivo X" })">Vivo X</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Vivo", series = "Vivo V" })">Vivo V</a></li>
-                                <li><a href="@Url.Action("Index", "Product", new { supplier = "Vivo", series = "Vivo Y" })">Vivo Y</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Vivo", series = "Vivo X" })">Vivo X</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Vivo", series = "Vivo V" })">Vivo V</a></li>
+                                <li><a href="@Url.Action("Phone", "Product", new { supplier = "Vivo", series = "Vivo Y" })">Vivo Y</a></li>
                             </ul>
                         </li>
 
                         <!-- Realme -->
                         <li class="menu-item">
-                            <a href="@Url.Action("Index", "Product", new { supplier = "Realme" })">Realme</a>
+                            <a href="@Url.Action("Phone", "Product", new { supplier = "Realme" })">Realme</a>
                         </li>
 
                         <!-- HONOR -->
                         <li class="menu-item">
-                            <a href="@Url.Action("Index", "Product", new { supplier = "HONOR" })">HONOR</a>
+                            <a href="@Url.Action("Phone", "Product", new { supplier = "HONOR" })">HONOR</a>
                         </li>
 
                         <!-- TECNO -->
                         <li class="menu-item">
-                            <a href="@Url.Action("Index", "Product", new { supplier = "TECNO" })">TECNO</a>
+                            <a href="@Url.Action("Phone", "Product", new { supplier = "TECNO" })">TECNO</a>
                         </li>
 
                         <!-- Best Seller -->
@@ -151,7 +151,7 @@
 
                 <!-- Sản phẩm mới -->
                 <li class="menu-item">
-                    <a href="@Url.Action("NewProducts", "Product")">
+                    <a href="@Url.Action("Phone", "Product", new { sort = "new" })">
                         Sản phẩm mới
                     </a>
                 </li>

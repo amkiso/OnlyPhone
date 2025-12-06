@@ -14,5 +14,10 @@ namespace OnlyPhone.Models
         public string RelatedId { get; set; }
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        // Thêm các trường mới hỗ trợ Global Notification & Update DB
+        public DateTime? ReadAt { get; set; }
+        public string TargetURL { get; set; }
+        public bool IsGlobal { get; set; } // True: Global, False: Personal
     }
 }
