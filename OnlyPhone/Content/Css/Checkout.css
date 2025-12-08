@@ -673,3 +673,240 @@
         page-break-inside: avoid;
     }
 }
+
+.voucher-list-container {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px dashed #e5e7eb;
+}
+
+.voucher-list-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+/* KHUNG DANH SÁCH (QUAN TRỌNG: Xếp hàng dọc) */
+.voucher-list {
+    display: flex;
+    flex-direction: column; /* Xếp chồng lên nhau */
+    gap: 12px; /* Khoảng cách giữa các voucher */
+    max-height: 350px; /* Chiều cao tối đa */
+    overflow-y: auto; /* Hiện thanh cuộn nếu quá dài */
+    padding-right: 5px; /* Tránh thanh cuộn che nội dung */
+}
+
+    /* Tùy chỉnh thanh cuộn cho đẹp (Chrome/Safari) */
+    .voucher-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .voucher-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .voucher-list::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 4px;
+    }
+
+        .voucher-list::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+/* THẺ VOUCHER (Từng dòng) */
+.voucher-item-card {
+    display: flex; /* Dàn nội dung bên trong theo hàng ngang */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    justify-content: space-between;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 12px;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+    /* Hiệu ứng hover */
+    .voucher-item-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
+        transform: translateY(-1px);
+    }
+
+/* Style riêng cho Voucher Private (Riêng tư) */
+.private-voucher {
+    background-color: #fffbeb; /* Vàng nhạt */
+    border-color: #fbbf24;
+}
+
+/* PHẦN TRÁI: Chứa Mã Code */
+.voucher-left {
+    flex: 0 0 90px; /* Chiều rộng cố định */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-right: 15px;
+    padding-right: 15px;
+    border-right: 1px dashed #e5e7eb; /* Đường kẻ ngăn cách */
+}
+
+.voucher-code-tag {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 800;
+    color: #2563eb;
+    background-color: #eff6ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px dashed #93c5fd;
+    font-size: 0.9rem;
+    width: 100%;
+    text-align: center;
+}
+
+.badge-private {
+    font-size: 0.7rem;
+    color: #d97706;
+    background: #fef3c7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    justify-content: center;
+}
+
+/* PHẦN GIỮA: Thông tin chi tiết */
+.voucher-center {
+    flex: 1; /* Chiếm phần không gian còn lại */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0; /* Fix lỗi text tràn */
+}
+
+.voucher-desc-main {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1f2937;
+    margin-bottom: 4px;
+    /* Cắt bớt nếu tiêu đề quá dài (2 dòng) */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.voucher-cond {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+    .voucher-cond span {
+        color: #059669; /* Màu xanh lá cho giá trị giảm */
+        font-weight: 600;
+    }
+
+.text-expire {
+    color: #dc2626; /* Màu đỏ cho ngày hết hạn */
+    font-size: 0.75rem;
+    margin-top: 2px;
+    display: block;
+}
+
+/* PHẦN PHẢI: Nút bấm */
+.voucher-right {
+    flex: 0 0 auto;
+    margin-left: 10px;
+}
+
+.btn-use-voucher {
+    background-color: #fff;
+    color: #2563eb;
+    border: 1px solid #2563eb;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+    .btn-use-voucher:hover {
+        background-color: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+/* RESPONSIVE: Mobile */
+@media (max-width: 576px) {
+    .voucher-item-card {
+        padding: 10px;
+    }
+
+    .voucher-left {
+        flex: 0 0 70px; /* Thu nhỏ phần trái trên mobile */
+        margin-right: 10px;
+        padding-right: 10px;
+    }
+
+    .voucher-code-tag {
+        font-size: 0.8rem;
+        padding: 2px 4px;
+    }
+
+    .voucher-desc-main {
+        font-size: 0.85rem;
+    }
+
+    .btn-use-voucher {
+        padding: 4px 10px;
+        font-size: 0.8rem;
+    }
+}
+.voucher-desc-main {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.voucher-cond {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.text-expire {
+    color: #ef4444;
+}
+
+.voucher-right {
+    flex-shrink: 0;
+    margin-left: 0.75rem;
+}
+
+.btn-use-voucher {
+    background: white;
+    border: 1px solid #3b82f6;
+    color: #3b82f6;
+    padding: 0.35rem 1rem;
+    border-radius: 99px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+    .btn-use-voucher:hover {
+        background: #3b82f6;
+        color: white;
+    }

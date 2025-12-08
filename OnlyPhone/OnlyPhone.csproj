@@ -202,14 +202,17 @@
     <Compile Include="Areas\Admin\Data\PersonalNotiItem.cs" />
     <Compile Include="Areas\Admin\Data\RevenueDashboardViewModel.cs" />
     <Compile Include="Areas\Admin\Data\UserListViewModel.cs" />
+    <Compile Include="Areas\Admin\Data\VoucherViewModel.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\CheckoutController.cs" />
-    <Compile Include="Controllers\EditController.cs" />
     <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
+    <Compile Include="Controllers\PromotionController.cs" />
     <Compile Include="Controllers\SearchController.cs" />
+    <Compile Include="Models\FeedbackViewModel.cs" />
     <Compile Include="Models\OrderDetailViewModel.cs" />
+    <Compile Include="Models\PromotionViewModel.cs" />
     <Compile Include="Models\UserProfileViewModels.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -254,10 +257,12 @@
     <Content Include="Content\Css\admin\Ordermanager.css" />
     <Content Include="Content\Css\admin\GlobalNoti.css" />
     <Content Include="Content\Css\admin\PersionNoti.css" />
+    <Content Include="Content\Css\admin\ProductManager.css" />
     <Content Include="Content\Css\Checkout.css" />
     <Content Include="Content\Css\header.css" />
     <Content Include="Content\Css\Index.css" />
     <Content Include="Content\Css\profile.css" />
+    <Content Include="Content\Css\Promotion.css" />
     <Content Include="Content\Css\Register.css" />
     <Content Include="Content\Css\seachbox.css" />
     <Content Include="Content\Css\subheader.css" />
@@ -6202,6 +6207,7 @@
     <Content Include="Areas\Admin\Views\Notification\Global.cshtml" />
     <Content Include="Areas\Admin\Data\SQL\PhoneSeller.bacpac" />
     <Content Include="Areas\Admin\Views\Voucher\Manager.cshtml" />
+    <Content Include="Areas\Admin\Views\Voucher\Index.cshtml" />
     <None Include="Models\SQLDataClasses.dbml.layout">
       <DependentUpon>SQLDataClasses.dbml</DependentUpon>
     </None>
@@ -6250,6 +6256,8 @@
     <Content Include="Views\Account\OrderDetail.cshtml" />
     <Content Include="Views\Account\OrderHistory.cshtml" />
     <Content Include="Views\Search\SearchResult.cshtml" />
+    <Content Include="Views\Account\ForgotPassword.cshtml" />
+    <Content Include="Views\Promotion\AllPromotion.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

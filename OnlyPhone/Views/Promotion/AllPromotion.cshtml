@@ -1,0 +1,196 @@
+﻿@model List<OnlyPhone.Models.PromotionViewModel>
+@{
+    ViewBag.Title = "Kho Voucher & Khuyến Mãi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>    a {
+        text-decoration: none;
+    }
+</style>
+<link href="~/Content/Css/Promotion.css" rel="stylesheet" />
+
+<div id="toast-container"></div>
+
+<div class="promo-banner">
+    <div class="promo-title">🎉 Ưu Đãi Ngập Tràn - Mua Sắm Thả Ga</div>
+    <div class="promo-subtitle">Lưu mã ngay để nhận ưu đãi tốt nhất hôm nay!</div>
+</div>
+
+<div class="promo-grid">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var item in Model)
+        {
+            <div class="coupon-card @(item.IsOutStock ? "out-stock" : "")" id="card-@item.VoucherId">
+                <div class="coupon-left">
+                    <span class="coupon-type">@(item.DiscountType ? "% GIẢM" : "VOUCHER")</span>
+                    <i class="fas @(item.DiscountType ? "fa-percent" : "fa-tag") coupon-icon"></i>
+                    <div class="coupon-brand">OnlyPhone</div>
+                </div>
+                <div class="coupon-right">
+                    <div class="coupon-amount">
+                        @(item.DiscountType ? $"Giảm {item.DiscountValue.ToString("0.##")}%" : $"Giảm {item.DiscountValue.ToString("N0")}đ")
+                    </div>
+                    <div class="coupon-desc">
+                        @item.Description
+                        @if (item.MaxDiscountAmount.HasValue)
+                        {<span>(Tối đa @item.MaxDiscountAmount.Value.ToString("N0")đ)</span>}
+                        <div class="coupon-min-order">
+                            <i class="fas fa-shopping-cart"></i> Đơn tối thiểu: @item.MinOrderValue.ToString("N0")đ
+                        </div>
+                    </div>
+
+                    @if (!item.IsSaved && !item.IsOutStock)
+                    {
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: @item.PercentUsed%"></div>
+                        </div>
+                        <div class="progress-text">Đã dùng @item.PercentUsed%</div>
+                    }
+                    else if (item.IsOutStock)
+                    {
+                        <div class="progress-text" style="color: #ef4444;">❌ Đã hết lượt sử dụng</div>
+                    }
+
+                    <div class="coupon-meta">
+                        <span><i class="far fa-clock"></i> HSD: @(item.EndDate.HasValue ? item.EndDate.Value.ToString("dd/MM/yyyy") : "Vĩnh viễn")</span>
+                    </div>
+
+                    <div class="coupon-action">
+                        @if (item.IsSaved)
+                        {
+                            <button class="btn-save saved" disabled>
+                                <i class="fas fa-check"></i> Đã lưu
+                            </button>
+                            <a href="/Checkout" class="btn-copy">Dùng ngay</a>
+                        }
+                        else if (item.IsOutStock)
+                        {
+                            <button class="btn-save saved" disabled>Hết lượt</button>
+                        }
+                        else
+                        {
+                            <button class="btn-save" onclick="saveVoucher(@item.VoucherId, this)">
+                                <i class="fas fa-bookmark"></i> Lưu ngay
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div style="text-align:center; width: 100%; grid-column: 1/-1; padding: 2rem;">
+            <p style="color: #6b7280; margin-top: 1rem;">Hiện chưa có mã khuyến mãi nào.</p>
+        </div>
+    }
+</div>
+
+<link href="~/Content/Bootstrap/bootstrap.min.css" rel="stylesheet" />
+<script src="~/Scripts/Bootstrap/bootstrap.bundle.min.js"></script>
+
+@section Scripts {
+    <script>
+        // Hàm hiển thị thông báo hiện đại
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+
+            const iconMap = {
+                success: '<i class="fas fa-check-circle"></i>',
+                error: '<i class="fas fa-times-circle"></i>',
+                warning: '<i class="fas fa-exclamation-circle"></i>'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            toast.innerHTML = `
+                    <div class="toast-icon">
+                        ${iconMap[type] || iconMap.success}
+                    </div>
+                    <div class="toast-content">${message}</div>
+                    <button class="toast-close" onclick="removeToast(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+
+            container.appendChild(toast);
+
+            // Tự động xóa sau 4 giây
+            setTimeout(() => {
+                removeToast(toast.querySelector('.toast-close'));
+            }, 4000);
+        }
+
+        function removeToast(btn) {
+            const toast = btn.closest('.toast-notification');
+            if (toast) {
+                toast.style.animation = 'slideOut 0.3s ease-out forwards';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }
+
+        async function saveVoucher(id, btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            btn.disabled = true;
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('voucherId', id);
+
+                const response = await fetch('/Promotion/SaveVoucher', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const res = await response.json();
+
+                if (res.success) {
+                    showNotification(res.message, 'success');
+
+                    btn.className = 'btn-save saved';
+                    btn.innerHTML = '<i class="fas fa-check"></i> Đã lưu';
+
+                    const cardRight = btn.closest('.coupon-right');
+                    if (cardRight) {
+                        const progress = cardRight.querySelector('.progress-container');
+                        const text = cardRight.querySelector('.progress-text');
+                        if (progress) progress.style.display = 'none';
+                        if (text) text.style.display = 'none';
+                    }
+
+                    // Thêm nút "Dùng ngay"
+                    const actionDiv = btn.closest('.coupon-action');
+                    if (actionDiv && !actionDiv.querySelector('.btn-copy')) {
+                        const useBtn = document.createElement('a');
+                        useBtn.href = '/Checkout';
+                        useBtn.className = 'btn-copy';
+                        useBtn.innerHTML = 'Dùng ngay';
+                        actionDiv.appendChild(useBtn);
+                    }
+                } else {
+                    if (res.requireLogin) {
+                        showNotification(res.message, 'warning');
+                        setTimeout(() => {
+                            window.location.href = '/Account/Login';
+                        }, 1500);
+                    } else {
+                        showNotification(res.message, 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }
+                }
+
+            } catch (error) {
+                console.error('Lỗi:', error);
+                showNotification('Lỗi kết nối, vui lòng thử lại!', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    </script>
+}

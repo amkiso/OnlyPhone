@@ -96,36 +96,35 @@ namespace OnlyPhone.Models
         public int VoucherId { get; set; }
         public string Code { get; set; }
         public string Description { get; set; }
-        public string DiscountType { get; set; }
-        public decimal DiscountValue { get; set; }
-        public decimal? MaxDiscountAmount { get; set; }
-        public decimal MinOrderValue { get; set; }
-        public DateTime EndDate { get; set; }
-        public int RemainingQuantity { get; set; }
 
+        // Logic mới
+        public bool DiscountType { get; set; } 
+        public decimal DiscountValue { get; set; }
+        public decimal? MaxDiscountAmount { get; set; } 
+        public decimal MinOrderValue { get; set; } 
+
+        public DateTime? EndDate { get; set; }
+        public bool IsPublic { get; set; }
+        public int QuantityLeft { get; set; } 
+
+        // Helper hiển thị
         public string DisplayText
         {
             get
             {
-                if (DiscountType == "PERCENT")
-                {
-                    var text = $"Giảm {DiscountValue}%";
-                    if (MaxDiscountAmount.HasValue)
-                        text += $" (tối đa {MaxDiscountAmount.Value:N0}đ)";
-                    return text;
-                }
-                else
-                {
-                    return $"Giảm {DiscountValue:N0}đ";
-                }
+                string discountPart = DiscountType
+                    ? $"{DiscountValue:0.##}%" + (MaxDiscountAmount.HasValue && MaxDiscountAmount.Value > 0 ? $" (Tối đa {MaxDiscountAmount.Value:N0}đ)" : "")
+                    : $"{DiscountValue:N0}đ";
+
+                return $"Giảm {discountPart} - Đơn từ {MinOrderValue:N0}đ";
             }
         }
     }
 
-    // =====================================================
-    // PAYMENT METHOD INFO
-    // =====================================================
-    public class PaymentMethodInfo
+        // =====================================================
+        // PAYMENT METHOD INFO
+        // =====================================================
+        public class PaymentMethodInfo
     {
         public string Code { get; set; }
         public string Name { get; set; }

@@ -203,5 +203,119 @@ namespace OnlyPhone.Models
 </body>
 </html>";
         }
+        public bool SendFeedbackToAdmin(string senderName, string senderEmail, string subject, string message)
+        {
+            try
+            {
+                // Email người nhận (Email của bạn theo yêu cầu)
+                string adminEmail = "2001231059@huit.edu.vn";
+
+                using (var client = new SmtpClient(_smtpServer, _smtpPort))
+                {
+                    client.EnableSsl = true;
+                    client.Credentials = new NetworkCredential(_smtpUsername, _smtpPassword);
+
+                    var mailMessage = new MailMessage
+                    {
+                        From = new MailAddress(_fromEmail, _fromName), // Gửi từ email hệ thống
+                        Subject = $"[Góp ý] {subject} - Từ {senderName}",
+                        IsBodyHtml = true,
+                        Body = $@"
+                            <h3>Bạn nhận được góp ý mới từ website OnlyPhone</h3>
+                            <p><b>Người gửi:</b> {senderName}</p>
+                            <p><b>Email liên hệ:</b> {senderEmail}</p>
+                            <p><b>Tiêu đề:</b> {subject}</p>
+                            <hr/>
+                            <p><b>Nội dung chi tiết:</b></p>
+                            <blockquote style='background: #f9f9f9; border-left: 10px solid #ccc; margin: 1.5em 10px; padding: 0.5em 10px;'>
+                                {message}
+                            </blockquote>
+                            <p><i>Email này được gửi tự động từ hệ thống.</i></p>"
+                    };
+
+                    mailMessage.To.Add(adminEmail);
+
+                    client.Send(mailMessage);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error sending feedback email: {ex.Message}");
+                return false;
+            }
         }
-}
+
+
+public bool SendResetPasswordOTP(string toEmail, string otpCode)
+        {
+            try
+            {
+                using (var client = new SmtpClient(_smtpServer, _smtpPort))
+                {
+                    client.EnableSsl = true;
+                    client.Credentials = new NetworkCredential(_smtpUsername, _smtpPassword);
+
+                    var mailMessage = new MailMessage
+                    {
+                        From = new MailAddress(_fromEmail, _fromName),
+                        Subject = "Mã OTP đặt lại mật khẩu - OnlyPhone",
+                        IsBodyHtml = true,
+                        Body = GetResetPasswordTemplate(toEmail, otpCode)
+                    };
+
+                    mailMessage.To.Add(toEmail);
+                    client.Send(mailMessage);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error sending reset email: {ex.Message}");
+                return false;
+            }
+        }
+
+        private string GetResetPasswordTemplate(string email, string otpCode)
+        {
+            // Tận dụng lại CSS của template cũ nhưng đổi nội dung
+            return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <style>
+        body {{font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }}
+        .container {{max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }}
+        .header {{background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: white; padding: 30px; text-align: center; }} /* Màu đỏ cam cảnh báo */
+        .header h1 {{margin: 0; font-size: 28px; }}
+        .content {{padding: 40px 30px; text-align: center; }}
+        .otp-box {{background: #fff5f5; border: 2px dashed #FF6B6B; border-radius: 10px; padding: 30px; margin: 30px 0; }}
+        .otp-code {{font-size: 42px; font-weight: bold; color: #e53e3e; letter-spacing: 10px; margin: 20px 0; }}
+        .footer {{background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>Yêu cầu đặt lại mật khẩu</h1>
+        </div>
+        <div class='content'>
+            <p>Xin chào,</p>
+            <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản liên kết với email <strong>{email}</strong>.</p>
+            
+            <div class='otp-box'>
+                <div style='color: #333; font-size: 16px; margin-bottom: 10px;'>Mã xác thực của bạn</div>
+                <div class='otp-code'>{otpCode}</div>
+                <div style='color: #999; font-size: 14px; margin-top: 10px;'>Mã có hiệu lực trong 5 phút</div>
+            </div>
+
+            <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email và bảo mật tài khoản của mình.</p>
+        </div>
+        <div class='footer'>
+            <p>© 2025 OnlyPhone. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+        } } }

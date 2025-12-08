@@ -1,0 +1,419 @@
+﻿
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 360px;
+}
+
+.toast-notification {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    overflow: hidden;
+}
+
+    .toast-notification::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+    }
+
+    .toast-notification.success::before {
+        background: linear-gradient(180deg, #10b981, #059669);
+    }
+
+    .toast-notification.error::before {
+        background: linear-gradient(180deg, #ef4444, #dc2626);
+    }
+
+    .toast-notification.warning::before {
+        background: linear-gradient(180deg, #f59e0b, #d97706);
+    }
+
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.toast-notification.success .toast-icon {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    color: #059669;
+}
+
+.toast-notification.error .toast-icon {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #dc2626;
+}
+
+.toast-notification.warning .toast-icon {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #d97706;
+}
+
+.toast-content {
+    flex: 1;
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+}
+
+.toast-close {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: #f3f4f6;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 16px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+    .toast-close:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+/* =========================
+       CSS GIAO DIỆN VOUCHER MỚI
+       ========================= */
+* {
+    box-sizing: border-box;
+}
+
+.promo-banner {
+    background: linear-gradient(135deg, #009dff 0%, #b9e5ff 100%);
+    padding: 2rem 1rem;
+    text-align: center;
+    color: white;
+    border-radius: 0 0 16px 16px;
+    margin-bottom: 1.5rem;
+}
+
+.promo-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.promo-subtitle {
+    font-size: 0.95rem;
+    opacity: 0.95;
+}
+
+.promo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem 2rem;
+}
+
+.coupon-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+    height: fit-content;
+}
+
+    .coupon-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(102,126,234,0.15);
+    }
+
+.coupon-left {
+    width: 85px;
+    background: linear-gradient(135deg, #667eea 0%, #00FFFF 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    padding: 12px 8px;
+    text-align: center;
+    border-right: 2px dashed #e5e7eb;
+    position: relative;
+    flex-shrink: 0;
+}
+
+    .coupon-left::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: -5px;
+        width: 10px;
+        background-image: radial-gradient(circle, #fff 5px, transparent 5px);
+        background-size: 100% 18px;
+        background-position: -5px 0;
+    }
+
+.coupon-type {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    opacity: 0.9;
+    font-weight: 600;
+}
+
+.coupon-icon {
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+}
+
+.coupon-brand {
+    font-size: 0.65rem;
+    opacity: 0.8;
+    margin-top: 2px;
+}
+
+.coupon-right {
+    flex: 1;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.coupon-amount {
+    font-size: 1.1rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea, #00FFFF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.4rem;
+}
+
+.coupon-desc {
+    font-size: 0.85rem;
+    color: #4b5563;
+    margin-bottom: 0.6rem;
+    line-height: 1.4;
+    flex-grow: 1;
+}
+
+.coupon-min-order {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.coupon-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 0.6rem;
+}
+
+.progress-container {
+    width: 100%;
+    height: 5px;
+    background: #f3f4f6;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.4rem;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #f59e0b, #f97316);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.7rem;
+    color: #f59e0b;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+}
+
+.coupon-action {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.btn-save {
+    flex: 1;
+    background: #0078de;
+    color: white;
+    border: none;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 6px rgba(102,126,234,0.3);
+}
+
+    .btn-save:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+    }
+
+    .btn-save.saved {
+        background: #e5e7eb;
+        color: #9ca3af;
+        cursor: default;
+        box-shadow: none;
+    }
+
+        .btn-save.saved:hover {
+            transform: none;
+        }
+
+.btn-copy {
+    padding: 9px 14px;
+    background: linear-gradient(135deg, #ecfeff, #cffafe);
+    color: #0891b2;
+    border: 1px solid #a5f3fc;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+    .btn-copy:hover {
+        background: linear-gradient(135deg, #cffafe, #a5f3fc);
+        transform: translateY(-1px);
+    }
+
+.coupon-card.out-stock {
+    opacity: 0.6;
+    filter: grayscale(0.8);
+}
+
+    .coupon-card.out-stock .coupon-left {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+    }
+
+    .coupon-card.out-stock:hover {
+        transform: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .promo-title {
+        font-size: 1.5rem;
+    }
+
+    .promo-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .promo-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 0 0.75rem 1.5rem;
+    }
+
+    .coupon-left {
+        width: 75px;
+        padding: 10px 6px;
+    }
+
+    .coupon-icon {
+        font-size: 1.4rem;
+    }
+
+    .coupon-right {
+        padding: 0.875rem;
+    }
+
+    .coupon-amount {
+        font-size: 1rem;
+    }
+
+    .coupon-desc {
+        font-size: 0.8rem;
+    }
+
+    #toast-container {
+        left: 10px;
+        right: 10px;
+        max-width: none;
+    }
+
+    .toast-notification {
+        padding: 14px 16px;
+    }
+
+    .toast-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .promo-banner {
+        padding: 1.5rem 0.75rem;
+    }
+
+    .coupon-action {
+        flex-direction: column;
+    }
+
+    .btn-copy {
+        width: 100%;
+    }
+}
+
+

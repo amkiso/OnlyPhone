@@ -14,7 +14,27 @@ namespace OnlyPhone.Controllers
         Xuly xl = new Xuly();
 
         // GET: Home/Index
+        [HttpPost]
+        public JsonResult SendFeedback(FeedbackViewModel model)
+        {
+            if (string.IsNullOrEmpty(model.Name) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Message))
+            {
+                return Json(new { success = false, message = "Vui lòng nhập đủ thông tin." });
+            }
 
+            // Gọi EmailService để gửi mail
+            EmailService service = new EmailService();
+            bool result = service.SendFeedbackToAdmin(model.Name, model.Email, model.Subject, model.Message);
+
+            if (result)
+            {
+                return Json(new { success = true, message = "Cảm ơn bạn! Ý kiến đã được gửi đến quản trị viên." });
+            }
+            else
+            {
+                return Json(new { success = false, message = "Lỗi gửi mail. Vui lòng thử lại sau." });
+            }
+        }
         public ActionResult Index()
         {
             int? userId = null;
@@ -35,7 +55,7 @@ namespace OnlyPhone.Controllers
 
         public ActionResult About()
         {
-            ViewBag.Message = "Your application description page.";
+            
 
             return View();
         }

@@ -113,52 +113,62 @@ namespace OnlyPhone.Controllers
         }
 
         // GET: Product/BestSeller - Sản phẩm bán chạy
-        public ActionResult BestSeller(int page = 1)
+        public ActionResult BestSeller(int page = 1, string sort = "bestseller", int series = 0)
         {
             int pageSize = 15;
-            var products = xl.GetBestSellerProducts(100); // Lấy 100 sản phẩm bán chạy nhất
-            var totalProducts = products.Count;
+            // Lấy danh sách gốc (ví dụ top 100 bán chạy)
+            var products = xl.GetBestSellerProducts(100);
+
+            // LỌC THEO SERIES (Memory Filter)
+            if (series > 0)
+            {
+                products = products.Where(p => p.series_id == series).ToList();
+            }
+
+            // Sắp xếp
+            products = ApplySorting(products, sort);
 
             // Phân trang
-            var pagedProducts = products
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+            var totalProducts = products.Count;
+            var pagedProducts = products.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
             var model = new ProductFilterViewModel
             {
                 Products = pagedProducts,
-                SeriesId = 0,
-                CurrentSort = "bestseller",
+                SeriesId = series, // Truyền lại SeriesId để View hiển thị
+                CurrentSort = sort,
                 CurrentPage = page,
                 PageSize = pageSize,
                 TotalProducts = totalProducts,
                 TotalPages = (int)Math.Ceiling((double)totalProducts / pageSize),
                 HasMore = page * pageSize < totalProducts,
-                SeriesName = "Sản phẩm bán chạy"
+                SeriesName = "Sản phẩm bán chạy" // Tiêu đề
             };
 
             ViewBag.AllSeries = xl.GetAllSeries();
             return View("Phone", model);
         }
 
-        // GET: Product/NewProducts - Sản phẩm mới
-        public ActionResult NewProducts(int page = 1)
+        // 2. Action Sản phẩm mới (Cập nhật)
+        public ActionResult NewProducts(int page = 1, string sort = "new", int series = 0)
         {
             int pageSize = 15;
             var products = xl.GetNewProducts(100);
-            var totalProducts = products.Count;
 
-            var pagedProducts = products
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+            if (series > 0)
+            {
+                products = products.Where(p => p.series_id == series).ToList();
+            }
+
+            products = ApplySorting(products, sort);
+            var totalProducts = products.Count;
+            var pagedProducts = products.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
             var model = new ProductFilterViewModel
             {
                 Products = pagedProducts,
-                SeriesId = 0,
-                CurrentSort = "new",
+                SeriesId = series,
+                CurrentSort = sort,
                 CurrentPage = page,
                 PageSize = pageSize,
                 TotalProducts = totalProducts,
@@ -171,35 +181,69 @@ namespace OnlyPhone.Controllers
             return View("Phone", model);
         }
 
-        // GET: Product/Deals - Sản phẩm giảm giá
-        public ActionResult Deals(int page = 1)
+        // 3. Action Giảm giá (Cập nhật)
+        public ActionResult Deals(int page = 1, string sort = "discount", int series = 0)
         {
             int pageSize = 15;
             var products = xl.GetDiscountProducts(100);
-            var totalProducts = products.Count;
 
-            var pagedProducts = products
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+            if (series > 0)
+            {
+                products = products.Where(p => p.series_id == series).ToList();
+            }
+
+            products = ApplySorting(products, sort);
+            var totalProducts = products.Count;
+            var pagedProducts = products.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
             var model = new ProductFilterViewModel
             {
                 Products = pagedProducts,
-                SeriesId = 0,
-                CurrentSort = "discount",
+                SeriesId = series,
+                CurrentSort = sort,
                 CurrentPage = page,
                 PageSize = pageSize,
                 TotalProducts = totalProducts,
                 TotalPages = (int)Math.Ceiling((double)totalProducts / pageSize),
                 HasMore = page * pageSize < totalProducts,
-                SeriesName = "DEAL HOT - Giảm giá đặc biệt"
+                SeriesName = "DEAL HOT - Giảm giá"
             };
 
             ViewBag.AllSeries = xl.GetAllSeries();
             return View("Phone", model);
         }
 
+        // 4. Action Featured (Cập nhật)
+        public ActionResult Featured(int page = 1, string sort = "featured", int series = 0)
+        {
+            int pageSize = 15;
+            var products = xl.GetFeaturedProducts(100);
+
+            if (series > 0)
+            {
+                products = products.Where(p => p.series_id == series).ToList();
+            }
+
+            products = ApplySorting(products, sort);
+            var totalProducts = products.Count;
+            var pagedProducts = products.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            var model = new ProductFilterViewModel
+            {
+                Products = pagedProducts,
+                SeriesId = series,
+                CurrentSort = sort,
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalProducts = totalProducts,
+                TotalPages = (int)Math.Ceiling((double)totalProducts / pageSize),
+                HasMore = page * pageSize < totalProducts,
+                SeriesName = "Sản phẩm nổi bật"
+            };
+
+            ViewBag.AllSeries = xl.GetAllSeries();
+            return View("Phone", model);
+        }
         // POST: Product/AddToCart - Thêm vào giỏ hàng (AJAX)
         [HttpPost]
         public JsonResult AddToCart(int productId, int quantity = 1)

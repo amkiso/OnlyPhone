@@ -431,5 +431,18 @@ function formatCurrency(amount) {
         document.head.appendChild(style);
     }
 })();
+// Hàm chọn voucher từ danh sách
+function selectAndApplyVoucher(code) {
+    // 1. Điền code vào ô input
+    const input = document.getElementById('voucherCode');
+    if (input) {
+        input.value = code;
 
+        // 2. Scroll nhẹ để user thấy ô input (UX)
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // 3. Gọi hàm applyVoucher() có sẵn để validate với server
+        applyVoucher();
+    }
+}
 console.log('✅ Checkout script loaded');

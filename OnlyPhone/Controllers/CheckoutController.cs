@@ -216,31 +216,25 @@ namespace OnlyPhone.Controllers
             try
             {
                 if (Session["UserID"] == null)
-                {
                     return Json(new { success = false, message = "Vui lòng đăng nhập" });
-                }
 
                 int userId = (int)Session["UserID"];
 
-                // Parse product IDs
+                // ... (Logic parse productIds giữ nguyên)
                 var productIds = products.Split(',')
                     .Where(s => !string.IsNullOrWhiteSpace(s))
                     .Select(s => int.TryParse(s.Trim(), out int id) ? id : 0)
-                    .Where(id => id > 0)
-                    .ToList();
+                    .Where(id => id > 0).ToList();
 
-                // Lấy thông tin checkout
                 var checkoutInfo = xl.GetCheckoutInfo(userId, productIds);
                 decimal subTotal = checkoutInfo.SubTotal;
-
-                // Tính phí ship
                 decimal shippingFee = xl.CalculateShippingFee(shippingMethod ?? "Standard");
 
-                // Tính giảm giá
-                decimal discount = voucherId.HasValue ? xl.CalculateDiscount(voucherId.Value, subTotal) : 0;
+                // [CHANGE] Truyền thêm userId vào hàm tính giảm giá
+                decimal discount = voucherId.HasValue ? xl.CalculateDiscount(voucherId.Value, subTotal, userId) : 0;
 
-                // Tính tổng
                 decimal total = subTotal + shippingFee - discount;
+                if (total < 0) total = 0;
 
                 return Json(new
                 {
@@ -257,10 +251,11 @@ namespace OnlyPhone.Controllers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error in CalculateTotal: {ex.Message}");
                 return Json(new { success = false, message = "Lỗi tính toán" });
             }
         }
+
+        
 
         // =====================================================
         // POST: Checkout/ValidateVoucher (AJAX)
@@ -270,34 +265,54 @@ namespace OnlyPhone.Controllers
         {
             try
             {
+                // Kiểm tra đăng nhập
+                if (Session["UserID"] == null)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập để sử dụng voucher" });
+                }
+
                 if (string.IsNullOrWhiteSpace(voucherCode))
                 {
                     return Json(new { success = false, message = "Vui lòng nhập mã voucher" });
                 }
 
-                var voucher = xl.GetAvailableVouchers((int)Session["UserID"], orderValue)
-                    .FirstOrDefault(v => v.Code.Equals(voucherCode, StringComparison.OrdinalIgnoreCase));
+                int userId = (int)Session["UserID"];
+
+                // 1. Tìm voucher theo Code (Không phân biệt hoa thường)
+                // Lưu ý: Cần truy cập qua context hoặc method get voucher từ Xuly
+                // Ở đây giả sử gọi qua da trực tiếp hoặc method GetVoucherByCode nếu có, 
+                // hoặc dùng lại list GetVouchers()
+                var allVouchers = xl.GetVouchers(); // Hàm này bạn đã có trong Xuly.cs trả về List<Voucher>
+                var voucher = allVouchers.FirstOrDefault(v => v.Code.Equals(voucherCode.Trim(), StringComparison.OrdinalIgnoreCase));
 
                 if (voucher == null)
                 {
-                    return Json(new { success = false, message = "Mã voucher không hợp lệ hoặc đã hết hạn" });
+                    return Json(new { success = false, message = "Mã voucher không tồn tại" });
                 }
 
-                decimal discount = xl.CalculateDiscount(voucher.VoucherId, orderValue);
+                // 2. Tính toán giảm giá (Logic kiểm tra điều kiện nằm trong hàm này)
+                decimal discount = xl.CalculateDiscount(voucher.VoucherID, orderValue, userId);
 
-                return Json(new
+                if (discount > 0)
                 {
-                    success = true,
-                    message = "Áp dụng voucher thành công",
-                    voucherId = voucher.VoucherId,
-                    discount = discount,
-                    discountText = discount.ToString("N0") + "đ"
-                });
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Áp dụng mã thành công!",
+                        voucherId = voucher.VoucherID,
+                        discount = discount,
+                        discountText = discount.ToString("N0") + "đ"
+                    });
+                }
+                else
+                {
+                    // Nếu discount = 0 tức là không thỏa mãn điều kiện
+                    return Json(new { success = false, message = "Voucher không khả dụng (Hết hạn, chưa đạt giá trị tối thiểu hoặc bạn không có quyền sử dụng)" });
+                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error in ValidateVoucher: {ex.Message}");
-                return Json(new { success = false, message = "Lỗi kiểm tra voucher" });
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
             }
         }
 
@@ -334,5 +349,6 @@ namespace OnlyPhone.Controllers
                 return Json(new List<string>(), JsonRequestBehavior.AllowGet);
             }
         }
+
     }
 }

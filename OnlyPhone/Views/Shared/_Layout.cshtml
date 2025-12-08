@@ -64,7 +64,7 @@
             <ul class="main-menu">
                 <!-- Danh mục sản phẩm -->
                 <li class="menu-item has-submenu">
-                    <a href="@Url.Action("Phone", "Product")" class="submenu-toggle">
+                    <a href="@Url.Action("Phone", "Product")">
                         <span>
                             <i class="fa-solid fa-bars menu-icon"></i>
                             Danh mục sản phẩm
@@ -74,7 +74,7 @@
                     <ul class="submenu">
                         <!-- iPhone -->
                         <li class="menu-item has-submenu">
-                            <a href="@Url.Action("Phone", "Product", new { supplier = "Apple" })" class="submenu-toggle" style="text-transform: none;">
+                            <a href="@Url.Action("Phone", "Product", new { supplier = "Apple" })" style="text-transform: none;">
                                 iPhone
                             </a>
                             <ul class="submenu">
@@ -90,7 +90,7 @@
 
                         <!-- Samsung -->
                         <li class="menu-item has-submenu">
-                            <a href="@Url.Action("Phone", "Product", new { supplier = "Samsung" })" class="submenu-toggle" style="text-transform: none;">
+                            <a href="@Url.Action("Phone", "Product", new { supplier = "Samsung" })" style="text-transform: none;">
                                 Samsung
                             </a>
                             <ul class="submenu">
@@ -105,7 +105,7 @@
 
                         <!-- Xiaomi -->
                         <li class="menu-item has-submenu">
-                            <a href="@Url.Action("Phone", "Product", new { supplier = "Xiaomi" })" class="submenu-toggle" style="text-transform: none;">
+                            <a href="@Url.Action("Phone", "Product", new { supplier = "Xiaomi" })" style="text-transform: none;">
                                 Xiaomi
                             </a>
                             <ul class="submenu">
@@ -117,7 +117,7 @@
 
                         <!-- Vivo -->
                         <li class="menu-item has-submenu">
-                            <a href="@Url.Action("Phone", "Product", new { supplier = "Vivo" })" class="submenu-toggle" style="text-transform: none;">
+                            <a href="@Url.Action("Phone", "Product", new { supplier = "Vivo" })" style="text-transform: none;">
                                 Vivo
                             </a>
                             <ul class="submenu">
@@ -158,14 +158,12 @@
 
                 <!-- Về chúng tôi -->
                 <li class="menu-item has-submenu">
-                    <a href="@Url.Action("About", "Home")" class="submenu-toggle">
+                    <a href="@Url.Action("About", "Home")">
                         <span>Về chúng tôi</span>
                         <i class="fa-solid fa-chevron-down chevron-icon"></i>
                     </a>
                     <ul class="submenu">
                         <li><a href="@Url.Action("About", "Home", new { section = "inspiration" })">Nguồn Cảm hứng</a></li>
-                        <li><a href="@Url.Action("About", "Home", new { section = "mission" })">Mục đích chính</a></li>
-                        <li><a href="@Url.Action("About", "Home", new { section = "tips" })">Mẹo & Thủ thuật</a></li>
                         <li><a href="@Url.Action("Contact", "Home")">Liên Hệ</a></li>
                     </ul>
                 </li>
@@ -177,17 +175,11 @@
                     </a>
                 </li>
 
-                <!-- Tin tức -->
-                <li class="menu-item has-submenu">
-                    <a href="@Url.Action("Index", "News")" class="submenu-toggle">
-                        <span>Tin tức</span>
-                        <i class="fa-solid fa-chevron-down chevron-icon"></i>
+                <!-- Khuyến mãi hấp dẫn -->
+                <li class="menu-item">
+                    <a href="@Url.Action("AllPromotion", "Promotion")">
+                        Khuyến mãi hấp dẫn
                     </a>
-                    <ul class="submenu">
-                        <li><a href="@Url.Action("Index", "News", new { category = "promotion" })">Tin khuyến mãi</a></li>
-                        <li><a href="@Url.Action("Index", "News", new { category = "event" })">Sự kiện</a></li>
-                        <li><a href="@Url.Action("Index", "News", new { category = "recruitment" })">Tuyển dụng</a></li>
-                    </ul>
                 </li>
 
                 <!-- Tra cứu đơn hàng -->

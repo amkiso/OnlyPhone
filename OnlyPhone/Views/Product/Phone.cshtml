@@ -5,6 +5,10 @@
         ? Model.SeriesName + " - OnlyPhone Store"
         : "Danh sách sản phẩm - OnlyPhone Store";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Lấy thông tin Route hiện tại để JS xử lý
+    string currentAction = ViewContext.RouteData.Values["action"].ToString();
+    string currentController = ViewContext.RouteData.Values["controller"].ToString();
 }
 
 <style>
@@ -431,28 +435,6 @@
 
 <div class="products-container">
     <div class="container">
-        <div class="breadcrumb-custom">
-            <a href="@Url.Action("Index", "Home")">
-                <i class="fa-solid fa-home"></i> Trang chủ
-            </a>
-            <span>/</span>
-            <span>@(!string.IsNullOrEmpty(Model.SeriesName) ? Model.SeriesName : "Danh sách sản phẩm")</span>
-        </div>
-
-        <div class="page-header">
-            <h1>
-                @if (!string.IsNullOrEmpty(Model.SeriesName))
-                {
-                    @Model.SeriesName
-                }
-                else
-                {
-                    <text>Tất cả sản phẩm</text>
-                }
-            </h1>
-            <p>Tìm thấy <strong>@Model.TotalProducts</strong> sản phẩm</p>
-        </div>
-
         <div class="filter-section">
             <div class="filter-group">
                 <span class="filter-label">
@@ -476,11 +458,11 @@
                 <span class="filter-label">
                     <i class="fa-solid fa-layer-group"></i> Hiển thị:
                 </span>
-                <select class="filter-select" id="sortFilter" onchange="applyFilter('type')">
-                    <option value="featured" @(Model.CurrentSort == "featured" || Model.CurrentSort == "price-asc" || Model.CurrentSort == "price-desc" ? "selected" : "")>Nổi bật</option>
-                    <option value="new" @(Model.CurrentSort == "new" ? "selected" : "")>Mới nhất</option>
-                    <option value="bestseller" @(Model.CurrentSort == "bestseller" ? "selected" : "")>Bán chạy</option>
-                    <option value="discount" @(Model.CurrentSort == "discount" ? "selected" : "")>Giảm giá</option>
+                <select class="filter-select" id="typeFilter" onchange="applyFilter('type')">
+                    <option value="featured" @(currentAction == "Featured" || currentAction == "Phone" ? "selected" : "")>Nổi bật (Mặc định)</option>
+                    <option value="new" @(currentAction == "NewProducts" ? "selected" : "")>Mới nhất</option>
+                    <option value="bestseller" @(currentAction == "BestSeller" ? "selected" : "")>Bán chạy</option>
+                    <option value="discount" @(currentAction == "Deals" ? "selected" : "")>Giảm giá</option>
                 </select>
             </div>
 
@@ -504,27 +486,19 @@
                     <div class="product-card">
                         @if (product.is_featured)
                         {
-                            <div class="product-badge">
-                                <span class="badge-hot">HOT</span>
-                            </div>
+                            <div class="product-badge"><span class="badge-hot">HOT</span></div>
                         }
                         else if (product.is_new)
                         {
-                            <div class="product-badge">
-                                <span class="badge-new">MỚI</span>
-                            </div>
+                            <div class="product-badge"><span class="badge-new">MỚI</span></div>
                         }
                         else if (product.DiscountPercent > 0)
                         {
-                            <div class="product-badge">
-                                <span class="badge-sale">-@product.DiscountPercent%</span>
-                            </div>
+                            <div class="product-badge"><span class="badge-sale">-@product.DiscountPercent%</span></div>
                         }
 
                         <div class="product-image-wrapper">
-                            <img src="~/Content/Pic/images/@product.images"
-                                 alt="@product.product_name"
-                                 class="product-image" />
+                            <img src="~/Content/Pic/images/@product.images" alt="@product.product_name" class="product-image" />
                         </div>
 
                         <div class="product-info">
@@ -532,9 +506,7 @@
                             {
                                 <div class="product-series">@product.series_name</div>
                             }
-
                             <h3 class="product-name">@product.product_name</h3>
-
                             <div class="product-price-box">
                                 <span class="product-price">@product.sale_price.ToString("N0") đ</span>
                                 @if (product.original_price > product.sale_price && product.original_price > 0)
@@ -552,14 +524,8 @@
                             }
 
                             <div class="product-actions">
-                                <a href="@Url.Action("Detail", "Product", new { id = product.product_id })"
-                                   class="btn-view-detail">
-                                    Xem chi tiết
-                                </a>
-
-                                <button class="btn-add-cart"
-                                        onclick="addToCart(@product.product_id)"
-                                        @( (product.current_Quantity > 0 && product.product_status == "selling") ? "" : "disabled" )>
+                                <a href="@Url.Action("Detail", "Product", new { id = product.product_id })" class="btn-view-detail">Xem chi tiết</a>
+                                <button class="btn-add-cart" onclick="addToCart(@product.product_id)" @((product.current_Quantity > 0 && product.product_status == "selling") ? "" : "disabled")>
                                     <i class="fa-solid fa-cart-plus"></i>
                                 </button>
                             </div>
@@ -572,10 +538,8 @@
                 <div class="empty-state">
                     <i class="fa-solid fa-box-open"></i>
                     <h3>Không tìm thấy sản phẩm</h3>
-                    <p>Xin lỗi, không có sản phẩm nào phù hợp với tiêu chí tìm kiếm của bạn.</p>
-                    <a href="@Url.Action("Phone", "Product")" class="btn-back-home">
-                        <i class="fa-solid fa-arrow-left"></i> Xem tất cả sản phẩm
-                    </a>
+                    <p>Thử thay đổi bộ lọc hoặc tìm kiếm sản phẩm khác.</p>
+                    <a href="@Url.Action("Phone", "Product")" class="btn-back-home"><i class="fa-solid fa-arrow-left"></i> Xem tất cả</a>
                 </div>
             }
         </div>
@@ -600,9 +564,7 @@
                         }
                         else if (i == Model.CurrentPage - 3 || i == Model.CurrentPage + 3)
                         {
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
                         }
                     }
 
@@ -617,94 +579,89 @@
     </div>
 </div>
 
-
 @functions {
+    // Hàm tạo URL phân trang Dynamic: Giữ lại TẤT CẢ các tham số hiện có
     string GetPageUrl(int page)
     {
         string currentAction = ViewContext.RouteData.Values["action"].ToString();
-        var specialActions = new[] { "BestSeller", "NewProducts", "Deals" };
 
-        // Nếu là trang đặc biệt (Mới, Bán chạy...), URL đơn giản
-        if (specialActions.Contains(currentAction))
-        {
-            return Url.Action(currentAction, "Product", new { page = page });
-        }
+        // Tạo dictionary chứa các tham số
+        var routeValues = new RouteValueDictionary();
 
-        // Trang Phone thông thường: Giữ lại tất cả filter
-        return Url.Action("Phone", "Product", new
-        {
-            supplier = Model.CurrentSupplier,
-            series = (Model.SeriesId > 0) ? (object)Model.SeriesId : null,
-            sort = !string.IsNullOrEmpty(Model.CurrentSort) ? Model.CurrentSort : "featured",
-            page = page
-        });
+        routeValues.Add("page", page);
+
+        // Giữ lại Series nếu có
+        if (Model.SeriesId > 0) routeValues.Add("series", Model.SeriesId);
+
+        // Giữ lại Sort nếu có
+        if (!string.IsNullOrEmpty(Model.CurrentSort)) routeValues.Add("sort", Model.CurrentSort);
+
+        // Giữ lại Supplier nếu có
+        if (!string.IsNullOrEmpty(Model.CurrentSupplier)) routeValues.Add("supplier", Model.CurrentSupplier);
+
+        return Url.Action(currentAction, "Product", routeValues);
     }
 }
 
 <script src="~/Scripts/Bootstrap/jquery-3.7.0.min.js"></script>
 <script>
-    // Hàm lọc và sắp xếp sản phẩm (Logic mới tách biệt)
+    // Hàm xử lý Filter & Sort đa năng
     function applyFilter(source) {
-        var series = document.getElementById('seriesFilter').value;
-        var sortType = document.getElementById('sortFilter').value;
-        var priceSort = document.getElementById('priceFilter').value;
+        // 1. Lấy giá trị hiện tại của các controls
+        var seriesId = document.getElementById('seriesFilter').value;
+        var typeAction = document.getElementById('typeFilter').value; // featured, new, bestseller...
+        var priceSort = document.getElementById('priceFilter').value; // price-asc, price-desc
 
-        var currentSupplier = '@(Model.CurrentSupplier ?? "")';
-        var finalSort = 'featured';
+        var currentAction = '@currentAction';
+        var targetAction = currentAction;
+        var targetSort = "";
 
-        // 1. Logic xử lý ưu tiên giữa các ô lọc
-        if (source === 'price') {
-            if (priceSort !== "") {
-                finalSort = priceSort;
-                document.getElementById('sortFilter').value = 'featured'; // Reset ô hiển thị
-            } else {
-                finalSort = sortType;
-            }
-        }
-        else if (source === 'type') {
-            finalSort = sortType;
-            document.getElementById('priceFilter').value = ""; // Reset ô giá
+        // 2. Xử lý Logic chuyển hướng (Thay đổi loại trang)
+        if (source === 'type') {
+            // Map giá trị dropdown sang tên Action của Controller
+            if (typeAction === 'featured') targetAction = 'Featured'; // Hoặc 'Phone' tùy bạn
+            else if (typeAction === 'new') targetAction = 'NewProducts';
+            else if (typeAction === 'bestseller') targetAction = 'BestSeller';
+            else if (typeAction === 'discount') targetAction = 'Deals';
+
+            // Khi chuyển loại trang, reset sort giá về mặc định
+            priceSort = "";
         }
         else {
-            // Nếu đổi Series, giữ nguyên trạng thái sort hiện tại
-            if (priceSort !== "") {
-                finalSort = priceSort;
-            } else {
-                finalSort = sortType;
-            }
+            // Nếu không đổi loại trang, giữ nguyên Action hiện tại
+            targetAction = currentAction;
         }
 
-        // 2. Chuyển hướng Action nếu cần (Chỉ khi không sort theo giá)
-        if (source === 'type' && priceSort === "") {
-            if (finalSort === 'new') {
-                window.location.href = '@Url.Action("NewProducts", "Product")';
-                return;
-            }
-            if (finalSort === 'bestseller') {
-                window.location.href = '@Url.Action("BestSeller", "Product")';
-                return;
-            }
-            if (finalSort === 'discount') {
-                window.location.href = '@Url.Action("Deals", "Product")';
-                return;
-            }
+        // 3. Xử lý Logic Sắp xếp (Sort)
+        if (priceSort !== "") {
+            // Nếu có chọn giá, ưu tiên dùng giá
+            targetSort = priceSort;
+        } else {
+            // Nếu không chọn giá, dùng sort mặc định của Action đó
+            if (targetAction === 'NewProducts') targetSort = 'new';
+            else if (targetAction === 'BestSeller') targetSort = 'bestseller';
+            else if (targetAction === 'Deals') targetSort = 'discount';
+            else targetSort = 'featured';
         }
 
-        // 3. Tạo URL cho Action Phone mặc định
-        var url = '@Url.Action("Phone", "Product")';
+        // 4. Xây dựng URL
+        // Cấu trúc: /Product/{Action}?series={id}&sort={sort}&supplier={sup}
+        var url = '/Product/' + targetAction;
         var params = [];
 
-        params.push('page=1'); // Reset về trang 1
+        params.push('page=1'); // Luôn reset về trang 1
 
-        if (series && series !== '0') {
-            params.push('series=' + series);
+        if (seriesId && seriesId !== '0') {
+            params.push('series=' + seriesId);
         }
 
-        if (finalSort) {
-            params.push('sort=' + finalSort);
+        if (targetSort) {
+            params.push('sort=' + targetSort);
         }
 
-        if (currentSupplier) {
+        // Giữ lại supplier nếu đang ở trang Phone (các trang đặc biệt thường không lọc supplier)
+        var currentSupplier = '@(Model.CurrentSupplier ?? "")';
+        if (currentSupplier && targetAction === 'Phone') {
             params.push('supplier=' + encodeURIComponent(currentSupplier));
         }
 
@@ -712,10 +669,11 @@
             url += '?' + params.join('&');
         }
 
+        // 5. Chuyển hướng
         window.location.href = url;
     }
 
-    // Hàm thêm vào giỏ hàng (AJAX)
+    // (Giữ nguyên hàm addToCart)
     function addToCart(productId) {
         const button = event?.target?.closest('.btn-add-cart');
         if(button) button.disabled = true;
@@ -745,8 +703,6 @@
                 alert('Đã xảy ra lỗi kết nối server');
             },
             complete: function() {
-                // Chỉ enable lại nếu nút không phải bị disabled do hết hàng từ đầu
-                // Tuy nhiên trong trường hợp thêm thành công, cứ để user bấm tiếp cũng được
                 if(button) button.disabled = false;
             }
         });

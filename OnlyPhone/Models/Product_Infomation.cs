@@ -45,7 +45,7 @@ namespace OnlyPhone.Models
         {
             get
             {
-                return current_Quantity > 0 && product_status == "selling";
+                return current_Quantity > 0 && product_status.ToLower() == "selling";
             }
         }
     }

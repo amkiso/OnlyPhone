@@ -1,9 +1,232 @@
 ﻿@{
-    ViewBag.Title = "About";
+    ViewBag.Title = "Giới thiệu & Liên hệ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<main aria-labelledby="title">
-    <h2 id="title">@ViewBag.Title.</h2>
-    <h3>@ViewBag.Message</h3>
 
-    <p>Use this area to provide additional information.</p>
-</main>
+<style>
+    /* Header Banner */
+    .about-banner {
+        background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+        color: white;
+        padding: 60px 20px;
+        text-align: center;
+        border-radius: 0 0 20px 20px;
+        margin-bottom: 40px;
+    }
+    .about-banner h1 { font-weight: 800; margin: 0; font-size: 2.5rem; }
+    .about-banner p { opacity: 0.9; margin-top: 10px; font-size: 1.1rem; }
+
+    /* Layout Grid */
+    .about-container {
+        max-width: 1200px;
+        margin: 20px;
+        padding: 0 20px 60px;
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Chia đôi màn hình */
+        gap: 40px;
+    }
+
+    /* Cards */
+    .about-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border: 1px solid #eee;
+    }
+
+    /* Info Section */
+    .project-desc {
+        background: #f0f9ff;
+        border-left: 5px solid #0072ff;
+        padding: 20px;
+        margin-bottom: 30px;
+        color: #444;
+        line-height: 1.6;
+        border-radius: 4px;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .c-icon {
+        width: 45px; height: 45px;
+        background: #e6f2ff; color: #0072ff;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    .c-text h4 { margin: 0 0 5px; font-size: 1rem; color: #333; }
+    .c-text p { margin: 0; color: #666; }
+
+    /* Map */
+    .map-frame {
+        width: 100%;
+        height: 300px;
+        border-radius: 10px;
+        border: 0;
+        margin-top: 20px;
+    }
+
+    /* Form */
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; }
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        transition: 0.3s;
+        box-sizing: border-box; /* Quan trọng để không bị tràn */
+    }
+    .form-control:focus { border-color: #0072ff; outline: none; box-shadow: 0 0 0 3px rgba(0,114,255,0.1); }
+
+    .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: #0072ff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 1rem;
+    }
+    .btn-submit:hover { background: #005bb5; transform: translateY(-2px); }
+    .btn-submit:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .about-container { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="about-container">
+    <div class="about-card">
+        <h2 style="margin-top:0; color: #333;">Thông tin dự án</h2>
+
+        <div class="project-desc">
+            <i class="fas fa-info-circle"></i>
+            Trang web <strong>OnlyPhone</strong> là sản phẩm đồ án môn học. Mục đích chính là nghiên cứu, học hỏi và áp dụng các công nghệ lập trình web hiện đại (ASP.NET MVC, SQL Server) vào thực tế để phục vụ cộng đồng.
+        </div>
+
+        <div class="contact-item">
+            <div class="c-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="c-text">
+                <h4>Địa chỉ</h4>
+                <p>140 Lê Trọng Tấn, Phường Tây Thạnh, Quận Tân Phú, TP.HCM</p>
+            </div>
+        </div>
+
+        <div class="contact-item">
+            <div class="c-icon"><i class="fas fa-envelope"></i></div>
+            <div class="c-text">
+                <h4>Email liên hệ</h4>
+                <p>2001231059@huit.edu.vn</p>
+            </div>
+        </div>
+
+        <div class="contact-item">
+            <div class="c-icon"><i class="fas fa-phone-alt"></i></div>
+            <div class="c-text">
+                <h4>Điện thoại</h4>
+                <p>028 3816 1673 (HUIT)</p>
+            </div>
+        </div>
+
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.060292275069!2d106.62637657596547!3d10.806694389343946!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752be27d8b4f4d%3A0x92dcba2950430867!2zMTQwIEzDqiBUHLhu41uZyBU4bqlbiwgVMOieSBUaOG6oW5oLCBUw6JuIFBow7osIEjhu5MgQ2jDrSBNaW5oLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1709628000000!5m2!1svi!2s"
+                class="map-frame" allowfullscreen="" loading="lazy"></iframe>
+    </div>
+
+    <div class="about-card">
+        <h2 style="margin-top:0; color: #333;">Gửi ý kiến đóng góp</h2>
+        <p style="color:#666; margin-bottom: 25px;">Mọi ý kiến của bạn sẽ được gửi trực tiếp đến email của quản trị viên.</p>
+
+        <form id="feedbackForm">
+            <div class="form-group">
+                <label class="form-label">Họ và tên <span style="color:red">*</span></label>
+                <input type="text" name="Name" class="form-control" required placeholder="Nhập tên của bạn...">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email của bạn <span style="color:red">*</span></label>
+                <input type="email" name="Email" class="form-control" required placeholder="example@email.com">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Tiêu đề</label>
+                <input type="text" name="Subject" class="form-control" placeholder="Vấn đề cần góp ý...">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nội dung <span style="color:red">*</span></label>
+                <textarea name="Message" class="form-control" rows="5" required placeholder="Nhập nội dung chi tiết..."></textarea>
+            </div>
+
+            <button type="submit" id="btnSend" class="btn-submit">
+                <i class="fas fa-paper-plane"></i> Gửi ý kiến
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Hàm hiển thị thông báo (Sử dụng lại hàm showToast bạn đã có ở trang Promotion)
+        // Nếu trang này chưa có hàm showToast, bạn hãy copy lại hàm đó vào đây
+
+        document.getElementById('feedbackForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('btnSend');
+            const originalText = btn.innerHTML;
+
+            // Loading state
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+            btn.disabled = true;
+
+            const formData = new FormData(this);
+
+            try {
+                // Gọi về HomeController/SendFeedback
+                const response = await fetch('/Home/SendFeedback', {
+                    method: 'POST',
+                    body: formData // Fetch tự động xử lý FormData
+                });
+
+                const res = await response.json();
+
+                if (res.success) {
+                    if (typeof showToast === "function") {
+                        showToast(res.message, 'success');
+                    } else {
+                        alert(res.message); // Fallback nếu chưa có hàm toast
+                    }
+                    this.reset(); // Xóa form
+                } else {
+                    if (typeof showToast === "function") {
+                        showToast(res.message, 'error');
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+                if (typeof showToast === "function") {
+                    showToast('Lỗi kết nối server', 'error');
+                } else {
+                    alert('Lỗi kết nối server');
+                }
+            } finally {
+                // Reset nút
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+    </script>
+}

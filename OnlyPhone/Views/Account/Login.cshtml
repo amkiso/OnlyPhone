@@ -448,7 +448,7 @@
                             @Html.CheckBoxFor(m => m.RememberMe, new { id = "rememberMe" })
                             <label for="rememberMe">Ghi nhớ đăng nhập</label>
                         </div>
-                        <a href="#" class="forgot-link">Quên mật khẩu?</a>
+                        <a href="@Url.Action("ForgotPassword","Account" )" class="forgot-link">Quên mật khẩu?</a>
                     </div>
 
                     <button type="submit" class="btn-login" id="btnLogin">
@@ -462,7 +462,7 @@
             </div>
 
             <div class="card-footer">
-                Chưa có tài khoản? <a href="#">Đăng ký ngay</a>
+                Chưa có tài khoản? <a href="@Url.Action("Register","Account")">Đăng ký ngay</a>
             </div>
         </div>
     </div>

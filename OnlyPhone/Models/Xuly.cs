@@ -856,7 +856,7 @@ namespace OnlyPhone.Models
         /// <summary>
         /// Lấy danh sách sản phẩm nổi bật (Is_Featured = true)
         /// </summary>
-        private List<Product_Infomation> GetFeaturedProducts(int count)
+        public List<Product_Infomation> GetFeaturedProducts(int count)
         {
             try
             {
@@ -1321,7 +1321,7 @@ namespace OnlyPhone.Models
         }
 
         /// <summary>
-        /// Lấy danh sách voucher khả dụng
+        /// Lấy danh sách Voucher khả dụng (Top 5) kết hợp Private và Public
         /// </summary>
         public List<VoucherInfo> GetAvailableVouchers(int userId, decimal orderValue)
         {
@@ -1329,31 +1329,137 @@ namespace OnlyPhone.Models
             {
                 var now = DateTime.Now;
 
-                return da.Vouchers
-                    .Where(v => v.IsActive == true
-                             && v.StartDate <= now
-                             && v.EndDate >= now
-                             && v.Quantity > v.QuantityUsed
-                             && (v.MinOrderValue == null || v.MinOrderValue <= orderValue))
-                    .Select(v => new VoucherInfo
-                    {
-                        VoucherId = v.VoucherID,
-                        Code = v.Code,
-                        Description = v.Descriptions,
-                        DiscountType = v.DiscountType,
-                        DiscountValue = v.DiscountValue,
-                        MaxDiscountAmount = v.MaxDiscountAmount,
-                        MinOrderValue = v.MinOrderValue ?? 0,
-                        EndDate = v.EndDate,
-                        RemainingQuantity = v.Quantity - v.QuantityUsed
-                    })
-                    .OrderByDescending(v => v.DiscountValue)
-                    .ToList();
+                // 1. Lấy Voucher Private (Có trong bảng User_Voucher và còn lượt dùng)
+                var privateVouchers = from uv in da.User_Vouchers
+                                      join v in da.Vouchers on uv.VoucherID equals v.VoucherID
+                                      where uv.ID_user == userId
+                                         && uv.QuantityLeft > 0
+                                         && v.IsActive == true
+                                         && v.IsPublic == false
+                                         && v.StartDate <= now
+                                         && (v.EndDate == null || v.EndDate >= now)
+                                         && (v.MinOrderValue == null || v.MinOrderValue <= orderValue)
+                                      select new VoucherInfo
+                                      {
+                                          VoucherId = v.VoucherID,
+                                          Code = v.Code,
+                                          Description = v.Descriptions,
+                                          DiscountType = v.Is_Percent, // Map Is_Percent
+                                          DiscountValue = v.DiscountValue,
+                                          MaxDiscountAmount = v.MaxDiscountAmount,
+                                          MinOrderValue = v.MinOrderValue ?? 0,
+                                          EndDate = v.EndDate,
+                                          IsPublic = false,
+                                          QuantityLeft = uv.QuantityLeft
+                                      };
+
+                // 2. Lấy Voucher Public (IsPublic = true, còn số lượng chung)
+                var publicVouchers = from v in da.Vouchers
+                                     where v.IsActive == true
+                                        && v.IsPublic == true
+                                        && v.Quantity > v.QuantityUsed // Kiểm tra tổng số lượng
+                                        && v.StartDate <= now
+                                        && (v.EndDate == null || v.EndDate >= now)
+                                        && (v.MinOrderValue == null || v.MinOrderValue <= orderValue)
+                                     select new VoucherInfo
+                                     {
+                                         VoucherId = v.VoucherID,
+                                         Code = v.Code,
+                                         Description = v.Descriptions,
+                                         DiscountType = v.Is_Percent,
+                                         DiscountValue = v.DiscountValue,
+                                         MaxDiscountAmount = v.MaxDiscountAmount,
+                                         MinOrderValue = v.MinOrderValue ?? 0,
+                                         EndDate = v.EndDate,
+                                         IsPublic = true,
+                                         QuantityLeft = v.Quantity - v.QuantityUsed
+                                     };
+
+                // 3. Gộp danh sách, ưu tiên Private lên đầu, lấy tối đa 5 cái
+                var combinedList = privateVouchers.Concat(publicVouchers)
+                                                  .OrderBy(v => v.IsPublic) // false (Private) lên trước true (Public)
+                                                  .ThenByDescending(v => v.DiscountValue)
+                                                  .Take(5)
+                                                  .ToList();
+
+                return combinedList;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error in GetAvailableVouchers: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error GetAvailableVouchers: {ex.Message}");
                 return new List<VoucherInfo>();
+            }
+        }
+        /// <summary>
+        /// Tính toán giá trị giảm giá dựa trên logic chi tiết
+        /// </summary>
+        public decimal CalculateDiscount(int voucherId, decimal orderValue, int userId)
+        {
+            try
+            {
+                // 1. Lấy thông tin Voucher
+                var voucher = da.Vouchers.FirstOrDefault(v => v.VoucherID == voucherId);
+
+                // Check cơ bản: Tồn tại và Đang kích hoạt
+                if (voucher == null || !voucher.IsActive) return 0;
+
+                // 2. Check Thời gian
+                var now = DateTime.Now;
+                if (now < voucher.StartDate) return 0;
+                if (voucher.EndDate.HasValue && now > voucher.EndDate.Value) return 0;
+
+                // 3. Check Giá trị đơn hàng tối thiểu
+                if (voucher.MinOrderValue.HasValue && orderValue < voucher.MinOrderValue.Value) return 0;
+
+                // 4. Check Quyền sử dụng (Public vs Private)
+                if (voucher.IsPublic)
+                {
+                    // Public: Check tổng số lượng phát hành
+                    if (voucher.Quantity <= voucher.QuantityUsed) return 0;
+
+                    // (Optional) Có thể check thêm User đã dùng quá MaxUsagePerUser chưa bằng cách count trong Order
+                }
+                else
+                {
+                    // Private: Check trong ví User_Voucher
+                    var userVoucher = da.User_Vouchers.FirstOrDefault(uv => uv.VoucherID == voucherId && uv.ID_user == userId);
+
+                    // Không có trong ví hoặc hết lượt dùng cá nhân
+                    if (userVoucher == null || userVoucher.QuantityLeft <= 0) return 0;
+                }
+
+                // 5. Tính toán giá trị giảm (Discount Amount)
+                decimal finalDiscount = 0;
+
+                if (voucher.Is_Percent)
+                {
+                    // Giảm theo %
+                    finalDiscount = orderValue * (voucher.DiscountValue / 100);
+
+                    // Kiểm tra trần giảm giá (MaxDiscountAmount)
+                    if (voucher.MaxDiscountAmount.HasValue && voucher.MaxDiscountAmount.Value > 0)
+                    {
+                        if (finalDiscount > voucher.MaxDiscountAmount.Value)
+                        {
+                            finalDiscount = voucher.MaxDiscountAmount.Value;
+                        }
+                    }
+                }
+                else
+                {
+                    // Giảm tiền mặt trực tiếp
+                    finalDiscount = voucher.DiscountValue;
+                }
+
+                // Đảm bảo không giảm quá giá trị đơn hàng (tránh âm tiền)
+                if (finalDiscount > orderValue) finalDiscount = orderValue;
+
+                return finalDiscount;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error CalculateDiscount: {ex.Message}");
+                return 0;
             }
         }
 
@@ -1398,7 +1504,110 @@ namespace OnlyPhone.Models
         }
     };
         }
+        public bool UpdatePasswordByEmail(string email, string newPassword)
+        {
+            try
+            {
+                var user = da.Users.FirstOrDefault(u => u.user_email == email);
+                if (user == null) return false;
 
+                user.user_password = HashPassword(newPassword); // Sử dụng hàm Hash có sẵn
+                da.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error UpdatePasswordByEmail: {ex.Message}");
+                return false;
+            }
+        }
+        /// <summary>
+        /// Lấy danh sách Voucher Public để hiển thị trang Khuyến mãi
+        /// </summary>
+        public List<PromotionViewModel> GetAllPromotions(int? userId)
+        {
+            var now = DateTime.Now;
+
+            // Lấy tất cả Voucher Public đang hoạt động
+            var query = da.Vouchers.Where(v => v.IsPublic == true
+                                            && v.IsActive == true
+                                            && v.StartDate <= now
+                                            && (v.EndDate == null || v.EndDate >= now));
+
+            // Lấy danh sách ID voucher mà user này đã lưu (nếu đã đăng nhập)
+            List<int> savedVoucherIds = new List<int>();
+            if (userId.HasValue)
+            {
+                savedVoucherIds = da.User_Vouchers
+                                    .Where(uv => uv.ID_user == userId.Value)
+                                    .Select(uv => uv.VoucherID)
+                                    .ToList();
+            }
+
+            var list = query.ToList().Select(v => new PromotionViewModel
+            {
+                VoucherId = v.VoucherID,
+                Code = v.Code,
+                Description = v.Descriptions,
+                DiscountType = v.Is_Percent,
+                DiscountValue = v.DiscountValue,
+                MaxDiscountAmount = v.MaxDiscountAmount,
+                MinOrderValue = v.MinOrderValue ?? 0,
+                EndDate = v.EndDate,
+
+                // Logic tính toán
+                IsSaved = savedVoucherIds.Contains(v.VoucherID),
+                IsOutStock = v.Quantity <= v.QuantityUsed,
+                // Tính % đã dùng để hiện thanh bar (ví dụ: đã dùng 80/100 -> 80%)
+                PercentUsed = v.Quantity > 0 ? (int)((double)v.QuantityUsed / v.Quantity * 100) : 100
+            }).OrderByDescending(x => x.IsSaved == false) // Ưu tiên cái chưa lưu lên đầu
+              .ThenBy(x => x.IsOutStock) // Cái còn hàng lên trước
+              .ToList();
+
+            return list;
+        }
+
+        /// <summary>
+        /// Lưu voucher vào kho của người dùng
+        /// </summary>
+        public (bool Success, string Message) SaveVoucherToWallet(int voucherId, int userId)
+        {
+            try
+            {
+                // 1. Check Voucher tồn tại
+                var voucher = da.Vouchers.FirstOrDefault(v => v.VoucherID == voucherId);
+                if (voucher == null || !voucher.IsPublic || !voucher.IsActive)
+                    return (false, "Voucher không khả dụng.");
+
+                // 2. Check hết lượt chưa
+                if (voucher.Quantity <= voucher.QuantityUsed)
+                    return (false, "Voucher đã hết lượt sử dụng.");
+
+                // 3. Check đã lưu chưa
+                var existing = da.User_Vouchers.FirstOrDefault(u => u.ID_user == userId && u.VoucherID == voucherId);
+                if (existing != null)
+                    return (false, "Bạn đã lưu voucher này rồi.");
+
+                // 4. Lưu vào User_Voucher
+                var uv = new User_Voucher
+                {
+                    ID_user = userId,
+                    VoucherID = voucherId,
+                    QuantityLeft = 1, // Mặc định lưu được 1 lượt dùng
+                    IsUsed = false,
+                    SavedDate = DateTime.Now
+                };
+
+                da.User_Vouchers.InsertOnSubmit(uv);
+                da.SubmitChanges();
+
+                return (true, "Lưu voucher thành công!");
+            }
+            catch (Exception ex)
+            {
+                return (false, "Lỗi hệ thống: " + ex.Message);
+            }
+        }
         /// <summary>
         /// Lấy danh sách phương thức vận chuyển
         /// </summary>
@@ -1463,13 +1672,13 @@ namespace OnlyPhone.Models
 
                 decimal discount = 0;
 
-                if (voucher.DiscountType == "PERCENT")
+                if (voucher.Is_Percent)
                 {
                     discount = orderValue * voucher.DiscountValue / 100;
                     if (voucher.MaxDiscountAmount.HasValue && discount > voucher.MaxDiscountAmount.Value)
                         discount = voucher.MaxDiscountAmount.Value;
                 }
-                else if (voucher.DiscountType == "AMOUNT")
+                else 
                 {
                     discount = voucher.DiscountValue;
                 }
@@ -2210,7 +2419,7 @@ namespace OnlyPhone.Models
 
                 if (voucher != null)
                 {
-                    if (voucher.DiscountType == "PERCENT")
+                    if (voucher.Is_Percent)
                     {
                         discountAmount = subTotal * voucher.DiscountValue / 100;
                         if (voucher.MaxDiscountAmount.HasValue && discountAmount > voucher.MaxDiscountAmount.Value)
@@ -2574,7 +2783,11 @@ namespace OnlyPhone.Models
             }
         }
 
-        // 2. Cập nhật sản phẩm
+        /// <summary>
+        /// Cập nhật sản phẩm
+        /// </summary>
+        /// <param name="info"></param>
+        /// <returns></returns>
         public bool UpdateProduct(Product_Infomation info)
         {
             try
@@ -2610,7 +2823,12 @@ namespace OnlyPhone.Models
             }
         }
 
-        // 3. Upload ảnh sản phẩm
+        /// <summary>
+        /// Upload ảnh sản phẩm
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="serverPath"></param>
+        /// <returns></returns>
         public string UploadProductImage(HttpPostedFileBase file, string serverPath)
         {
             try
@@ -2672,7 +2890,11 @@ namespace OnlyPhone.Models
             }
         }
 
-        // 2. Cập nhật User
+        /// <summary>
+        /// Cập nhật User
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         public bool UpdateUser(UserListViewModel model)
         {
             try
@@ -2705,7 +2927,11 @@ namespace OnlyPhone.Models
             }
         }
 
-        // 3. Xóa User (Cần cẩn trọng với khóa ngoại)
+        /// <summary>
+        /// Xóa User (Cần cẩn trọng với khóa ngoại)
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
         public bool DeleteUser(int userId)
         {
             try
@@ -2827,7 +3053,12 @@ namespace OnlyPhone.Models
             }
         }
 
-        // 2. Cập nhật trạng thái đơn hàng & Gửi thông báo
+        /// <summary>
+        /// Cập nhật trạng thái đơn hàng 
+        /// </summary>
+        /// <param name="orderId"></param>
+        /// <param name="newStatusId"></param>
+        /// <returns></returns>& Gửi thông báo
         public bool UpdateOrderStatus(string orderId, int newStatusId)
         {
             try
@@ -2873,7 +3104,12 @@ namespace OnlyPhone.Models
             }
         }
 
-        // 3. Xóa sản phẩm khỏi đơn hàng (Edit Mode)
+        /// <summary>
+        /// Xóa sản phẩm khỏi đơn hàng (Edit Mode)
+        /// </summary>
+        /// <param name="orderId"></param>
+        /// <param name="productId"></param>
+        /// <returns></returns>
         public bool RemoveOrderItem(string orderId, int productId)
         {
             try
@@ -2948,7 +3184,12 @@ namespace OnlyPhone.Models
             }
         }
 
-        // Upload Logo
+        /// <summary>
+        /// Upload Logo
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="serverPath"></param>
+        /// <returns></returns>
         public string UploadBrandLogo(HttpPostedFileBase file, string serverPath)
         {
             try
@@ -2971,7 +3212,10 @@ namespace OnlyPhone.Models
             catch { return null; }
         }
 
-        // 2. Lấy thống kê Top Cards
+        /// <summary>
+        /// Lấy thống kê Top Cards
+        /// </summary>
+        /// <returns></returns>
         public BrandStatsModel GetBrandStats()
         {
             try
@@ -3012,7 +3256,11 @@ namespace OnlyPhone.Models
             }
         }
 
-        // 3. Thêm/Sửa Thương hiệu (Demo logic cơ bản)
+        /// <summary>
+        /// Thêm/Sửa Thương hiệu (Demo logic cơ bản)
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         public bool SaveBrand(BrandViewModel model)
         {
             try
@@ -3046,7 +3294,12 @@ namespace OnlyPhone.Models
             catch { return false; }
         }
 
-        // Thêm dòng sản phẩm mới
+        /// <summary>
+        /// Thêm dòng sản phẩm mới
+        /// </summary>
+        /// <param name="brandId"></param>
+        /// <param name="seriesName"></param>
+        /// <returns></returns>
         public bool AddSeries(int brandId, string seriesName)
         {
             try
@@ -3070,7 +3323,11 @@ namespace OnlyPhone.Models
             catch { return false; }
         }
 
-        // 4. Xóa Thương hiệu
+        /// <summary>
+        /// Xóa Thương hiệu
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public bool DeleteBrand(int id)
         {
             try
@@ -3274,13 +3531,27 @@ namespace OnlyPhone.Models
             catch { return false; }
         }
 
-        // 2. Lấy thông tin 1 Global (để fill vào form Edit)
+        /// <summary>
+        /// Lấy thông tin 1 Global (để fill vào form Edit)
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public Global_Notification GetGlobalById(int id)
         {
             return da.Global_Notifications.FirstOrDefault(g => g.Global_Noti_ID == id);
         }
 
-        // 3. Cập nhật Global
+        /// <summary>
+        /// Cập nhật Global
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="title"></param>
+        /// <param name="message"></param>
+        /// <param name="type"></param>
+        /// <param name="role"></param>
+        /// <param name="url"></param>
+        /// <param name="expiry"></param>
+        /// <returns></returns>
         public bool UpdateGlobalNotification(int id, string title, string message, string type, string role, string url, DateTime? expiry)
         {
             try
@@ -3328,7 +3599,11 @@ namespace OnlyPhone.Models
             }
             catch { return false; }
         }
-        // 2. Xóa thông báo cá nhân
+        /// <summary>
+        /// Xóa thông báo cá nhân
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public bool DeletePersonalNotification(int id)
         {
             try
@@ -3411,7 +3686,12 @@ namespace OnlyPhone.Models
 
             return model;
         }
-        // 2. Lấy chi tiết người đọc cho Popup
+        /// <summary>
+        /// Lấy chi tiết người đọc cho Popup
+        /// </summary>
+        /// <param name="globalId"></param>
+        /// <param name="viewType"></param>
+        /// <returns></returns>
         public List<GlobalReaderModel> GetGlobalReadersDetails(int globalId, string viewType) // viewType: "read" | "unread"
         {
             var noti = da.Global_Notifications.FirstOrDefault(g => g.Global_Noti_ID == globalId);
@@ -3459,7 +3739,11 @@ namespace OnlyPhone.Models
             return result;
         }
 
-        // 3. Xóa Global Notification
+        /// <summary>
+        /// Xóa Global Notification
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public bool DeleteGlobalNotification(int id)
         {
             try
@@ -3493,6 +3777,255 @@ namespace OnlyPhone.Models
             {
                 return new List<Voucher>();
             }
+        }
+        // VOUCHER MANAGEMENT METHOD
+        /// <summary>
+        /// Lấy thống kê Voucher
+        /// </summary>
+        /// <returns></returns>
+        public VoucherStatsModel GetVoucherStats()
+        {
+            var now = DateTime.Now;
+            return new VoucherStatsModel
+            {
+                Total = da.Vouchers.Count(),
+                Active = da.Vouchers.Count(v => v.IsActive == true && v.StartDate <= now && (v.EndDate == null || v.EndDate >= now)),
+                Expired = da.Vouchers.Count(v => v.EndDate < now),
+                Private = da.Vouchers.Count(v => v.IsPublic == false)
+            };
+        }
+
+        /// <summary>
+        /// Lấy danh sách Voucher (Phân trang + Tìm kiếm)
+        /// </summary>
+        /// <param name="keyword"></param>
+        /// <param name="filterStatus"></param>
+        /// <param name="page"></param>
+        /// <param name="pageSize"></param>
+        /// <returns></returns>
+        public VoucherPageModel GetVouchers(string keyword, int? filterStatus, int page = 1, int pageSize = 12)
+        {
+            var now = DateTime.Now;
+            var query = da.Vouchers.AsQueryable();
+
+            // Lọc theo từ khóa
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                query = query.Where(v => v.Code.Contains(keyword) || v.Descriptions.Contains(keyword));
+            }
+
+            // Lọc theo trạng thái
+            if (filterStatus.HasValue)
+            {
+                switch (filterStatus.Value)
+                {
+                    case 1: // Đang hoạt động
+                        query = query.Where(v => v.IsActive == true && v.StartDate <= now && (v.EndDate == null || v.EndDate >= now));
+                        break;
+                    case 2: // Hết hạn
+                        query = query.Where(v => v.EndDate < now);
+                        break;
+                    case 3: // Private
+                        query = query.Where(v => v.IsPublic == false);
+                        break;
+                }
+            }
+
+            int totalRecords = query.Count();
+            var listRaw = query.OrderByDescending(v => v.StartDate)
+                               .Skip((page - 1) * pageSize)
+                               .Take(pageSize)
+                               .ToList();
+
+            var listVM = listRaw.Select(v => new VoucherViewModel
+            {
+                VoucherID = v.VoucherID,
+                Code = v.Code,
+                Description = v.Descriptions,
+                IsPercent = v.Is_Percent,
+                DiscountValue = v.DiscountValue,
+                Quantity = v.Quantity,
+                QuantityUsed = v.QuantityUsed,
+                StartDate = v.StartDate,
+                EndDate = v.EndDate,
+                IsActive = v.IsActive,
+                IsPublic = v.IsPublic, // Cần đảm bảo cột này đã có trong DB như script trước
+                MinOrderValue = v.MinOrderValue,
+                MaxDiscountAmount = v.MaxDiscountAmount,
+                MaxUsagePerUser = v.MaxUsagePerUser, // Cần đảm bảo cột này đã có
+                StatusLabel = (v.EndDate < now) ? "Hết hạn" : (!v.IsActive ? "Tạm dừng" : "Đang chạy")
+            }).ToList();
+
+            return new VoucherPageModel
+            {
+                List = listVM,
+                Stats = GetVoucherStats(),
+                CurrentPage = page,
+                TotalPages = (int)Math.Ceiling((double)totalRecords / pageSize),
+                Keyword = keyword,
+                StatusFilter = filterStatus
+            };
+        }
+
+        /// <summary>
+        /// Tặng Voucher Private cho User
+        /// </summary>
+        /// <param name="voucherId"></param>
+        /// <param name="userIdOrEmail"></param>
+        /// <returns></returns>
+        public (bool Success, string Message) GiftVoucherToUser(int voucherId, string userIdOrEmail)
+        {
+            try
+            {
+                // Kiểm tra Voucher
+                var voucher = da.Vouchers.FirstOrDefault(v => v.VoucherID == voucherId);
+                if (voucher == null) return (false, "Voucher không tồn tại.");
+                if (voucher.IsPublic) return (false, "Chỉ được tặng Voucher riêng tư.");
+                if (voucher.Quantity <= voucher.QuantityUsed) return (false, "Voucher đã hết số lượng phát hành.");
+
+                // Tìm User (theo ID hoặc Email)
+                int userId = 0;
+                bool isId = int.TryParse(userIdOrEmail, out userId);
+
+                var user = da.Users.FirstOrDefault(u => (isId && u.ID_user == userId) || u.user_email == userIdOrEmail);
+
+                if (user == null) return (false, "Không tìm thấy người dùng.");
+
+                // Kiểm tra xem User đã có Voucher này chưa (và còn lượt dùng không)
+                var existing = da.User_Vouchers.FirstOrDefault(uv => uv.ID_user == user.ID_user && uv.VoucherID == voucherId);
+
+                if (existing != null)
+                {
+                    // Nếu đã có, kiểm tra giới hạn
+                    if (existing.QuantityLeft > 0) return (false, "Người dùng này vẫn còn lượt sử dụng voucher này.");
+
+                    // Nếu hết lượt, cấp thêm lượt mới (Tùy logic, ở đây tôi cộng thêm)
+                    existing.QuantityLeft += 1;
+                    existing.IsUsed = false;
+                }
+                else
+                {
+                    // Tạo mới
+                    var uv = new User_Voucher
+                    {
+                        ID_user = user.ID_user,
+                        VoucherID = voucherId,
+                        QuantityLeft = 1, // Tặng 1 vé
+                        IsUsed = false,
+                        SavedDate = DateTime.Now
+                    };
+                    da.User_Vouchers.InsertOnSubmit(uv);
+                }
+
+                // Tăng số lượng đã dùng của Voucher (Tính là đã phát hành)
+                // voucher.QuantityUsed += 1; // Tùy logic: Tặng có tính là Used luôn hay chờ mua hàng mới tính? 
+                // Thường thì khi "Tặng" chưa trừ kho tổng, khi "Dùng mua hàng" mới trừ. Nên dòng này comment lại.
+
+                da.SubmitChanges();
+                return (true, $"Đã tặng mã {voucher.Code} cho user {user.users_name}.");
+            }
+            catch (Exception ex)
+            {
+                return (false, "Lỗi hệ thống: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Xóa Voucher
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool DeleteVoucher(int id)
+        {
+            try
+            {
+                var v = da.Vouchers.FirstOrDefault(x => x.VoucherID == id);
+                if (v != null)
+                {
+                    // Kiểm tra ràng buộc khóa ngoại (User_Voucher, Orders)
+                    if (da.Orders.Any(o => o.VoucherID == id))
+                    {
+                        // Nếu đã có đơn hàng dùng, chỉ ẩn đi (Soft delete)
+                        v.IsActive = false;
+                    }
+                    else
+                    {
+                        // Xóa User_Voucher trước nếu có
+                        var uvs = da.User_Vouchers.Where(uv => uv.VoucherID == id);
+                        da.User_Vouchers.DeleteAllOnSubmit(uvs);
+                        da.Vouchers.DeleteOnSubmit(v);
+                    }
+                    da.SubmitChanges();
+                    return true;
+                }
+                return false;
+            }
+            catch { return false; }
+        }
+
+        /// <summary>
+        /// Thêm/Sửa Voucher (Hàm gộp)
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public bool SaveVoucher(VoucherViewModel model)
+        {
+            try
+            {
+                Voucher v;
+                if (model.VoucherID > 0)
+                {
+                    v = da.Vouchers.FirstOrDefault(x => x.VoucherID == model.VoucherID);
+                    if (v == null) return false;
+                }
+                else
+                {
+                    v = new Voucher();
+                    v.QuantityUsed = 0;
+                    da.Vouchers.InsertOnSubmit(v);
+                }
+
+                v.Code = model.Code;
+                v.Descriptions = model.Description;
+                v.Is_Percent = model.IsPercent;
+                v.DiscountValue = model.DiscountValue;
+                v.Quantity = model.Quantity;
+                v.StartDate = model.StartDate;
+                v.EndDate = model.EndDate;
+                v.IsActive = model.IsActive;
+                v.IsPublic = model.IsPublic;
+                v.MinOrderValue = model.MinOrderValue;
+                v.MaxDiscountAmount = model.MaxDiscountAmount;
+                v.MaxUsagePerUser = model.MaxUsagePerUser;
+                v.Header = model.Code; // Hoặc thêm cột Header vào model
+
+                da.SubmitChanges();
+                return true;
+            }
+            catch { return false; }
+        }
+
+        public VoucherViewModel GetVoucherDetail(int id)
+        {
+            var v = da.Vouchers.FirstOrDefault(x => x.VoucherID == id);
+            if (v == null) return null;
+            return new VoucherViewModel
+            {
+                VoucherID = v.VoucherID,
+                Code = v.Code,
+                Description = v.Descriptions,
+                IsPercent = v.Is_Percent,
+                DiscountValue = v.DiscountValue,
+                Quantity = v.Quantity,
+                QuantityUsed = v.QuantityUsed,
+                StartDate = v.StartDate,
+                EndDate = v.EndDate,
+                IsActive = v.IsActive,
+                IsPublic = v.IsPublic,
+                MinOrderValue = v.MinOrderValue,
+                MaxDiscountAmount = v.MaxDiscountAmount,
+                MaxUsagePerUser = v.MaxUsagePerUser
+            };
         }
     }
 

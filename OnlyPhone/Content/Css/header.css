@@ -263,9 +263,7 @@ ul {
     transform: rotate(180deg);
 }
 
-/* ======================== */
-/* NESTED SUBMENU (LEVEL 2) */
-/* ======================== */
+
 .submenu .menu-item.has-submenu > a {
     display: flex;
     justify-content: space-between;
@@ -273,14 +271,7 @@ ul {
     position: relative;
 }
 
-    .submenu .menu-item.has-submenu > a::after {
-        content: '\f054';
-        font-family: 'Font Awesome 6 Free';
-        font-weight: 900;
-        font-size: 10px;
-        margin-left: 10px;
-        transition: transform 0.3s ease;
-    }
+   
 
 .submenu .submenu {
     left: 100%;

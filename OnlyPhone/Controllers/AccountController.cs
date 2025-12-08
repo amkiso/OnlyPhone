@@ -5,15 +5,18 @@ using System.Web;
 using System.Web.Mvc;
 using OnlyPhone.Models;
 
-
 namespace OnlyPhone.Controllers
 {
     public class AccountController : Controller
     {
-        /*private readonly */
+        // Khởi tạo các đối tượng xử lý dữ liệu
         SQLDataClassesDataContext db = new SQLDataClassesDataContext();
         Xuly xl = new Xuly();
-        // GET: Account
+        EmailService em = new EmailService(); // Đưa lên cấp class để dùng chung
+
+        // =====================================================
+        // LOGIN & REGISTER VIEWS
+        // =====================================================
         public ActionResult Login()
         {
             if (Session["UserSession"] != null)
@@ -22,514 +25,15 @@ namespace OnlyPhone.Controllers
             }
             return View();
         }
+
         public ActionResult Register()
         {
             return View();
         }
-        [HttpGet]
-        public ActionResult Profile()
-        {
-            try
-            {
-                // Kiểm tra đăng nhập
-                if (Session["UserID"] == null)
-                {
-                    return RedirectToAction("Login", "Account");
-                }
-
-                int userId = (int)Session["UserID"];
-
-                // Lấy thông tin profile
-                var model = xl.GetUserProfile(userId);
-
-                if (model == null)
-                {
-                    TempData["ErrorMessage"] = "Không tìm thấy thông tin người dùng";
-                    return RedirectToAction("Index", "Home");
-                }
-
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in Profile: {ex.Message}");
-                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi tải thông tin";
-                return RedirectToAction("Index", "Home");
-            }
-        }
 
         // =====================================================
-        // GET: Account/EditProfile
+        // LOGIC ĐĂNG NHẬP (POST)
         // =====================================================
-        [HttpGet]
-        public ActionResult EditProfile()
-        {
-            try
-            {
-                if (Session["UserID"] == null)
-                {
-                    return RedirectToAction("Login", "Account");
-                }
-
-                int userId = (int)Session["UserID"];
-                var profile = xl.GetUserProfile(userId);
-
-                if (profile == null)
-                {
-                    TempData["ErrorMessage"] = "Không tìm thấy thông tin người dùng";
-                    return RedirectToAction("Profile");
-                }
-
-                // Map to EditProfileRequest
-                var model = new EditProfileRequest
-                {
-                    UserId = profile.UserId,
-                    FullName = profile.FullName,
-                    PhoneNumber = profile.PhoneNumber,
-                    Province = profile.Province,
-                    Ward = profile.Ward,
-                    AddressDetail = profile.AddressDetail
-                };
-
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in EditProfile GET: {ex.Message}");
-                TempData["ErrorMessage"] = "Đã xảy ra lỗi";
-                return RedirectToAction("Profile");
-            }
-        }
-
-        // =====================================================
-        // POST: Account/EditProfile
-        // =====================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult EditProfile(EditProfileRequest model)
-        {
-            try
-            {
-                if (Session["UserID"] == null)
-                {
-                    return RedirectToAction("Login", "Account");
-                }
-
-                int userId = (int)Session["UserID"];
-                model.UserId = userId;
-
-                if (!ModelState.IsValid)
-                {
-                    TempData["ErrorMessage"] = "Vui lòng kiểm tra lại thông tin";
-                    return View(model);
-                }
-
-                // Kiểm tra số điện thoại đã tồn tại
-                if (xl.IsPhoneExists(model.PhoneNumber, userId))
-                {
-                    TempData["ErrorMessage"] = "Số điện thoại đã được sử dụng";
-                    return View(model);
-                }
-
-                // Upload avatar nếu có
-                if (model.AvatarFile != null && model.AvatarFile.ContentLength > 0)
-                {
-                    var uploadResult = xl.UploadAvatar(userId, model.AvatarFile, Server.MapPath("~/"));
-
-                    if (!uploadResult.Success)
-                    {
-                        TempData["ErrorMessage"] = uploadResult.Message;
-                        return View(model);
-                    }
-                }
-
-                // Cập nhật thông tin
-                var result = xl.UpdateUserProfile(model);
-
-                if (result.Success)
-                {
-                    TempData["SuccessMessage"] = "Cập nhật thông tin thành công";
-                    return RedirectToAction("Profile");
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = result.Message;
-                    return View(model);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in EditProfile POST: {ex.Message}");
-                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi cập nhật thông tin";
-                return View(model);
-            }
-        }
-
-        // =====================================================
-        // POST: Account/UploadAvatar (AJAX)
-        // =====================================================
-        [HttpPost]
-        public JsonResult UploadAvatar(HttpPostedFileBase avatarFile)
-        {
-            try
-            {
-                if (Session["UserID"] == null)
-                {
-                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
-                }
-
-                int userId = (int)Session["UserID"];
-
-                if (avatarFile == null || avatarFile.ContentLength == 0)
-                {
-                    return Json(new { success = false, message = "Vui lòng chọn file ảnh" });
-                }
-
-                var result = xl.UploadAvatar(userId, avatarFile, Server.MapPath("~/"));
-
-                if (result.Success)
-                {
-                    return Json(new
-                    {
-                        success = true,
-                        message = result.Message,
-                        fileName = result.FileName,
-                        filePath = Url.Content(result.FilePath)
-                    });
-                }
-                else
-                {
-                    return Json(new { success = false, message = result.Message });
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in UploadAvatar: {ex.Message}");
-                return Json(new { success = false, message = "Đã xảy ra lỗi khi upload ảnh" });
-            }
-        }
-        [HttpPost]
-        public ActionResult KeepAlive()
-        {
-            if (Session["UserID"] != null)
-            {
-                try
-                {
-                    int userId = (int)Session["UserID"];
-                    var user = db.Users.SingleOrDefault(u => u.ID_user == userId);
-
-                    if (user != null)
-                    {
-                        user.LastActive = DateTime.Now;
-                        db.SubmitChanges();
-                    }
-                }
-                catch
-                {
-                    
-                }
-            }
-
-            // Luôn trả về 200 OK để phía Client (JavaScript) không báo lỗi đỏ trong Console
-            return new HttpStatusCodeResult(200);
-        }
-        [HttpGet]
-        public JsonResult GetRecentOrders()
-        {
-            try
-            {
-                if (Session["UserID"] == null)
-                {
-                    return Json(new { success = false, message = "Vui lòng đăng nhập" }, JsonRequestBehavior.AllowGet);
-                }
-
-                int userId = (int)Session["UserID"];
-                var orders = xl.GetUserOrderHistory(userId, 1, 5);
-
-                return Json(new
-                {
-                    success = true,
-                    data = orders.Select(o => new
-                    {
-                        orderId = o.OrderId,
-                        orderDate = o.OrderDate,
-                        statusName = o.StatusName,
-                        totalAmount = o.TotalAmount,
-                        itemCount = o.ItemCount
-                    })
-                }, JsonRequestBehavior.AllowGet);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in GetRecentOrders: {ex.Message}");
-                return Json(new { success = false, message = "Đã xảy ra lỗi" }, JsonRequestBehavior.AllowGet);
-            }
-        }
-
-        // =====================================================
-        // API: Get Order History với pagination và filter
-        // =====================================================
-        [HttpGet]
-        public JsonResult GetOrderHistory(int page = 1, int pageSize = 10, string statusFilter = "")
-        {
-            try
-            {
-                if (Session["UserID"] == null)
-                {
-                    return Json(new { success = false, message = "Vui lòng đăng nhập" }, JsonRequestBehavior.AllowGet);
-                }
-
-                int userId = (int)Session["UserID"];
-
-                // Lấy danh sách đơn hàng
-                var allOrders = xl.GetUserOrderHistory(userId, 1, 1000); // Lấy tất cả
-
-                // Filter theo status nếu có
-                if (!string.IsNullOrEmpty(statusFilter))
-                {
-                    int statusId = int.Parse(statusFilter);
-                    allOrders = allOrders.Where(o => GetStatusId(o.StatusName) == statusId).ToList();
-                }
-
-                // Tính tổng số trang
-                int totalOrders = allOrders.Count;
-                int totalPages = (int)Math.Ceiling(totalOrders / (double)pageSize);
-
-                // Pagination
-                var orders = allOrders
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
-
-                return Json(new
-                {
-                    success = true,
-                    data = new
-                    {
-                        orders = orders.Select(o => new
-                        {
-                            orderId = o.OrderId,
-                            orderDate = o.OrderDate,
-                            statusId = GetStatusId(o.StatusName),
-                            statusName = o.StatusName,
-                            totalAmount = o.TotalAmount,
-                            itemCount = o.ItemCount
-                        }),
-                        totalOrders = totalOrders,
-                        totalPages = totalPages,
-                        currentPage = page
-                    }
-                }, JsonRequestBehavior.AllowGet);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in GetOrderHistory: {ex.Message}");
-                return Json(new { success = false, message = "Đã xảy ra lỗi" }, JsonRequestBehavior.AllowGet);
-            }
-        }
-
-        // =====================================================
-        // API: Cancel Order (cập nhật từ AJAX sang API)
-        // =====================================================
-        [HttpPost]
-        public JsonResult CancelOrder(string orderId, string reason = "")
-        {
-            try
-            {
-                if (Session["UserID"] == null)
-                {
-                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
-                }
-
-                int userId = (int)Session["UserID"];
-                var result = xl.CancelOrder(orderId, userId, reason);
-
-                return Json(new { success = result.Success, message = result.Message });
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in CancelOrder: {ex.Message}");
-                return Json(new { success = false, message = "Đã xảy ra lỗi khi hủy đơn hàng" });
-            }
-        }
-
-        // =====================================================
-        // API: Reorder Order (cập nhật từ AJAX sang API)
-        // =====================================================
-        [HttpPost]
-        public JsonResult ReorderOrder(string orderId)
-        {
-            try
-            {
-                if (Session["UserID"] == null)
-                {
-                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
-                }
-
-                int userId = (int)Session["UserID"];
-                var result = xl.ReorderOrder(orderId, userId);
-
-                return Json(new { success = result.Success, message = result.Message });
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in ReorderOrder: {ex.Message}");
-                return Json(new { success = false, message = "Đã xảy ra lỗi" });
-            }
-        }
-
-        // =====================================================
-        // Helper: Map StatusName to StatusId
-        // =====================================================
-        private int GetStatusId(string statusName)
-        {
-            if (string.IsNullOrEmpty(statusName))
-                return 0;
-
-            if (statusName.Contains("Chờ") || statusName.Contains("Pending"))
-                return 1;
-            if (statusName.Contains("Đang xử lý") || statusName.Contains("Processing"))
-                return 2;
-            if (statusName.Contains("Xác nhận") || statusName.Contains("Confirmed"))
-                return 3;
-            if (statusName.Contains("Đang giao") || statusName.Contains("Shipping"))
-                return 4;
-            if (statusName.Contains("Hoàn thành") || statusName.Contains("Delivered"))
-                return 5;
-            if (statusName.Contains("Hủy") || statusName.Contains("Cancelled"))
-                return 6;
-
-            return 0;
-        }
-        // GET: Account/OrderDetail
-        [HttpGet]
-        public ActionResult OrderDetail(string id)
-        {
-            try
-            {
-                if (Session["UserID"] == null)
-                {
-                    return RedirectToAction("Login", "Account");
-                }
-
-                if (string.IsNullOrEmpty(id))
-                {
-                    TempData["ErrorMessage"] = "Không tìm thấy mã đơn hàng";
-                    return RedirectToAction("OrderHistory");
-                }
-
-                int userId = (int)Session["UserID"];
-                var model = xl.GetOrderDetail(id, userId);
-
-                if (model == null)
-                {
-                    TempData["ErrorMessage"] = "Không tìm thấy đơn hàng";
-                    return RedirectToAction("OrderHistory");
-                }
-
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in OrderDetail: {ex.Message}");
-                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi tải thông tin đơn hàng";
-                return RedirectToAction("OrderHistory");
-            }
-        }
-        // =====================================================
-        // GET: Account/ChangePassword
-        // =====================================================
-        [HttpGet]
-        public ActionResult ChangePassword()
-        {
-            if (Session["UserID"] == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
-            return View(new ChangePasswordRequest());
-        }
-
-        // =====================================================
-        // POST: Account/ChangePassword
-        // =====================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult ChangePassword(ChangePasswordRequest model)
-        {
-            try
-            {
-                if (Session["UserID"] == null)
-                {
-                    return RedirectToAction("Login", "Account");
-                }
-
-                int userId = (int)Session["UserID"];
-                model.UserId = userId;
-
-                if (!ModelState.IsValid)
-                {
-                    TempData["ErrorMessage"] = "Vui lòng kiểm tra lại thông tin";
-                    return View(model);
-                }
-
-                var result = xl.ChangePassword(model);
-
-                if (result.Success)
-                {
-                    TempData["SuccessMessage"] = "Đổi mật khẩu thành công";
-                    return RedirectToAction("Profile");
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = result.Message;
-                    return View(model);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in ChangePassword: {ex.Message}");
-                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi đổi mật khẩu";
-                return View(model);
-            }
-        }
-
-        // =====================================================
-        // GET: Account/OrderHistory
-        // =====================================================
-        [HttpGet]
-        public ActionResult OrderHistory(int page = 1)
-        {
-            try
-            {
-                if (Session["UserID"] == null)
-                {
-                    return RedirectToAction("Login", "Account");
-                }
-
-                int userId = (int)Session["UserID"];
-                var orders = xl.GetUserOrderHistory(userId, page, 10);
-
-                ViewBag.CurrentPage = page;
-                ViewBag.TotalOrders = orders.Count;
-
-                return View(orders);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in OrderHistory: {ex.Message}");
-                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi tải lịch sử đơn hàng";
-                return RedirectToAction("Profile");
-            }
-        }
-        public ActionResult FogotPassword()
-        {
-            return View();
-        }
-        public ActionResult Info()
-        {
-            return View();
-        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Login(LoginViewModel model)
@@ -552,8 +56,7 @@ namespace OnlyPhone.Controllers
                     return View(model);
                 }
 
-                // Kiểm tra mật khẩu (nên sử dụng BCrypt hoặc hash password)
-                // Giả sử password đã được hash trong DB
+                // Kiểm tra mật khẩu (đã hash)
                 if (!xl.VerifyPassword(model.Password, user.user_password))
                 {
                     ModelState.AddModelError("", "Mật khẩu không chính xác");
@@ -569,12 +72,17 @@ namespace OnlyPhone.Controllers
                     .Sum(ci => (int?)ci.quantity) ?? 0;
 
                 // Đếm thông báo chưa đọc
-                int unreadNotifications = db.Notifications
-                    .Count(n => n.ID_user == user.ID_user && n.IsRead == false);
+                int unreadNotifications = xl.GetUnreadNotificationCount(user.ID_user);
+
+                // Cập nhật trạng thái Active
                 var userdetails = db.User_details.FirstOrDefault(ud => ud.ID_user == user.ID_user);
-                userdetails.user_status = true;
+                if (userdetails != null)
+                {
+                    userdetails.user_status = true;
+                }
                 user.LastActive = DateTime.Now;
                 db.SubmitChanges();
+
                 // Tạo session user
                 var userSession = new UserSessionModel
                 {
@@ -608,10 +116,7 @@ namespace OnlyPhone.Controllers
                     Response.Cookies.Add(cookie);
                 }
 
-                // Redirect dựa theo role
-                
-                    return RedirectToAction("Index", "Home");
-                
+                return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)
             {
@@ -620,15 +125,25 @@ namespace OnlyPhone.Controllers
             }
         }
 
-        // GET: Account/Logout
+        // =====================================================
+        // LOGOUT
+        // =====================================================
         public ActionResult Logout()
         {
-            var userdetail = db.User_details.FirstOrDefault(ud => ud.ID_user == (int)Session["UserID"]);
-            userdetail.user_status = false;
-            db.SubmitChanges();
+            if (Session["UserID"] != null)
+            {
+                int uid = (int)Session["UserID"];
+                var userdetail = db.User_details.FirstOrDefault(ud => ud.ID_user == uid);
+                if (userdetail != null)
+                {
+                    userdetail.user_status = false;
+                    db.SubmitChanges();
+                }
+            }
+
             Session.Clear();
             Session.Abandon();
-            
+
             // Xóa cookie Remember Me
             if (Request.Cookies["UserLogin"] != null)
             {
@@ -641,38 +156,472 @@ namespace OnlyPhone.Controllers
 
             return RedirectToAction("Index", "Home");
         }
-        EmailService em = new EmailService();
-        
+
+        // =====================================================
+        // PROFILE & EDIT PROFILE
+        // =====================================================
+        [HttpGet]
+        public ActionResult Profile()
+        {
+            try
+            {
+                if (Session["UserID"] == null) return RedirectToAction("Login", "Account");
+
+                int userId = (int)Session["UserID"];
+                var model = xl.GetUserProfile(userId);
+
+                if (model == null)
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy thông tin người dùng";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in Profile: {ex.Message}");
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        [HttpGet]
+        public ActionResult EditProfile()
+        {
+            try
+            {
+                if (Session["UserID"] == null) return RedirectToAction("Login", "Account");
+
+                int userId = (int)Session["UserID"];
+                var profile = xl.GetUserProfile(userId);
+
+                if (profile == null) return RedirectToAction("Profile");
+
+                var model = new EditProfileRequest
+                {
+                    UserId = profile.UserId,
+                    FullName = profile.FullName,
+                    PhoneNumber = profile.PhoneNumber,
+                    Province = profile.Province,
+                    Ward = profile.Ward,
+                    AddressDetail = profile.AddressDetail
+                };
+
+                return View(model);
+            }
+            catch
+            {
+                return RedirectToAction("Profile");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditProfile(EditProfileRequest model)
+        {
+            try
+            {
+                if (Session["UserID"] == null) return RedirectToAction("Login", "Account");
+
+                int userId = (int)Session["UserID"];
+                model.UserId = userId;
+
+                if (!ModelState.IsValid)
+                {
+                    TempData["ErrorMessage"] = "Vui lòng kiểm tra lại thông tin";
+                    return View(model);
+                }
+
+                if (xl.IsPhoneExists(model.PhoneNumber, userId))
+                {
+                    TempData["ErrorMessage"] = "Số điện thoại đã được sử dụng";
+                    return View(model);
+                }
+
+                if (model.AvatarFile != null && model.AvatarFile.ContentLength > 0)
+                {
+                    var uploadResult = xl.UploadAvatar(userId, model.AvatarFile, Server.MapPath("~/"));
+                    if (!uploadResult.Success)
+                    {
+                        TempData["ErrorMessage"] = uploadResult.Message;
+                        return View(model);
+                    }
+                }
+
+                var result = xl.UpdateUserProfile(model);
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = "Cập nhật thông tin thành công";
+                    return RedirectToAction("Profile");
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = result.Message;
+                    return View(model);
+                }
+            }
+            catch
+            {
+                TempData["ErrorMessage"] = "Đã xảy ra lỗi hệ thống";
+                return View(model);
+            }
+        }
+
+        // =====================================================
+        // UPLOAD AVATAR (AJAX)
+        // =====================================================
+        [HttpPost]
+        public JsonResult UploadAvatar(HttpPostedFileBase avatarFile)
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+
+                int userId = (int)Session["UserID"];
+                if (avatarFile == null || avatarFile.ContentLength == 0)
+                    return Json(new { success = false, message = "Vui lòng chọn file ảnh" });
+
+                var result = xl.UploadAvatar(userId, avatarFile, Server.MapPath("~/"));
+
+                if (result.Success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = result.Message,
+                        fileName = result.FileName,
+                        filePath = Url.Content(result.FilePath)
+                    });
+                }
+                return Json(new { success = false, message = result.Message });
+            }
+            catch
+            {
+                return Json(new { success = false, message = "Lỗi upload ảnh" });
+            }
+        }
+
+        // =====================================================
+        // CHANGE PASSWORD (LOGGED IN)
+        // =====================================================
+        [HttpGet]
+        public ActionResult ChangePassword()
+        {
+            if (Session["UserID"] == null) return RedirectToAction("Login", "Account");
+            return View(new ChangePasswordRequest());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ChangePassword(ChangePasswordRequest model)
+        {
+            try
+            {
+                if (Session["UserID"] == null) return RedirectToAction("Login", "Account");
+
+                int userId = (int)Session["UserID"];
+                model.UserId = userId;
+
+                if (!ModelState.IsValid) return View(model);
+
+                var result = xl.ChangePassword(model);
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = "Đổi mật khẩu thành công";
+                    return RedirectToAction("Profile");
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = result.Message;
+                    return View(model);
+                }
+            }
+            catch
+            {
+                TempData["ErrorMessage"] = "Lỗi đổi mật khẩu";
+                return View(model);
+            }
+        }
+
+        // =====================================================
+        // NEW FEATURE: FORGOT PASSWORD (QUÊN MẬT KHẨU)
+        // =====================================================
+
+        // BƯỚC 1: Trang nhập Email
+        [HttpGet]
+        public ActionResult ForgotPassword()
+        {
+            return View(); // Đã sửa tên từ FogotPassword -> ForgotPassword
+        }
+
+        // Xử lý gửi OTP đặt lại mật khẩu
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult SendResetOTP(string email)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(email))
+                    return Json(new { success = false, message = "Vui lòng nhập email" });
+
+                // Kiểm tra email tồn tại
+                var user = db.Users.FirstOrDefault(u => u.user_email == email);
+                if (user == null)
+                    return Json(new { success = false, message = "Email này chưa được đăng ký trong hệ thống" });
+
+                // Tạo OTP
+                string otpCode = GenerateOTP();
+
+                // Lưu Session (Khác với Session đăng ký để tránh xung đột)
+                Session["ResetPass_Email"] = email;
+                Session["ResetPass_OTP"] = otpCode;
+                Session["ResetPass_Time"] = DateTime.Now.AddMinutes(5);
+
+                // Gửi Email (Cần cập nhật EmailService.cs như hướng dẫn trước)
+                bool sent = em.SendResetPasswordOTP(email, otpCode);
+
+                if (sent)
+                    return Json(new { success = true, message = "Mã OTP đã được gửi", redirectUrl = Url.Action("VerifyResetOTP") });
+                else
+                    return Json(new { success = false, message = "Không thể gửi email. Vui lòng thử lại sau." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // BƯỚC 2: Trang nhập OTP
+        [HttpGet]
+        public ActionResult VerifyResetOTP()
+        {
+            if (Session["ResetPass_Email"] == null)
+                return RedirectToAction("ForgotPassword");
+
+            ViewBag.Email = Session["ResetPass_Email"];
+            return View();
+        }
+
+        // Xử lý kiểm tra OTP
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult CheckResetOTP(string otp)
+        {
+            var sessionOtp = Session["ResetPass_OTP"] as string;
+            var expiry = Session["ResetPass_Time"] as DateTime?;
+
+            if (string.IsNullOrEmpty(sessionOtp) || expiry == null)
+                return Json(new { success = false, message = "Phiên làm việc hết hạn, vui lòng thực hiện lại" });
+
+            if (DateTime.Now > expiry)
+                return Json(new { success = false, message = "Mã OTP đã hết hạn" });
+
+            if (otp != sessionOtp)
+                return Json(new { success = false, message = "Mã OTP không chính xác" });
+
+            // OTP đúng -> Cho phép sang bước đổi pass
+            Session["ResetPass_CanChange"] = true;
+            return Json(new { success = true, redirectUrl = Url.Action("ResetPassword") });
+        }
+
+        // BƯỚC 3: Trang đặt mật khẩu mới
+        [HttpGet]
+        public ActionResult ResetPassword()
+        {
+            // Bảo mật: Phải verify OTP thành công mới được vào đây
+            if (Session["ResetPass_CanChange"] == null || (bool)Session["ResetPass_CanChange"] == false)
+                return RedirectToAction("ForgotPassword");
+
+            return View();
+        }
+
+        // Xử lý cập nhật mật khẩu mới vào DB
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult ConfirmResetPassword(string newPassword)
+        {
+            try
+            {
+                if (Session["ResetPass_CanChange"] == null)
+                    return Json(new { success = false, message = "Yêu cầu không hợp lệ" });
+
+                string email = Session["ResetPass_Email"] as string;
+
+                // Cần cập nhật Xuly.cs thêm hàm UpdatePasswordByEmail
+                bool result = xl.UpdatePasswordByEmail(email, newPassword);
+
+                if (result)
+                {
+                    // Xóa Session
+                    Session.Remove("ResetPass_Email");
+                    Session.Remove("ResetPass_OTP");
+                    Session.Remove("ResetPass_Time");
+                    Session.Remove("ResetPass_CanChange");
+
+                    return Json(new { success = true, message = "Đổi mật khẩu thành công", redirectUrl = Url.Action("Login") });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Lỗi cập nhật mật khẩu" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+        // =====================================================
+        // ORDER MANAGEMENT
+        // =====================================================
+        [HttpGet]
+        public ActionResult OrderHistory(int page = 1)
+        {
+            if (Session["UserID"] == null) return RedirectToAction("Login");
+
+            int userId = (int)Session["UserID"];
+            var orders = xl.GetUserOrderHistory(userId, page, 10);
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalOrders = orders.Count;
+
+            return View(orders);
+        }
+
+        [HttpGet]
+        public ActionResult OrderDetail(string id)
+        {
+            if (Session["UserID"] == null) return RedirectToAction("Login");
+            if (string.IsNullOrEmpty(id)) return RedirectToAction("OrderHistory");
+
+            int userId = (int)Session["UserID"];
+            var model = xl.GetOrderDetail(id, userId);
+
+            if (model == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy đơn hàng";
+                return RedirectToAction("OrderHistory");
+            }
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public JsonResult GetRecentOrders()
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" }, JsonRequestBehavior.AllowGet);
+
+                int userId = (int)Session["UserID"];
+                var orders = xl.GetUserOrderHistory(userId, 1, 5);
+
+                return Json(new
+                {
+                    success = true,
+                    data = orders.Select(o => new {
+                        orderId = o.OrderId,
+                        orderDate = o.OrderDate,
+                        statusName = o.StatusName,
+                        totalAmount = o.TotalAmount,
+                        itemCount = o.ItemCount
+                    })
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch
+            {
+                return Json(new { success = false, message = "Lỗi tải dữ liệu" }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult GetOrderHistory(int page = 1, int pageSize = 10, string statusFilter = "")
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" }, JsonRequestBehavior.AllowGet);
+
+                int userId = (int)Session["UserID"];
+                var allOrders = xl.GetUserOrderHistory(userId, 1, 1000);
+
+                if (!string.IsNullOrEmpty(statusFilter))
+                {
+                    int statusId = int.Parse(statusFilter);
+                    allOrders = allOrders.Where(o => GetStatusId(o.StatusName) == statusId).ToList();
+                }
+
+                int totalOrders = allOrders.Count;
+                int totalPages = (int)Math.Ceiling(totalOrders / (double)pageSize);
+                var orders = allOrders.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        orders = orders.Select(o => new {
+                            orderId = o.OrderId,
+                            orderDate = o.OrderDate,
+                            statusId = GetStatusId(o.StatusName),
+                            statusName = o.StatusName,
+                            totalAmount = o.TotalAmount,
+                            itemCount = o.ItemCount
+                        }),
+                        totalOrders = totalOrders,
+                        totalPages = totalPages,
+                        currentPage = page
+                    }
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch
+            {
+                return Json(new { success = false, message = "Lỗi tải dữ liệu" }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public JsonResult CancelOrder(string orderId, string reason = "")
+        {
+            if (Session["UserID"] == null) return Json(new { success = false, message = "Vui lòng đăng nhập" });
+
+            int userId = (int)Session["UserID"];
+            var result = xl.CancelOrder(orderId, userId, reason);
+            return Json(new { success = result.Success, message = result.Message });
+        }
+
+        [HttpPost]
+        public JsonResult ReorderOrder(string orderId)
+        {
+            if (Session["UserID"] == null) return Json(new { success = false, message = "Vui lòng đăng nhập" });
+
+            int userId = (int)Session["UserID"];
+            var result = xl.ReorderOrder(orderId, userId);
+            return Json(new { success = result.Success, message = result.Message });
+        }
+
+        // =====================================================
+        // REGISTER OTP (ĐĂNG KÝ MỚI)
+        // =====================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult SendOTP(string email, string username)
         {
             try
             {
-                // Validate
                 if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(username))
-                {
                     return Json(new { success = false, message = "Email và tên đăng nhập không được để trống" });
-                }
 
-                // Kiểm tra email đã tồn tại
-                var existingEmail = db.Users.Any(u => u.user_email == email);
-                if (existingEmail)
-                {
+                if (db.Users.Any(u => u.user_email == email))
                     return Json(new { success = false, message = "Email đã được sử dụng" });
-                }
 
-                // Kiểm tra username đã tồn tại
-                var existingUsername = db.Users.Any(u => u.users_name == username);
-                if (existingUsername)
-                {
+                if (db.Users.Any(u => u.users_name == username))
                     return Json(new { success = false, message = "Tên đăng nhập đã được sử dụng" });
-                }
 
-                // Tạo mã OTP 6 số
                 string otpCode = GenerateOTP();
 
-                // Lưu OTP vào Session với thời gian hết hạn 5 phút
                 var otpModel = new RegisterViewModel.OTPModel
                 {
                     Email = email,
@@ -682,83 +631,47 @@ namespace OnlyPhone.Controllers
                 };
 
                 Session["RegisterOTP"] = otpModel;
-
-                // Gửi email
                 bool emailSent = em.SendOTPEmail(email, otpCode, username);
 
                 if (emailSent)
-                {
                     return Json(new { success = true, message = "Mã OTP đã được gửi đến email" });
-                }
                 else
-                {
-                    return Json(new { success = false, message = "Không thể gửi email. Vui lòng kiểm tra lại địa chỉ email" });
-                }
+                    return Json(new { success = false, message = "Không thể gửi email. Kiểm tra lại địa chỉ" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
 
-        // POST: Account/VerifyOTP
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult VerifyOTP(string email, string otpCode, string username, string password)
         {
             try
             {
-                // Lấy OTP từ Session
                 var otpModel = Session["RegisterOTP"] as RegisterViewModel.OTPModel;
+                if (otpModel == null) return Json(new { success = false, message = "Phiên làm việc hết hạn" });
 
-                if (otpModel == null)
-                {
-                    return Json(new { success = false, message = "Phiên làm việc đã hết hạn. Vui lòng thử lại" });
-                }
+                if (otpModel.Email != email) return Json(new { success = false, message = "Email không khớp" });
+                if (DateTime.Now > otpModel.ExpiryTime) return Json(new { success = false, message = "OTP đã hết hạn" });
+                if (otpModel.OtpCode != otpCode) return Json(new { success = false, message = "OTP không đúng" });
 
-                // Kiểm tra email khớp
-                if (otpModel.Email != email)
-                {
-                    return Json(new { success = false, message = "Email không khớp" });
-                }
+                // Double check DB
+                if (db.Users.Any(u => u.user_email == email)) return Json(new { success = false, message = "Email đã tồn tại" });
 
-                // Kiểm tra OTP hết hạn
-                if (DateTime.Now > otpModel.ExpiryTime)
-                {
-                    Session.Remove("RegisterOTP");
-                    return Json(new { success = false, message = "Mã OTP đã hết hạn" });
-                }
-
-                // Kiểm tra mã OTP
-                if (otpModel.OtpCode != otpCode)
-                {
-                    return Json(new { success = false, message = "Mã OTP không đúng" });
-                }
-
-                // Kiểm tra lại email và username chưa tồn tại (double check)
-                if (db.Users.Any(u => u.user_email == email))
-                {
-                    return Json(new { success = false, message = "Email đã được sử dụng" });
-                }
-
-                if (db.Users.Any(u => u.users_name == username))
-                {
-                    return Json(new { success = false, message = "Tên đăng nhập đã được sử dụng" });
-                }
-
-                // Tạo user mới
                 var newUser = new User
                 {
                     users_name = username,
                     user_email = email,
-                    user_password = HashPassword(password), // Hash password
-                    user_type = "Customer" // Mặc định là Customer
+                    user_password = HashPassword(password),
+                    user_type = "Customer"
                 };
 
                 db.Users.InsertOnSubmit(newUser);
                 db.SubmitChanges();
 
-                // Tạo giỏ hàng cho user mới
+                // Tạo giỏ hàng
                 var cart = new shopping_cart
                 {
                     ID_user = newUser.ID_user,
@@ -768,12 +681,12 @@ namespace OnlyPhone.Controllers
                 db.shopping_carts.InsertOnSubmit(cart);
                 db.SubmitChanges();
 
-                // Tạo thông báo chào mừng
+                // Thông báo chào mừng
                 var notification = new Notification
                 {
                     ID_user = newUser.ID_user,
                     Title = "Chào mừng đến với OnlyPhone!",
-                    Message = $"Xin chào {username}, cảm ơn bạn đã đăng ký tài khoản tại OnlyPhone. Chúc bạn có trải nghiệm mua sắm tuyệt vời!",
+                    Message = $"Xin chào {username}, cảm ơn bạn đã đăng ký tài khoản.",
                     Type = "System",
                     IsRead = false,
                     Created_At = DateTime.Now
@@ -781,34 +694,54 @@ namespace OnlyPhone.Controllers
                 db.Notifications.InsertOnSubmit(notification);
                 db.SubmitChanges();
 
-                // Gửi email chào mừng (không bắt buộc)
+                // Gửi mail chào mừng
                 em.SendWelcomeEmail(email, username);
-
-                // Xóa OTP khỏi Session
                 Session.Remove("RegisterOTP");
 
                 return Json(new { success = true, message = "Đăng ký thành công" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
+
+        // =====================================================
+        // OTHER ACTIONS
+        // =====================================================
+        public ActionResult Info()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult KeepAlive()
+        {
+            if (Session["UserID"] != null)
+            {
+                try
+                {
+                    int userId = (int)Session["UserID"];
+                    var user = db.Users.SingleOrDefault(u => u.ID_user == userId);
+                    if (user != null)
+                    {
+                        user.LastActive = DateTime.Now;
+                        db.SubmitChanges();
+                    }
+                }
+                catch { }
+            }
+            return new HttpStatusCodeResult(200);
+        }
+
         [HttpPost]
         public JsonResult MarkNotificationAsRead(int notificationId)
         {
             try
             {
-                if (Session["UserID"] == null)
-                {
-                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
-                }
-
+                if (Session["UserID"] == null) return Json(new { success = false, message = "Vui lòng đăng nhập" });
                 int userId = (int)Session["UserID"];
-
-                // Gọi hàm xử lý chung trong Xuly (đã handle số âm/dương)
                 bool result = xl.MarkNotificationRead(userId, notificationId);
-
                 return Json(new { success = result });
             }
             catch (Exception ex)
@@ -816,39 +749,24 @@ namespace OnlyPhone.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-        // Helper: Generate OTP 6 số
-        private string GenerateOTP()
-        {
-            Random random = new Random();
-            return random.Next(100000, 999999).ToString();
-        }
+
         [HttpGet]
         public JsonResult GetNotificationDetail(int id)
         {
             try
             {
-                if (Session["UserID"] == null)
-                {
-                    return Json(new { error = "Vui lòng đăng nhập" }, JsonRequestBehavior.AllowGet);
-                }
-
+                if (Session["UserID"] == null) return Json(new { error = "Vui lòng đăng nhập" }, JsonRequestBehavior.AllowGet);
                 int userId = (int)Session["UserID"];
 
-                // Gọi hàm xử lý vừa thêm ở trên
                 var noti = xl.GetNotificationDetail(userId, id);
+                if (noti == null) return Json(new { error = "Không tìm thấy thông báo" }, JsonRequestBehavior.AllowGet);
 
-                if (noti == null)
-                {
-                    return Json(new { error = "Không tìm thấy thông báo" }, JsonRequestBehavior.AllowGet);
-                }
-
-                // Trả về JSON đúng định dạng mà header.js đang chờ (Title, CreatedDate, Content)
                 return Json(new
                 {
                     Title = noti.Title,
-                    CreatedDate = noti.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss"), // Format ISO
+                    CreatedDate = noti.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss"),
                     Content = noti.Message,
-                    Url = noti.TargetURL // Trả thêm URL nếu muốn redirect
+                    Url = noti.TargetURL
                 }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -856,7 +774,15 @@ namespace OnlyPhone.Controllers
                 return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
-        // Helper: Hash password (sử dụng SHA256)
+
+        // =====================================================
+        // HELPER METHODS
+        // =====================================================
+        private string GenerateOTP()
+        {
+            return new Random().Next(100000, 999999).ToString();
+        }
+
         private string HashPassword(string password)
         {
             using (var sha256 = System.Security.Cryptography.SHA256.Create())
@@ -867,5 +793,16 @@ namespace OnlyPhone.Controllers
             }
         }
 
+        private int GetStatusId(string statusName)
+        {
+            if (string.IsNullOrEmpty(statusName)) return 0;
+            if (statusName.Contains("Chờ") || statusName.Contains("Pending")) return 1;
+            if (statusName.Contains("Đang xử lý") || statusName.Contains("Processing")) return 2;
+            if (statusName.Contains("Xác nhận") || statusName.Contains("Confirmed")) return 3;
+            if (statusName.Contains("Đang giao") || statusName.Contains("Shipping")) return 4;
+            if (statusName.Contains("Hoàn thành") || statusName.Contains("Delivered")) return 5;
+            if (statusName.Contains("Hủy") || statusName.Contains("Cancelled")) return 6;
+            return 0;
+        }
     }
 }
