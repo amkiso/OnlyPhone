@@ -53,25 +53,27 @@
     </button>
 </section>
 
-<div class="product-container" id="productList"></div>
+<div class="product-section">
+    <div class="product-container" id="productList"></div>
 
-<div class="pagination-wrapper">
-    <div class="pagination-info">
-        Hiển thị <strong id="showing-start">0</strong> - <strong id="showing-end">0</strong> trong tổng số <strong id="total-items">0</strong> sản phẩm
-    </div>
-
-    <div class="pagination-controls">
-        <div class="page-size-selector">
-            <label>Hiển thị:</label>
-            <select id="pageSizeSelect" onchange="changePageSize()">
-                <option value="10">10</option>
-                <option value="20" selected>20</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-            </select>
+    <div class="pagination-wrapper">
+        <div class="pagination-info">
+            Hiển thị <strong id="showing-start">0</strong> - <strong id="showing-end">0</strong> trong tổng số <strong id="total-items">0</strong> sản phẩm
         </div>
 
-        <div class="pagination-buttons" id="paginationButtons"></div>
+        <div class="pagination-controls">
+            <div class="page-size-selector">
+                <label>Hiển thị:</label>
+                <select id="pageSizeSelect" onchange="changePageSize()">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+
+            <div class="pagination-buttons" id="paginationButtons"></div>
+        </div>
     </div>
 </div>
 
@@ -83,22 +85,23 @@
     <script>
 const seriesData = @Html.Raw(jsonSeries);
 const supplierData = @Html.Raw(jsonSuppliers);
-let allProducts = @Html.Raw(filteredProducts);
-let filteredProducts = [...allProducts];
+let pagedProducts = @Html.Raw(filteredProducts);
 let currentPage = @currentPage;
 let pageSize = @pageSize;
+const totalItems = @totalItems;
+const totalPages = @totalPages;
 let tempCardId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     renderProducts();
     renderPagination();
+    const sizeSelect = document.getElementById('pageSizeSelect');
+    if (sizeSelect) sizeSelect.value = pageSize;
 });
 
 function renderProducts() {
     const container = document.getElementById('productList');
-    const start = (currentPage - 1) * pageSize;
-    const end = start + pageSize;
-    const pageProducts = filteredProducts.slice(start, end);
+    const pageProducts = pagedProducts;
 
     if (pageProducts.length === 0) {
         container.innerHTML = `
@@ -193,23 +196,50 @@ function createProductCard(item) {
 }
 
 function renderPagination() {
-    const totalPages = Math.ceil(filteredProducts.length / pageSize);
     const container = document.getElementById('paginationButtons');
+
+    if (totalPages <= 0) {
+        container.innerHTML = `
+            <button class="page-btn" disabled><i class="fa fa-chevron-left"></i></button>
+            <button class="page-btn active" disabled>0</button>
+            <button class="page-btn" disabled><i class="fa fa-chevron-right"></i></button>`;
+        return;
+    }
+
+    if (totalPages === 1) {
+        container.innerHTML = `
+            <button class="page-btn" disabled><i class="fa fa-chevron-left"></i></button>
+            <button class="page-btn active" disabled>1</button>
+            <button class="page-btn" disabled><i class="fa fa-chevron-right"></i></button>`;
+        return;
+    }
+
+    const buildPages = () => {
+        const pages = [];
+        const windowSize = 1;
+        const start = Math.max(2, currentPage - windowSize);
+        const end = Math.min(totalPages - 1, currentPage + windowSize);
+        pages.push(1);
+        if (start > 2) pages.push('...');
+        for (let i = start; i <= end; i++) pages.push(i);
+        if (end < totalPages - 1) pages.push('...');
+        if (totalPages > 1) pages.push(totalPages);
+        return pages;
+    };
 
     let html = `<button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
         <i class="fa fa-chevron-left"></i>
     </button>`;
 
-    // Smart page numbers
-    for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-            html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
-        } else if (i === currentPage - 3 || i === currentPage + 3) {
+    buildPages().forEach(p => {
+        if (p === '...') {
             html += `<button class="page-btn dots" disabled>...</button>`;
+        } else {
+            html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="changePage(${p})">${p}</button>`;
         }
-    }
+    });
 
-    html += `<button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>
+    html += `<button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
         <i class="fa fa-chevron-right"></i>
     </button>`;
 
@@ -217,65 +247,44 @@ function renderPagination() {
 }
 
 function changePage(page) {
-    const totalPages = Math.ceil(filteredProducts.length / pageSize);
-    if (page < 1 || page > totalPages) return;
+    if (page < 1 || page > totalPages || page === currentPage) return;
 
-    currentPage = page;
-
-    // Update URL without reload
-    const url = new URL(window.location);
-    url.searchParams.set('page', page);
-    window.history.pushState({}, '', url);
-
-    showLoading();
-
-    setTimeout(() => {
-        renderProducts();
-        renderPagination();
-        hideLoading();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 200);
+    navigateWithParams(page, pageSize);
 }
 
 function changePageSize() {
     pageSize = parseInt(document.getElementById('pageSizeSelect').value);
     currentPage = 1;
-
-    // Update URL
-    const url = new URL(window.location);
-    url.searchParams.set('pageSize', pageSize);
-    url.searchParams.set('page', 1);
-    window.history.pushState({}, '', url);
-
-    renderProducts();
-    renderPagination();
+    navigateWithParams(1, pageSize);
 }
 
 function updatePaginationInfo() {
-    const start = filteredProducts.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-    const end = Math.min(currentPage * pageSize, filteredProducts.length);
+    const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    const end = totalItems === 0 ? 0 : Math.min(totalItems, (currentPage - 1) * pageSize + pagedProducts.length);
 
     document.getElementById('showing-start').textContent = start;
     document.getElementById('showing-end').textContent = end;
-    document.getElementById('total-items').textContent = filteredProducts.length;
+    document.getElementById('total-items').textContent = totalItems;
 }
 
 function applyFilters() {
     const status = document.getElementById('statusFilter').value;
-    const keyword = document.getElementById('searchBox').value.toLowerCase();
-
-    // Reload với filter mới
-    const url = new URL(window.location);
-    url.searchParams.set('status', status);
-    url.searchParams.set('keyword', keyword);
-    url.searchParams.set('page', 1);
-
-    window.location.href = url.toString();
+    const keyword = document.getElementById('searchBox').value.trim();
+    navigateWithParams(1, pageSize, status, keyword);
 }
 
 function filterProducts(status) {
     document.getElementById('statusFilter').value = status;
     applyFilters();
+}
+
+function navigateWithParams(page, size, statusOverride, keywordOverride) {
+    const url = new URL(window.location);
+    url.searchParams.set('status', statusOverride ?? document.getElementById('statusFilter').value);
+    url.searchParams.set('keyword', keywordOverride ?? document.getElementById('searchBox').value.trim());
+    url.searchParams.set('page', page);
+    url.searchParams.set('pageSize', size);
+    window.location.href = url.toString();
 }
 
 function toggleEditMode(id, isEdit) {

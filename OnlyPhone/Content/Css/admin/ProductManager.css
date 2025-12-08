@@ -1,4 +1,4 @@
-﻿<style>
+﻿
     :root {
         --card-radius: 12px;
         --border-color: rgba(0,0,0,0.08);
@@ -148,11 +148,18 @@
         border: 1px solid var(--border-color);
         flex-wrap: wrap;
         gap: 15px;
+        width: 100%;
+        position: relative;
+        z-index: 2;
+        clear: both;
+        box-shadow: var(--shadow);
     }
 
     .pagination-info {
         color: var(--text);
         font-size: 14px;
+        flex: 1;
+        min-width: 200px;
     }
 
     .pagination-info strong {
@@ -165,6 +172,9 @@
         align-items: center;
         gap: 8px;
         flex-wrap: wrap;
+        justify-content: flex-end;
+        width: 100%;
+        flex: 1;
     }
 
     .page-size-selector {
@@ -194,6 +204,9 @@
         display: flex;
         gap: 5px;
         align-items: center;
+        flex-wrap: wrap;
+        row-gap: 6px;
+        justify-content: flex-end;
     }
 
     .page-btn {
@@ -292,6 +305,10 @@
             width: 100%;
             justify-content: center;
         }
+        .pagination-buttons {
+            width: 100%;
+            justify-content: center;
+        }
     }
 
     @media (max-width: 768px) {
@@ -314,4 +331,3 @@
             justify-content: center;
         }
     }
-</style>

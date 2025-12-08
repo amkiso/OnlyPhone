@@ -1,4 +1,5 @@
-﻿using On.Areas.Admin;
+﻿using Newtonsoft.Json;
+using On.Areas.Admin;
 using OnlyPhone.Models;
 using System;
 using System.Collections.Generic;
@@ -8,28 +9,48 @@ using System.Web.Mvc;
 
 namespace OnlyPhone.Areas.Admin.Controllers
 {
-    [AdminSecurity]
+    
     public class ProductController : Controller
     {
         Xuly xl = new Xuly();
 
         // GET: Admin/Product/Manager
-        public ActionResult Manager()
+        public ActionResult Manager(string status = "all", string keyword = "", int page = 1, int pageSize = 20)
         {
-            // 1. Lấy dữ liệu (PageSize lớn để lấy hết danh sách quản lý)
-            var products = xl.GetProductsWithFilter(0, "new", 1, 2000);
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 100);
+
+            // 1. Lấy dữ liệu phân trang + filter
+            var pagedResult = xl.GetAdminProducts(status, keyword, page, pageSize, "new");
+            var totalPages = (int)Math.Ceiling((double)pagedResult.TotalItems / pageSize);
+
+            // Nếu page vượt quá tổng trang (sau khi filter) thì lùi về trang cuối
+            if (totalPages > 0 && page > totalPages)
+            {
+                page = totalPages;
+                pagedResult = xl.GetAdminProducts(status, keyword, page, pageSize, "new");
+            }
 
             // 2. Tính toán số liệu Top Cards
-            ViewBag.TotalSelling = products.Count(p => p.product_status == "selling" && p.current_Quantity > 0);
-            ViewBag.TotalLowStock = products.Count(p => p.current_Quantity > 0 && p.current_Quantity <= 5);
-            ViewBag.TotalOutStock = products.Count(p => p.product_status == "out of stock" || p.current_Quantity == 0);
-            ViewBag.TotalSold = products.Sum(p => p.total_sold);
+            ViewBag.TotalSelling = pagedResult.TotalSelling;
+            ViewBag.TotalLowStock = pagedResult.TotalLowStock;
+            ViewBag.TotalOutStock = pagedResult.TotalOutStock;
+            ViewBag.TotalSold = pagedResult.TotalSold;
 
             // 3. Lấy danh sách cho Dropdown
             ViewBag.SeriesList = xl.GetAllSeries();
             ViewBag.SupplierList = xl.GetAllSuppliers();
 
-            return View(products);
+            // 4. Thông tin phân trang
+            ViewBag.TotalItems = pagedResult.TotalItems;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.StatusFilter = status;
+            ViewBag.Keyword = keyword;
+            ViewBag.FilteredProducts = JsonConvert.SerializeObject(pagedResult.Items);
+
+            return View(pagedResult.Items);
         }
 
         // POST: Save Product

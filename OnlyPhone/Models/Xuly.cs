@@ -20,6 +20,16 @@ namespace OnlyPhone.Models
         // PRODUCT METHODS
         // =====================================================
 
+        public class ProductPagingResult
+        {
+            public List<Product_Infomation> Items { get; set; } = new List<Product_Infomation>();
+            public int TotalItems { get; set; }
+            public int TotalSelling { get; set; }
+            public int TotalLowStock { get; set; }
+            public int TotalOutStock { get; set; }
+            public int TotalSold { get; set; }
+        }
+
         // Method lấy tất cả sản phẩm (compatibility với code cũ)
         public List<Product_Infomation> itemproduct()
         {
@@ -76,6 +86,126 @@ namespace OnlyPhone.Models
             {
                 System.Diagnostics.Debug.WriteLine($"Error in GetProductsWithFilter: {ex.Message}");
                 return new List<Product_Infomation>();
+            }
+        }
+
+        // Method phục vụ trang quản trị: filter + phân trang + số liệu thống kê
+        public ProductPagingResult GetAdminProducts(string status, string keyword, int pageNumber, int pageSize, string sortBy = "new")
+        {
+            try
+            {
+                pageNumber = pageNumber < 1 ? 1 : pageNumber;
+                pageSize = pageSize <= 0 ? 20 : pageSize;
+                status = status ?? "all";
+                keyword = keyword ?? string.Empty;
+
+                var query = from p in da.Products
+                            join s in da.suppliers on p.supplier_ID equals s.supplier_ID
+                            join ps in da.PhoneSeries on p.Series_id equals ps.Series_id
+                            select new
+                            {
+                                Product = p,
+                                SupplierName = s.supplier_name,
+                                SeriesName = ps.SeriesName,
+                                TotalSold = da.Orders_items
+                                            .Where(oi => oi.Product_ID == p.Product_ID)
+                                            .Sum(oi => (int?)oi.quantity) ?? 0
+                            };
+
+                if (!string.IsNullOrWhiteSpace(keyword))
+                {
+                    string lowerKeyword = keyword.Trim().ToLower();
+                    query = query.Where(x => x.Product.Product_name.ToLower().Contains(lowerKeyword));
+                }
+
+                switch (status.ToLower())
+                {
+                    case "selling":
+                        query = query.Where(x => x.Product.Product_Status == "selling" && x.Product.Current_Quantity > 0);
+                        break;
+                    case "low":
+                        query = query.Where(x => x.Product.Current_Quantity > 0 && x.Product.Current_Quantity <= 5);
+                        break;
+                    case "out":
+                        query = query.Where(x => x.Product.Product_Status == "out of stock" || x.Product.Current_Quantity == 0);
+                        break;
+                    case "discontinued":
+                        query = query.Where(x => x.Product.Product_Status == "discontinued");
+                        break;
+                    default:
+                        break;
+                }
+
+                int totalItems = query.Count();
+                int totalSelling = query.Count(x => x.Product.Product_Status == "selling" && x.Product.Current_Quantity > 0);
+                int totalLow = query.Count(x => x.Product.Current_Quantity > 0 && x.Product.Current_Quantity <= 5);
+                int totalOut = query.Count(x => x.Product.Product_Status == "out of stock" || x.Product.Current_Quantity == 0);
+                int totalSold = query.Sum(x => x.TotalSold);
+
+                switch (sortBy?.ToLower())
+                {
+                    case "price-asc":
+                        query = query.OrderBy(x => x.Product.Sale_Price);
+                        break;
+                    case "price-desc":
+                        query = query.OrderByDescending(x => x.Product.Sale_Price);
+                        break;
+                    case "bestseller":
+                        query = query.OrderByDescending(x => x.TotalSold);
+                        break;
+                    case "discount":
+                        query = query.OrderByDescending(x =>
+                            (x.Product.Original_Price > x.Product.Sale_Price && x.Product.Original_Price > 0)
+                                ? ((x.Product.Original_Price - x.Product.Sale_Price) / x.Product.Original_Price * 100)
+                                : 0);
+                        break;
+                    case "featured":
+                        query = query.OrderByDescending(x => x.Product.Is_Featured)
+                                     .ThenByDescending(x => x.Product.Created_Date);
+                        break;
+                    case "new":
+                    default:
+                        query = query.OrderByDescending(x => x.Product.Created_Date);
+                        break;
+                }
+
+                var paged = query.Skip((pageNumber - 1) * pageSize)
+                                 .Take(pageSize)
+                                 .ToList();
+
+                var items = paged.Select(x => new Product_Infomation
+                {
+                    product_id = x.Product.Product_ID,
+                    product_name = x.Product.Product_name,
+                    sale_price = x.Product.Sale_Price ?? 0,
+                    original_price = x.Product.Original_Price ?? 0,
+                    current_Quantity = x.Product.Current_Quantity,
+                    product_status = x.Product.Product_Status,
+                    images = x.Product.Product_Image,
+                    series_name = x.SeriesName,
+                    series_id = x.Product.Series_id,
+                    supplier_name = x.SupplierName,
+                    is_featured = x.Product.Is_Featured ?? false,
+                    is_new = x.Product.Is_New ?? false,
+                    total_sold = x.TotalSold,
+                    created_date = x.Product.Created_Date ?? DateTime.Now,
+                    product_description = ParseProductDescription(x.Product.Descriptions)
+                }).ToList();
+
+                return new ProductPagingResult
+                {
+                    Items = items,
+                    TotalItems = totalItems,
+                    TotalSelling = totalSelling,
+                    TotalLowStock = totalLow,
+                    TotalOutStock = totalOut,
+                    TotalSold = totalSold
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetAdminProducts: {ex.Message}");
+                return new ProductPagingResult();
             }
         }
 
