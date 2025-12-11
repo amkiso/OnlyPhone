@@ -9,6 +9,7 @@ using System.Web.Mvc;
 
 namespace OnlyPhone.Areas.Admin.Controllers
 {
+    [AdminSecurity]
     public class VoucherController : Controller
     {
         Xuly xl = new Xuly();

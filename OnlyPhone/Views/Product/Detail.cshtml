@@ -578,7 +578,7 @@
                         <div class="spec-item">
                             <div class="spec-label">Tình trạng:</div>
                             <div class="spec-value">
-                                @if (!Model.Product.IsInStock)
+                                @if (Model.Product.IsInStock)
                                 {
                                     <span style="color: #10b981; font-weight: 600;">Còn hàng (@Model.Product.current_Quantity sản phẩm)</span>
                                 }
@@ -594,7 +594,7 @@
                     
 
                     <!-- Quantity -->
-                    @if (!Model.Product.IsInStock)
+                    @if (Model.Product.IsInStock)
                     {
                         <div class="quantity-section">
                             <label class="quantity-label">Số lượng:</label>
